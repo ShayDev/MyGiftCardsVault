@@ -1,0 +1,56 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// Enums
+enum TransactionType {
+  RECHARGE
+  SPEND
+}
+
+model FamilyGroup {
+  id        String   @id @default(uuid())
+  name      String
+  users     User[]
+  giftCards GiftCard[]
+  createdAt DateTime @default(now())
+}
+
+model User {
+  id         String      @id @default(uuid())
+  email      String      @unique
+  name       String?
+  role       String      @default("member")
+  familyId   String
+  family     FamilyGroup @relation(fields: [familyId], references: [id])
+  createdAt  DateTime    @default(now())
+}
+
+model GiftCard {
+  id           String        @id @default(uuid())
+  familyId     String
+  family       FamilyGroup   @relation(fields: [familyId], references: [id])
+  name         String
+  provider     String
+  last4        String?       // masked card identifier for display
+  isReloadable Boolean       @default(true)
+  metadata     Json?
+  transactions Transaction[]
+  createdAt    DateTime      @default(now())
+}
+
+model Transaction {
+  id         String          @id @default(uuid())
+  giftCardId String
+  giftCard   GiftCard        @relation(fields: [giftCardId], references: [id])
+  type       TransactionType
+  // Positive decimal amount. Interpretation: RECHARGE adds, SPEND subtracts.
+  amount     Decimal         @db.Decimal(65, 30)
+  notes      String?
+  createdAt  DateTime        @default(now())
+}
