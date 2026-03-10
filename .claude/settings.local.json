@@ -1,0 +1,8 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(ls c:/Dev/CloudeProjects/MyGiftCardsVault/postcss*)",
+      "Bash(npm install:*)"
+    ]
+  }
+}
