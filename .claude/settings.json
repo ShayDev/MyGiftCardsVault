@@ -1,0 +1,9 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npx prisma:*)",
+      "Bash(node -e \"require\\(''''./prisma.config.ts''''\\)\")",
+      "Bash(npx tsx:*)"
+    ]
+  }
+}

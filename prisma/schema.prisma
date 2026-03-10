@@ -4,7 +4,6 @@ generator client {
 
 datasource db {
   provider = "postgresql"
-  url      = env("DATABASE_URL")
 }
 
 // Enums
@@ -39,6 +38,7 @@ model GiftCard {
   provider     String
   last4        String?       // masked card identifier for display
   isReloadable Boolean       @default(true)
+  isActive     Boolean       @default(true)
   metadata     Json?
   transactions Transaction[]
   createdAt    DateTime      @default(now())

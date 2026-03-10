@@ -10,12 +10,13 @@
     "seed": "node prisma/seed.js"
   },
   "dependencies": {
-    "@prisma/client": "^5.14.0",
+    "@neondatabase/serverless": "^1.0.2",
+    "@prisma/adapter-neon": "^7.4.2",
+    "@prisma/client": "^7.4.2",
     "@tailwindcss/postcss": "^4.2.1",
     "autoprefixer": "latest",
     "next": "latest",
     "postcss": "latest",
-    "prisma": "^5.14.0",
     "react": "latest",
     "react-dom": "latest",
     "tailwindcss": "latest",
@@ -25,6 +26,7 @@
   "devDependencies": {
     "@types/node": "latest",
     "@types/react": "latest",
+    "prisma": "^7.4.2",
     "typescript": "latest"
   }
 }

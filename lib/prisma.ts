@@ -1,13 +1,18 @@
-import { PrismaClient } from "@prisma/client";
+import { PrismaClient } from '@prisma/client'
+import { PrismaNeon } from '@prisma/adapter-neon'
 
 declare global {
-  // allow global `prisma` in dev to avoid creating many instances
   // eslint-disable-next-line no-var
-  var prisma: PrismaClient | undefined;
+  var prisma: PrismaClient | undefined
 }
 
-export const prisma = global.prisma ?? new PrismaClient();
+function createPrismaClient() {
+  const adapter = new PrismaNeon({ connectionString: process.env.DATABASE_URL! })
+  return new PrismaClient({ adapter })
+}
 
-if (process.env.NODE_ENV !== "production") global.prisma = prisma;
+export const prisma = global.prisma ?? createPrismaClient()
 
-export default prisma;
+if (process.env.NODE_ENV !== 'production') global.prisma = prisma
+
+export default prisma
