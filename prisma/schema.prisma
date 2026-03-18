@@ -36,7 +36,9 @@ model GiftCard {
   family       FamilyGroup   @relation(fields: [familyId], references: [id])
   name         String
   provider     String
-  last4        String?       // masked card identifier for display
+  last4        String        // last 4 digits, required for display
+  fullNumber   String?       // full card number, optional
+  notes        String?       // card notes, optional
   isReloadable Boolean       @default(true)
   isActive     Boolean       @default(true)
   metadata     Json?

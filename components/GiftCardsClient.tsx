@@ -8,6 +8,8 @@ export type CardWithBalance = {
   name: string
   provider: string
   last4?: string | null
+  fullNumber?: string
+  notes?: string
   isReloadable: boolean
   createdAt: string
   balance: number
@@ -125,13 +127,43 @@ function AddCardModal({ onClose }: { onClose: () => void }) {
         <Field label="Provider">
           <input name="provider" required placeholder="e.g. Amazon, Target, Starbucks" className={inputClass} />
         </Field>
-        <Field label="Last 4 Digits (optional)">
+        <Field label="Last 4 Digits">
           <input
             name="last4"
+            required
             maxLength={4}
+            minLength={4}
             pattern="[0-9]{4}"
             placeholder="1234"
             className={`${inputClass} font-mono`}
+          />
+        </Field>
+        <Field label="Full Card Number (optional)">
+          <input
+            name="fullNumber"
+            placeholder="e.g. 6006491234561234"
+            className={`${inputClass} font-mono`}
+          />
+        </Field>
+        <Field label="Default Balance (USD)">
+          <div className="relative">
+            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 font-medium text-sm">$</span>
+            <input
+              name="defaultBalance"
+              type="number"
+              required
+              min="0.01"
+              step="0.01"
+              placeholder="0.00"
+              className={`${inputClass} pl-7 font-mono`}
+            />
+          </div>
+        </Field>
+        <Field label="Notes (optional)">
+          <input
+            name="notes"
+            placeholder="e.g. Birthday gift from mom"
+            className={inputClass}
           />
         </Field>
         <div className="flex items-center justify-between py-1">
@@ -167,6 +199,133 @@ function AddCardModal({ onClose }: { onClose: () => void }) {
           </button>
         </div>
       </form>
+    </Modal>
+  )
+}
+
+// ── Card Detail Modal ──────────────────────────────────────────────────────────
+
+function CardDetailModal({
+  card,
+  onClose,
+  onSpend,
+  onRecharge,
+  onDelete,
+}: {
+  card: CardWithBalance
+  onClose: () => void
+  onSpend: () => void
+  onRecharge: () => void
+  onDelete: () => void
+}) {
+  const [showFull, setShowFull] = useState(false)
+
+  const maskedFull = card.fullNumber
+    ? card.fullNumber.replace(/.(?=.{4})/g, '•')
+    : null
+
+  return (
+    <Modal title="Card Details" onClose={onClose}>
+      <div className="space-y-4">
+        {/* Header */}
+        <div className="flex items-center gap-3 p-3 rounded-xl bg-slate-50 border border-slate-100">
+          <div className={`w-11 h-11 rounded-xl flex items-center justify-center text-sm font-bold flex-shrink-0 ${providerColor(card.provider)}`}>
+            {card.provider.slice(0, 2).toUpperCase()}
+          </div>
+          <div className="flex-1 min-w-0">
+            <p className="font-semibold text-slate-800 truncate">{card.name}</p>
+            <p className="text-xs text-slate-400">{card.provider}</p>
+          </div>
+          <div className="text-right flex-shrink-0">
+            <p className="text-xs text-slate-400">Balance</p>
+            <p className={`font-mono font-bold text-base ${card.balance > 0 ? 'text-emerald-600' : 'text-rose-500'}`}>
+              {formatCurrency(card.balance)}
+            </p>
+          </div>
+        </div>
+
+        {/* Details grid */}
+        <div className="grid grid-cols-2 gap-3">
+          <div className="p-3 rounded-xl border border-slate-100 bg-white">
+            <p className="text-xs text-slate-400 mb-1">Last 4 Digits</p>
+            <p className="font-mono text-slate-700 font-medium tracking-widest">
+              {card.last4 ? `•••• ${card.last4}` : '—'}
+            </p>
+          </div>
+          <div className="p-3 rounded-xl border border-slate-100 bg-white">
+            <p className="text-xs text-slate-400 mb-1">Type</p>
+            {card.isReloadable ? (
+              <span className="inline-flex items-center gap-1 text-xs font-medium text-emerald-700">
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+                Reloadable
+              </span>
+            ) : (
+              <span className="inline-flex items-center gap-1 text-xs font-medium text-slate-600">
+                <span className="w-1.5 h-1.5 rounded-full bg-slate-400" />
+                One-time
+              </span>
+            )}
+          </div>
+          <div className="p-3 rounded-xl border border-slate-100 bg-white col-span-2">
+            <p className="text-xs text-slate-400 mb-1">Added</p>
+            <p className="text-sm text-slate-700">{formatDate(card.createdAt)}</p>
+          </div>
+        </div>
+
+        {/* Full number */}
+        {card.fullNumber && (
+          <div className="p-3 rounded-xl border border-slate-100 bg-white">
+            <div className="flex items-center justify-between mb-1">
+              <p className="text-xs text-slate-400">Full Card Number</p>
+              <button
+                type="button"
+                onClick={() => setShowFull(!showFull)}
+                className="text-xs text-emerald-600 hover:text-emerald-700 font-medium"
+              >
+                {showFull ? 'Hide' : 'Reveal'}
+              </button>
+            </div>
+            <p className="font-mono text-slate-700 text-sm tracking-wider break-all">
+              {showFull ? card.fullNumber : maskedFull}
+            </p>
+          </div>
+        )}
+
+        {/* Notes */}
+        {card.notes && (
+          <div className="p-3 rounded-xl border border-slate-100 bg-white">
+            <p className="text-xs text-slate-400 mb-1">Notes</p>
+            <p className="text-sm text-slate-700">{card.notes}</p>
+          </div>
+        )}
+
+        {/* Actions */}
+        <div className="flex gap-2 pt-1">
+          <button
+            onClick={() => { onClose(); onSpend() }}
+            className="flex-1 min-h-[44px] text-sm font-medium rounded-xl border border-rose-200 text-rose-600 hover:bg-rose-50 transition-colors"
+          >
+            Spend
+          </button>
+          {card.isReloadable && (
+            <button
+              onClick={() => { onClose(); onRecharge() }}
+              className="flex-1 min-h-[44px] text-sm font-medium rounded-xl border border-emerald-200 text-emerald-600 hover:bg-emerald-50 transition-colors"
+            >
+              Recharge
+            </button>
+          )}
+          <button
+            onClick={() => { onClose(); onDelete() }}
+            className="min-h-[44px] w-11 flex items-center justify-center rounded-xl border border-slate-200 text-slate-400 hover:text-rose-500 hover:border-rose-200 transition-colors"
+            title="Remove card"
+          >
+            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+            </svg>
+          </button>
+        </div>
+      </div>
     </Modal>
   )
 }
@@ -374,6 +533,7 @@ function StatCard({
 type ModalState =
   | { type: 'none' }
   | { type: 'add-card' }
+  | { type: 'detail'; card: CardWithBalance }
   | { type: 'transaction'; card: CardWithBalance; txType: 'SPEND' | 'RECHARGE' }
   | { type: 'delete'; card: CardWithBalance }
 
@@ -491,12 +651,15 @@ export default function GiftCardsClient({ cards, onAddCard }: { cards: CardWithB
                     {cards.map((card) => (
                       <tr key={card.id} className="hover:bg-slate-50/70 transition-colors group">
                         <td className="px-5 py-3.5">
-                          <div className="flex items-center gap-3">
+                          <button
+                            onClick={() => setModal({ type: 'detail', card })}
+                            className="flex items-center gap-3 text-left hover:opacity-75 transition-opacity"
+                          >
                             <div className={`w-9 h-9 rounded-lg flex items-center justify-center text-sm font-bold flex-shrink-0 ${providerColor(card.provider)}`}>
                               {card.provider.slice(0, 2).toUpperCase()}
                             </div>
-                            <span className="font-medium text-slate-800 truncate">{card.name}</span>
-                          </div>
+                            <span className="font-medium text-slate-800 truncate underline-offset-2 hover:underline">{card.name}</span>
+                          </button>
                         </td>
                         <td className="px-4 py-3.5 text-slate-600">{card.provider}</td>
                         <td className="px-4 py-3.5">
@@ -566,7 +729,10 @@ export default function GiftCardsClient({ cards, onAddCard }: { cards: CardWithB
                       <div className={`w-10 h-10 rounded-xl flex items-center justify-center text-sm font-bold flex-shrink-0 ${providerColor(card.provider)}`}>
                         {card.provider.slice(0, 2).toUpperCase()}
                       </div>
-                      <div className="flex-1 min-w-0">
+                      <button
+                        onClick={() => setModal({ type: 'detail', card })}
+                        className="flex-1 min-w-0 text-left"
+                      >
                         <div className="font-medium text-slate-800 truncate">{card.name}</div>
                         <div className="text-xs text-slate-400">
                           {card.provider}
@@ -574,7 +740,7 @@ export default function GiftCardsClient({ cards, onAddCard }: { cards: CardWithB
                             <span className="font-mono ml-1.5 tracking-widest">•••• {card.last4}</span>
                           )}
                         </div>
-                      </div>
+                      </button>
                       <div className="text-right flex-shrink-0">
                         <div className={`font-mono font-bold text-base ${card.balance > 0 ? 'text-emerald-600' : 'text-rose-500'}`}>
                           {formatCurrency(card.balance)}
@@ -620,6 +786,15 @@ export default function GiftCardsClient({ cards, onAddCard }: { cards: CardWithB
 
       {/* Modals */}
       {modal.type === 'add-card' && <AddCardModal onClose={close} />}
+      {modal.type === 'detail' && (
+        <CardDetailModal
+          card={modal.card}
+          onClose={close}
+          onSpend={() => setModal({ type: 'transaction', card: modal.card, txType: 'SPEND' })}
+          onRecharge={() => setModal({ type: 'transaction', card: modal.card, txType: 'RECHARGE' })}
+          onDelete={() => setModal({ type: 'delete', card: modal.card })}
+        />
+      )}
       {modal.type === 'transaction' && (
         <TransactionModal
           card={modal.card}

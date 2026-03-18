@@ -31,6 +31,8 @@ export default async function Page() {
     name: c.name,
     provider: c.provider,
     last4: c.last4,
+    fullNumber: c.fullNumber ?? undefined,
+    notes: c.notes ?? undefined,
     isReloadable: c.isReloadable,
     createdAt: c.createdAt.toISOString(),
     balance: parseFloat(balances.get(c.id)?.toString() ?? '0'),

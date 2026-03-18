@@ -7,7 +7,10 @@ import prisma from '../lib/prisma'
 const CreateCardSchema = z.object({
   name: z.string().min(1, 'Name is required'),
   provider: z.string().min(1, 'Provider is required'),
-  last4: z.string().length(4).optional(),
+  last4: z.string().regex(/^\d{4}$/, 'Must be exactly 4 digits'),
+  fullNumber: z.string().min(1).optional(),
+  defaultBalance: z.number().positive('Default balance must be positive'),
+  notes: z.string().optional(),
   isReloadable: z.boolean(),
 })
 
@@ -15,22 +18,37 @@ export async function createCard(formData: FormData) {
   const familyId = process.env.DEV_FAMILY_ID
   if (!familyId) throw new Error('No family ID configured')
 
+  const rawBalance = parseFloat(formData.get('defaultBalance') as string)
   const raw = {
     name: formData.get('name') as string,
     provider: formData.get('provider') as string,
-    last4: (formData.get('last4') as string) || undefined,
+    last4: formData.get('last4') as string,
+    fullNumber: (formData.get('fullNumber') as string) || undefined,
+    defaultBalance: isNaN(rawBalance) ? 0 : rawBalance,
+    notes: (formData.get('notes') as string) || undefined,
     isReloadable: formData.get('isReloadable') === 'true',
   }
 
   const data = CreateCardSchema.parse(raw)
 
-  await prisma.giftCard.create({
+  const card = await prisma.giftCard.create({
     data: {
       familyId,
       name: data.name,
       provider: data.provider,
-      last4: data.last4 ?? null,
+      last4: data.last4,
+      fullNumber: data.fullNumber ?? null,
+      notes: data.notes ?? null,
       isReloadable: data.isReloadable,
+    },
+  })
+
+  await prisma.transaction.create({
+    data: {
+      giftCardId: card.id,
+      type: 'RECHARGE',
+      amount: data.defaultBalance,
+      notes: 'Initial balance',
     },
   })
 
