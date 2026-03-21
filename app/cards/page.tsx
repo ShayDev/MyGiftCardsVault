@@ -32,6 +32,7 @@ export default async function Page() {
     provider: c.provider,
     last4: c.last4,
     fullNumber: c.fullNumber ?? undefined,
+    expiresAt: c.expiresAt ?? undefined,
     notes: c.notes ?? undefined,
     isReloadable: c.isReloadable,
     createdAt: c.createdAt.toISOString(),

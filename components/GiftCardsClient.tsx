@@ -9,6 +9,7 @@ export type CardWithBalance = {
   provider: string
   last4?: string | null
   fullNumber?: string
+  expiresAt?: string
   notes?: string
   isReloadable: boolean
   createdAt: string
@@ -145,6 +146,15 @@ function AddCardModal({ onClose }: { onClose: () => void }) {
             className={`${inputClass} font-mono`}
           />
         </Field>
+        <Field label="Expiration (optional)">
+          <input
+            name="expiresAt"
+            maxLength={4}
+            pattern="(0[1-9]|1[0-2])\d{2}"
+            placeholder="MMYY"
+            className={`${inputClass} font-mono`}
+          />
+        </Field>
         <Field label="Default Balance (USD)">
           <div className="relative">
             <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 font-medium text-sm">$</span>
@@ -266,7 +276,13 @@ function CardDetailModal({
               </span>
             )}
           </div>
-          <div className="p-3 rounded-xl border border-slate-100 bg-white col-span-2">
+          <div className="p-3 rounded-xl border border-slate-100 bg-white">
+            <p className="text-xs text-slate-400 mb-1">Expires</p>
+            <p className="font-mono text-slate-700 font-medium">
+              {card.expiresAt ? `${card.expiresAt.slice(0, 2)}/${card.expiresAt.slice(2)}` : '—'}
+            </p>
+          </div>
+          <div className="p-3 rounded-xl border border-slate-100 bg-white">
             <p className="text-xs text-slate-400 mb-1">Added</p>
             <p className="text-sm text-slate-700">{formatDate(card.createdAt)}</p>
           </div>
