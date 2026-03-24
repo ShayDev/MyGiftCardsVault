@@ -1,0 +1,170 @@
+export type Locale = 'en' | 'he'
+
+export const localeDir: Record<Locale, 'ltr' | 'rtl'> = { en: 'ltr', he: 'rtl' }
+export const localeLabel: Record<Locale, string> = { en: 'EN', he: 'עב' }
+
+const translations = {
+  en: {
+    // Header
+    brandFirst: 'GiftCards',
+    brandSecond: 'Vault',
+    // Stats
+    totalBalance: 'Total Balance',
+    totalCards: 'Total Cards',
+    reloadable: 'Reloadable',
+    emptyCards: 'Empty Cards',
+    // Table headers
+    allCards: 'All Cards',
+    colCard: 'Card',
+    colProvider: 'Provider',
+    colCardNumber: 'Card #',
+    colType: 'Type',
+    colBalance: 'Balance',
+    colAdded: 'Added',
+    colActions: 'Actions',
+    // Card types
+    reloadableLabel: 'Reloadable',
+    oneTime: 'One-time',
+    // Buttons
+    addCard: 'Add Card',
+    addFirstCard: 'Add First Card',
+    spend: 'Spend',
+    recharge: 'Recharge',
+    cancel: 'Cancel',
+    // Empty state
+    noGiftCardsYet: 'No gift cards yet',
+    addFirstCardPrompt: 'Add your first card to get started.',
+    // Add card modal
+    addNewCard: 'Add New Card',
+    cardName: 'Card Name',
+    cardNamePlaceholder: 'e.g. Amazon Shopping',
+    providerLabel: 'Provider',
+    providerPlaceholder: 'e.g. Amazon, Target, Starbucks',
+    last4Digits: 'Last 4 Digits',
+    fullCardNumberOptional: 'Full Card Number (optional)',
+    fullCardNumberPlaceholder: 'e.g. 6006491234561234',
+    expirationOptional: 'Expiration (optional)',
+    defaultBalance: 'Default Balance (USD)',
+    notesOptional: 'Notes (optional)',
+    notesPlaceholder: 'e.g. Birthday gift from mom',
+    canFundsBeAdded: 'Can funds be added to this card?',
+    adding: 'Adding…',
+    // Transaction modal
+    spendFromCard: 'Spend from Card',
+    rechargeCard: 'Recharge Card',
+    amount: 'Amount (USD)',
+    newBalance: 'New balance',
+    confirmSpend: 'Confirm Spend',
+    confirmRecharge: 'Confirm Recharge',
+    saving: 'Saving…',
+    notes: 'Notes (optional)',
+    notesTransactionPlaceholder: 'e.g. Grocery run',
+    enterValidAmount: 'Enter a valid amount',
+    amountExceedsBalance: 'Amount exceeds available balance',
+    transactionFailed: 'Transaction failed',
+    // Delete dialog
+    removeCard: 'Remove Card',
+    thisWillHideCard: 'This will hide the card',
+    willBeMarkedInactive: 'will be marked inactive. All transaction history is preserved.',
+    removing: 'Removing…',
+    failedToRemoveCard: 'Failed to remove card',
+    // Card detail modal
+    cardDetails: 'Card Details',
+    last4Label: 'Last 4 Digits',
+    typeLabel: 'Type',
+    expires: 'Expires',
+    dateAdded: 'Added',
+    fullCardNumber: 'Full Card Number',
+    reveal: 'Reveal',
+    hide: 'Hide',
+    notesLabel: 'Notes',
+    failedToCreateCard: 'Failed to create card',
+    // Misc
+    cards: (n: number) => `${n} card${n !== 1 ? 's' : ''}`,
+  },
+  he: {
+    // Header
+    brandFirst: 'כרטיסי מתנה',
+    brandSecond: 'כספת',
+    // Stats
+    totalBalance: 'יתרה כוללת',
+    totalCards: 'סה״כ כרטיסים',
+    reloadable: 'ניתן לטעינה',
+    emptyCards: 'כרטיסים ריקים',
+    // Table headers
+    allCards: 'כל הכרטיסים',
+    colCard: 'כרטיס',
+    colProvider: 'ספק',
+    colCardNumber: 'מספר כרטיס',
+    colType: 'סוג',
+    colBalance: 'יתרה',
+    colAdded: 'נוסף',
+    colActions: 'פעולות',
+    // Card types
+    reloadableLabel: 'ניתן לטעינה',
+    oneTime: 'חד פעמי',
+    // Buttons
+    addCard: 'הוסף כרטיס',
+    addFirstCard: 'הוסף כרטיס ראשון',
+    spend: 'הוצאה',
+    recharge: 'טעינה',
+    cancel: 'ביטול',
+    // Empty state
+    noGiftCardsYet: 'אין כרטיסי מתנה עדיין',
+    addFirstCardPrompt: 'הוסף את הכרטיס הראשון שלך להתחלה.',
+    // Add card modal
+    addNewCard: 'הוסף כרטיס חדש',
+    cardName: 'שם כרטיס',
+    cardNamePlaceholder: 'למשל: קניות אמזון',
+    providerLabel: 'ספק',
+    providerPlaceholder: 'למשל: אמזון, טארגט, סטארבקס',
+    last4Digits: '4 ספרות אחרונות',
+    fullCardNumberOptional: 'מספר כרטיס מלא (אופציונלי)',
+    fullCardNumberPlaceholder: 'למשל: 6006491234561234',
+    expirationOptional: 'תאריך תפוגה (אופציונלי)',
+    defaultBalance: 'יתרה התחלתית (USD)',
+    notesOptional: 'הערות (אופציונלי)',
+    notesPlaceholder: 'למשל: מתנת יום הולדת מאמא',
+    canFundsBeAdded: 'ניתן להוסיף כספים לכרטיס זה?',
+    adding: 'מוסיף...',
+    // Transaction modal
+    spendFromCard: 'הוצאה מהכרטיס',
+    rechargeCard: 'טעינת כרטיס',
+    amount: 'סכום (USD)',
+    newBalance: 'יתרה חדשה',
+    confirmSpend: 'אשר הוצאה',
+    confirmRecharge: 'אשר טעינה',
+    saving: 'שומר...',
+    notes: 'הערות (אופציונלי)',
+    notesTransactionPlaceholder: 'למשל: קניות מכולת',
+    enterValidAmount: 'יש להזין סכום תקין',
+    amountExceedsBalance: 'הסכום חורג מהיתרה הזמינה',
+    transactionFailed: 'העסקה נכשלה',
+    // Delete dialog
+    removeCard: 'הסר כרטיס',
+    thisWillHideCard: 'פעולה זו תסתיר את הכרטיס',
+    willBeMarkedInactive: 'יסומן כלא פעיל. כל היסטוריית העסקאות שמורה.',
+    removing: 'מסיר...',
+    failedToRemoveCard: 'הסרת הכרטיס נכשלה',
+    // Card detail modal
+    cardDetails: 'פרטי כרטיס',
+    last4Label: '4 ספרות אחרונות',
+    typeLabel: 'סוג',
+    expires: 'תפוגה',
+    dateAdded: 'נוסף',
+    fullCardNumber: 'מספר כרטיס מלא',
+    reveal: 'הצג',
+    hide: 'הסתר',
+    notesLabel: 'הערות',
+    failedToCreateCard: 'יצירת הכרטיס נכשלה',
+    // Misc
+    cards: (n: number) => n === 1 ? 'כרטיס אחד' : `${n} כרטיסים`,
+  },
+} as const
+
+export type Translations = typeof translations.en
+export type TranslationKey = keyof Translations
+
+export function getT(locale: Locale): Translations {
+  return translations[locale] as unknown as Translations
+}
