@@ -7,6 +7,12 @@ import LanguageToggle from "../components/LanguageToggle";
 export const metadata: Metadata = {
   title: "MyGiftCardsVault",
   description: "Family gift card management",
+  manifest: "/manifest.json",
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "black-translucent",
+    title: "GiftVault",
+  },
 };
 
 export default function RootLayout({
@@ -16,7 +22,10 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en" dir="ltr">
-      <head />
+      <head>
+        <meta name="theme-color" content="#0f172a" />
+        <link rel="apple-touch-icon" href="/icons/icon-192.png" />
+      </head>
       <body className="min-h-screen bg-slate-50 text-slate-900 antialiased">
         <LanguageProvider>
           <header className="bg-white border-b border-slate-200 sticky top-0 z-10 shadow-sm">
