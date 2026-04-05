@@ -4,7 +4,8 @@
       "Bash(npx prisma:*)",
       "Bash(node -e \"require\\(''''./prisma.config.ts''''\\)\")",
       "Bash(npx tsx:*)",
-      "Bash(find c:DevCloudeProjectsMyGiftCardsVault -maxdepth 3 -type f \\\\\\(-name tailwind.config.* -o -name next.config.* -o -name i18n* -o -name *intl* \\\\\\))"
+      "Bash(find c:DevCloudeProjectsMyGiftCardsVault -maxdepth 3 -type f \\\\\\(-name tailwind.config.* -o -name next.config.* -o -name i18n* -o -name *intl* \\\\\\))",
+      "Bash(ls c:/Dev/CloudeProjects/MyGiftCardsVault/*.json c:/Dev/CloudeProjects/MyGiftCardsVault/.env*)"
     ]
   }
 }
