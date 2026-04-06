@@ -2,6 +2,8 @@
 
 import React, { useState, useTransition } from 'react'
 import { createCard, deactivateCard, createTransaction } from '../app/actions'
+import { useLanguageStore } from '../hooks/useLanguageStore'
+import { getT } from '../lib/i18n'
 
 export type CardWithBalance = {
   id: string
@@ -98,11 +100,12 @@ const inputClass =
 // ── Add Card Modal ─────────────────────────────────────────────────────────────
 
 function AddCardModal({ onClose }: { onClose: () => void }) {
+  const t = getT(useLanguageStore((s) => s.locale))
   const [isPending, startTransition] = useTransition()
   const [isReloadable, setIsReloadable] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
-  function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
+  function handleSubmit(e: React.SyntheticEvent<HTMLFormElement>) {
     e.preventDefault()
     const form = e.currentTarget
     const fd = new FormData(form)
@@ -114,21 +117,21 @@ function AddCardModal({ onClose }: { onClose: () => void }) {
         await createCard(fd)
         onClose()
       } catch (err) {
-        setError(err instanceof Error ? err.message : 'Failed to create card')
+        setError(err instanceof Error ? err.message : t.failedToCreateCard)
       }
     })
   }
 
   return (
-    <Modal title="Add New Card" onClose={onClose}>
+    <Modal title={t.addNewCard} onClose={onClose}>
       <form onSubmit={handleSubmit} className="space-y-4">
-        <Field label="Card Name">
-          <input name="name" required placeholder="e.g. Amazon Shopping" className={inputClass} />
+        <Field label={t.cardName}>
+          <input name="name" required placeholder={t.cardNamePlaceholder} className={inputClass} />
         </Field>
-        <Field label="Provider">
-          <input name="provider" required placeholder="e.g. Amazon, Target, Starbucks" className={inputClass} />
+        <Field label={t.providerLabel}>
+          <input name="provider" required placeholder={t.providerPlaceholder} className={inputClass} />
         </Field>
-        <Field label="Last 4 Digits">
+        <Field label={t.last4Digits}>
           <input
             name="last4"
             required
@@ -139,14 +142,14 @@ function AddCardModal({ onClose }: { onClose: () => void }) {
             className={`${inputClass} font-mono`}
           />
         </Field>
-        <Field label="Full Card Number (optional)">
+        <Field label={t.fullCardNumberOptional}>
           <input
             name="fullNumber"
-            placeholder="e.g. 6006491234561234"
+            placeholder={t.fullCardNumberPlaceholder}
             className={`${inputClass} font-mono`}
           />
         </Field>
-        <Field label="Expiration (optional)">
+        <Field label={t.expirationOptional}>
           <input
             name="expiresAt"
             maxLength={4}
@@ -155,7 +158,7 @@ function AddCardModal({ onClose }: { onClose: () => void }) {
             className={`${inputClass} font-mono`}
           />
         </Field>
-        <Field label="Default Balance (USD)">
+        <Field label={t.defaultBalance}>
           <div className="relative">
             <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 font-medium text-sm">$</span>
             <input
@@ -169,17 +172,17 @@ function AddCardModal({ onClose }: { onClose: () => void }) {
             />
           </div>
         </Field>
-        <Field label="Notes (optional)">
+        <Field label={t.notesOptional}>
           <input
             name="notes"
-            placeholder="e.g. Birthday gift from mom"
+            placeholder={t.notesPlaceholder}
             className={inputClass}
           />
         </Field>
         <div className="flex items-center justify-between py-1">
           <div>
-            <p className="text-sm font-medium text-slate-700">Reloadable</p>
-            <p className="text-xs text-slate-400">Can funds be added to this card?</p>
+            <p className="text-sm font-medium text-slate-700">{t.reloadable}</p>
+            <p className="text-xs text-slate-400">{t.canFundsBeAdded}</p>
           </div>
           <button
             type="button"
@@ -198,14 +201,14 @@ function AddCardModal({ onClose }: { onClose: () => void }) {
             onClick={onClose}
             className="flex-1 h-11 rounded-xl border border-slate-200 text-sm font-medium text-slate-600 hover:bg-slate-50 transition-colors"
           >
-            Cancel
+            {t.cancel}
           </button>
           <button
             type="submit"
             disabled={isPending}
             className="flex-1 h-11 rounded-xl bg-emerald-500 hover:bg-emerald-600 disabled:opacity-60 text-white text-sm font-medium transition-colors"
           >
-            {isPending ? 'Adding…' : 'Add Card'}
+            {isPending ? t.adding : t.addCard}
           </button>
         </div>
       </form>
@@ -228,6 +231,7 @@ function CardDetailModal({
   onRecharge: () => void
   onDelete: () => void
 }) {
+  const t = getT(useLanguageStore((s) => s.locale))
   const [showFull, setShowFull] = useState(false)
 
   const maskedFull = card.fullNumber
@@ -235,7 +239,7 @@ function CardDetailModal({
     : null
 
   return (
-    <Modal title="Card Details" onClose={onClose}>
+    <Modal title={t.cardDetails} onClose={onClose}>
       <div className="space-y-4">
         {/* Header */}
         <div className="flex items-center gap-3 p-3 rounded-xl bg-slate-50 border border-slate-100">
@@ -247,7 +251,7 @@ function CardDetailModal({
             <p className="text-xs text-slate-400">{card.provider}</p>
           </div>
           <div className="text-right flex-shrink-0">
-            <p className="text-xs text-slate-400">Balance</p>
+            <p className="text-xs text-slate-400">{t.colBalance}</p>
             <p className={`font-mono font-bold text-base ${card.balance > 0 ? 'text-emerald-600' : 'text-rose-500'}`}>
               {formatCurrency(card.balance)}
             </p>
@@ -257,33 +261,33 @@ function CardDetailModal({
         {/* Details grid */}
         <div className="grid grid-cols-2 gap-3">
           <div className="p-3 rounded-xl border border-slate-100 bg-white">
-            <p className="text-xs text-slate-400 mb-1">Last 4 Digits</p>
+            <p className="text-xs text-slate-400 mb-1">{t.last4Label}</p>
             <p className="font-mono text-slate-700 font-medium tracking-widest">
               {card.last4 ? `•••• ${card.last4}` : '—'}
             </p>
           </div>
           <div className="p-3 rounded-xl border border-slate-100 bg-white">
-            <p className="text-xs text-slate-400 mb-1">Type</p>
+            <p className="text-xs text-slate-400 mb-1">{t.typeLabel}</p>
             {card.isReloadable ? (
               <span className="inline-flex items-center gap-1 text-xs font-medium text-emerald-700">
                 <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
-                Reloadable
+                {t.reloadableLabel}
               </span>
             ) : (
               <span className="inline-flex items-center gap-1 text-xs font-medium text-slate-600">
                 <span className="w-1.5 h-1.5 rounded-full bg-slate-400" />
-                One-time
+                {t.oneTime}
               </span>
             )}
           </div>
           <div className="p-3 rounded-xl border border-slate-100 bg-white">
-            <p className="text-xs text-slate-400 mb-1">Expires</p>
+            <p className="text-xs text-slate-400 mb-1">{t.expires}</p>
             <p className="font-mono text-slate-700 font-medium">
               {card.expiresAt ? `${card.expiresAt.slice(0, 2)}/${card.expiresAt.slice(2)}` : '—'}
             </p>
           </div>
           <div className="p-3 rounded-xl border border-slate-100 bg-white">
-            <p className="text-xs text-slate-400 mb-1">Added</p>
+            <p className="text-xs text-slate-400 mb-1">{t.dateAdded}</p>
             <p className="text-sm text-slate-700">{formatDate(card.createdAt)}</p>
           </div>
         </div>
@@ -292,13 +296,13 @@ function CardDetailModal({
         {card.fullNumber && (
           <div className="p-3 rounded-xl border border-slate-100 bg-white">
             <div className="flex items-center justify-between mb-1">
-              <p className="text-xs text-slate-400">Full Card Number</p>
+              <p className="text-xs text-slate-400">{t.fullCardNumber}</p>
               <button
                 type="button"
                 onClick={() => setShowFull(!showFull)}
                 className="text-xs text-emerald-600 hover:text-emerald-700 font-medium"
               >
-                {showFull ? 'Hide' : 'Reveal'}
+                {showFull ? t.hide : t.reveal}
               </button>
             </div>
             <p className="font-mono text-slate-700 text-sm tracking-wider break-all">
@@ -310,7 +314,7 @@ function CardDetailModal({
         {/* Notes */}
         {card.notes && (
           <div className="p-3 rounded-xl border border-slate-100 bg-white">
-            <p className="text-xs text-slate-400 mb-1">Notes</p>
+            <p className="text-xs text-slate-400 mb-1">{t.notesLabel}</p>
             <p className="text-sm text-slate-700">{card.notes}</p>
           </div>
         )}
@@ -321,20 +325,20 @@ function CardDetailModal({
             onClick={() => { onClose(); onSpend() }}
             className="flex-1 min-h-[44px] text-sm font-medium rounded-xl border border-rose-200 text-rose-600 hover:bg-rose-50 transition-colors"
           >
-            Spend
+            {t.spend}
           </button>
           {card.isReloadable && (
             <button
               onClick={() => { onClose(); onRecharge() }}
               className="flex-1 min-h-[44px] text-sm font-medium rounded-xl border border-emerald-200 text-emerald-600 hover:bg-emerald-50 transition-colors"
             >
-              Recharge
+              {t.recharge}
             </button>
           )}
           <button
             onClick={() => { onClose(); onDelete() }}
             className="min-h-[44px] w-11 flex items-center justify-center rounded-xl border border-slate-200 text-slate-400 hover:text-rose-500 hover:border-rose-200 transition-colors"
-            title="Remove card"
+            title={t.removeCard}
           >
             <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
@@ -359,6 +363,7 @@ function TransactionModal({
   currentBalance: number
   onClose: () => void
 }) {
+  const t = getT(useLanguageStore((s) => s.locale))
   const [isPending, startTransition] = useTransition()
   const [amount, setAmount] = useState('')
   const [notes, setNotes] = useState('')
@@ -368,14 +373,14 @@ function TransactionModal({
   const amountNum = parseFloat(amount) || 0
   const projected = isSpend ? currentBalance - amountNum : currentBalance + amountNum
 
-  function handleSubmit(e: React.FormEvent) {
+  function handleSubmit(e: React.SyntheticEvent) {
     e.preventDefault()
     if (!amountNum || amountNum <= 0) {
-      setError('Enter a valid amount')
+      setError(t.enterValidAmount)
       return
     }
     if (isSpend && amountNum > currentBalance) {
-      setError('Amount exceeds available balance')
+      setError(t.amountExceedsBalance)
       return
     }
     setError(null)
@@ -384,13 +389,13 @@ function TransactionModal({
         await createTransaction({ cardId: card.id, type, amount: amountNum, notes: notes || undefined })
         onClose()
       } catch (err) {
-        setError(err instanceof Error ? err.message : 'Transaction failed')
+        setError(err instanceof Error ? err.message : t.transactionFailed)
       }
     })
   }
 
   return (
-    <Modal title={isSpend ? 'Spend from Card' : 'Recharge Card'} onClose={onClose}>
+    <Modal title={isSpend ? t.spendFromCard : t.rechargeCard} onClose={onClose}>
       <div className="mb-4 p-3 rounded-xl bg-slate-50 border border-slate-100 flex items-center gap-3">
         <div className={`w-10 h-10 rounded-xl flex items-center justify-center text-sm font-bold flex-shrink-0 ${providerColor(card.provider)}`}>
           {card.provider.slice(0, 2).toUpperCase()}
@@ -400,7 +405,7 @@ function TransactionModal({
           <p className="text-xs text-slate-400">{card.provider}</p>
         </div>
         <div className="text-right">
-          <p className="text-xs text-slate-400">Balance</p>
+          <p className="text-xs text-slate-400">{t.colBalance}</p>
           <p className={`font-mono font-semibold text-sm ${currentBalance > 0 ? 'text-emerald-600' : 'text-rose-500'}`}>
             {formatCurrency(currentBalance)}
           </p>
@@ -408,7 +413,7 @@ function TransactionModal({
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-4">
-        <Field label="Amount (USD)">
+        <Field label={t.amount}>
           <div className="relative">
             <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 font-medium text-sm">$</span>
             <input
@@ -426,17 +431,17 @@ function TransactionModal({
 
         {amount && amountNum > 0 && (
           <div className={`flex items-center justify-between text-sm px-3 py-2 rounded-xl ${projected >= 0 ? 'bg-emerald-50 text-emerald-700' : 'bg-rose-50 text-rose-600'}`}>
-            <span>New balance</span>
+            <span>{t.newBalance}</span>
             <span className="font-mono font-semibold">{formatCurrency(projected)}</span>
           </div>
         )}
 
-        <Field label="Notes (optional)">
+        <Field label={t.notes}>
           <input
             type="text"
             value={notes}
             onChange={(e) => setNotes(e.target.value)}
-            placeholder="e.g. Grocery run"
+            placeholder={t.notesTransactionPlaceholder}
             className={inputClass}
           />
         </Field>
@@ -449,14 +454,14 @@ function TransactionModal({
             onClick={onClose}
             className="flex-1 h-11 rounded-xl border border-slate-200 text-sm font-medium text-slate-600 hover:bg-slate-50 transition-colors"
           >
-            Cancel
+            {t.cancel}
           </button>
           <button
             type="submit"
             disabled={isPending}
             className={`flex-1 h-11 rounded-xl text-white text-sm font-medium transition-colors disabled:opacity-60 ${isSpend ? 'bg-rose-500 hover:bg-rose-600' : 'bg-emerald-500 hover:bg-emerald-600'}`}
           >
-            {isPending ? 'Saving…' : isSpend ? 'Confirm Spend' : 'Confirm Recharge'}
+            {isPending ? t.saving : isSpend ? t.confirmSpend : t.confirmRecharge}
           </button>
         </div>
       </form>
@@ -467,6 +472,7 @@ function TransactionModal({
 // ── Delete Confirm Dialog ──────────────────────────────────────────────────────
 
 function DeleteDialog({ card, onClose }: { card: CardWithBalance; onClose: () => void }) {
+  const t = getT(useLanguageStore((s) => s.locale))
   const [isPending, startTransition] = useTransition()
   const [error, setError] = useState<string | null>(null)
 
@@ -476,22 +482,22 @@ function DeleteDialog({ card, onClose }: { card: CardWithBalance; onClose: () =>
         await deactivateCard(card.id)
         onClose()
       } catch (err) {
-        setError(err instanceof Error ? err.message : 'Failed to remove card')
+        setError(err instanceof Error ? err.message : t.failedToRemoveCard)
       }
     })
   }
 
   return (
-    <Modal title="Remove Card" onClose={onClose}>
+    <Modal title={t.removeCard} onClose={onClose}>
       <div className="space-y-4">
         <div className="flex items-start gap-3 p-3 rounded-xl bg-rose-50 border border-rose-100">
           <svg className="w-5 h-5 text-rose-500 flex-shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
             <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v2m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z" />
           </svg>
           <div>
-            <p className="text-sm font-medium text-rose-700">This will hide the card</p>
+            <p className="text-sm font-medium text-rose-700">{t.thisWillHideCard}</p>
             <p className="text-xs text-rose-500 mt-0.5">
-              <strong>{card.name}</strong> will be marked inactive. All transaction history is preserved.
+              <strong>{card.name}</strong> {t.willBeMarkedInactive}
             </p>
           </div>
         </div>
@@ -503,14 +509,14 @@ function DeleteDialog({ card, onClose }: { card: CardWithBalance; onClose: () =>
             onClick={onClose}
             className="flex-1 h-11 rounded-xl border border-slate-200 text-sm font-medium text-slate-600 hover:bg-slate-50 transition-colors"
           >
-            Cancel
+            {t.cancel}
           </button>
           <button
             onClick={handleConfirm}
             disabled={isPending}
             className="flex-1 h-11 rounded-xl bg-rose-500 hover:bg-rose-600 disabled:opacity-60 text-white text-sm font-medium transition-colors"
           >
-            {isPending ? 'Removing…' : 'Remove Card'}
+            {isPending ? t.removing : t.removeCard}
           </button>
         </div>
       </div>
@@ -553,7 +559,8 @@ type ModalState =
   | { type: 'transaction'; card: CardWithBalance; txType: 'SPEND' | 'RECHARGE' }
   | { type: 'delete'; card: CardWithBalance }
 
-export default function GiftCardsClient({ cards, onAddCard }: { cards: CardWithBalance[]; onAddCard?: () => void }) {
+export default function GiftCardsClient({ cards }: { cards: CardWithBalance[] }) {
+  const t = getT(useLanguageStore((s) => s.locale))
   const [modal, setModal] = useState<ModalState>({ type: 'none' })
 
   const totalBalance = cards.reduce((sum, c) => sum + c.balance, 0)
@@ -568,7 +575,7 @@ export default function GiftCardsClient({ cards, onAddCard }: { cards: CardWithB
         {/* Summary Stats */}
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
           <StatCard
-            label="Total Balance"
+            label={t.totalBalance}
             value={formatCurrency(totalBalance)}
             valueClass="text-emerald-600"
             iconClass="bg-emerald-50 text-emerald-600"
@@ -579,7 +586,7 @@ export default function GiftCardsClient({ cards, onAddCard }: { cards: CardWithB
             }
           />
           <StatCard
-            label="Total Cards"
+            label={t.totalCards}
             value={String(cards.length)}
             iconClass="bg-slate-100 text-slate-600"
             icon={
@@ -589,7 +596,7 @@ export default function GiftCardsClient({ cards, onAddCard }: { cards: CardWithB
             }
           />
           <StatCard
-            label="Reloadable"
+            label={t.reloadable}
             value={String(reloadableCount)}
             iconClass="bg-blue-50 text-blue-600"
             icon={
@@ -599,7 +606,7 @@ export default function GiftCardsClient({ cards, onAddCard }: { cards: CardWithB
             }
           />
           <StatCard
-            label="Empty Cards"
+            label={t.emptyCards}
             value={String(emptyCount)}
             valueClass={emptyCount > 0 ? 'text-rose-600' : undefined}
             iconClass="bg-rose-50 text-rose-500"
@@ -614,10 +621,10 @@ export default function GiftCardsClient({ cards, onAddCard }: { cards: CardWithB
         {/* Table */}
         <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
           <div className="px-5 py-4 border-b border-slate-100 flex items-center justify-between">
-            <h2 className="font-semibold text-slate-800 text-base">All Cards</h2>
+            <h2 className="font-semibold text-slate-800 text-base">{t.allCards}</h2>
             <div className="flex items-center gap-2">
               <span className="text-xs text-slate-400 bg-slate-100 px-2 py-0.5 rounded-full">
-                {cards.length} card{cards.length !== 1 ? 's' : ''}
+                {t.cards(cards.length)}
               </span>
               <button
                 onClick={() => setModal({ type: 'add-card' })}
@@ -626,7 +633,7 @@ export default function GiftCardsClient({ cards, onAddCard }: { cards: CardWithB
                 <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
                   <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
                 </svg>
-                Add Card
+                {t.addCard}
               </button>
             </div>
           </div>
@@ -638,13 +645,13 @@ export default function GiftCardsClient({ cards, onAddCard }: { cards: CardWithB
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
                 </svg>
               </div>
-              <p className="text-slate-500 font-medium">No gift cards yet</p>
-              <p className="text-sm text-slate-400 mt-1">Add your first card to get started.</p>
+              <p className="text-slate-500 font-medium">{t.noGiftCardsYet}</p>
+              <p className="text-sm text-slate-400 mt-1">{t.addFirstCardPrompt}</p>
               <button
                 onClick={() => setModal({ type: 'add-card' })}
                 className="mt-4 min-h-[44px] px-5 bg-emerald-500 hover:bg-emerald-600 text-white text-sm font-medium rounded-xl transition-colors"
               >
-                Add First Card
+                {t.addFirstCard}
               </button>
             </div>
           ) : (
@@ -654,13 +661,13 @@ export default function GiftCardsClient({ cards, onAddCard }: { cards: CardWithB
                 <table className="w-full text-sm">
                   <thead>
                     <tr className="border-b border-slate-100 bg-slate-50/60">
-                      <th className="text-left font-medium text-slate-500 px-5 py-3 w-[28%]">Card</th>
-                      <th className="text-left font-medium text-slate-500 px-4 py-3">Provider</th>
-                      <th className="text-left font-medium text-slate-500 px-4 py-3">Card #</th>
-                      <th className="text-left font-medium text-slate-500 px-4 py-3">Type</th>
-                      <th className="text-right font-medium text-slate-500 px-4 py-3">Balance</th>
-                      <th className="text-left font-medium text-slate-500 px-4 py-3">Added</th>
-                      <th className="text-right font-medium text-slate-500 px-5 py-3">Actions</th>
+                      <th className="text-start font-medium text-slate-500 px-5 py-3 w-[28%]">{t.colCard}</th>
+                      <th className="text-start font-medium text-slate-500 px-4 py-3">{t.colProvider}</th>
+                      <th className="text-start font-medium text-slate-500 px-4 py-3">{t.colCardNumber}</th>
+                      <th className="text-start font-medium text-slate-500 px-4 py-3">{t.colType}</th>
+                      <th className="text-end font-medium text-slate-500 px-4 py-3">{t.colBalance}</th>
+                      <th className="text-start font-medium text-slate-500 px-4 py-3">{t.colAdded}</th>
+                      <th className="text-end font-medium text-slate-500 px-5 py-3">{t.colActions}</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-100">
@@ -687,12 +694,12 @@ export default function GiftCardsClient({ cards, onAddCard }: { cards: CardWithB
                           {card.isReloadable ? (
                             <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-emerald-50 text-emerald-700 border border-emerald-100">
                               <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
-                              Reloadable
+                              {t.reloadableLabel}
                             </span>
                           ) : (
                             <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-slate-100 text-slate-600 border border-slate-200">
                               <span className="w-1.5 h-1.5 rounded-full bg-slate-400" />
-                              One-time
+                              {t.oneTime}
                             </span>
                           )}
                         </td>
@@ -710,20 +717,20 @@ export default function GiftCardsClient({ cards, onAddCard }: { cards: CardWithB
                               onClick={() => setModal({ type: 'transaction', card, txType: 'SPEND' })}
                               className="h-8 px-2.5 text-xs font-medium rounded-lg border border-rose-200 text-rose-600 hover:bg-rose-50 transition-colors"
                             >
-                              Spend
+                              {t.spend}
                             </button>
                             {card.isReloadable && (
                               <button
                                 onClick={() => setModal({ type: 'transaction', card, txType: 'RECHARGE' })}
                                 className="h-8 px-2.5 text-xs font-medium rounded-lg border border-emerald-200 text-emerald-600 hover:bg-emerald-50 transition-colors"
                               >
-                                Recharge
+                                {t.recharge}
                               </button>
                             )}
                             <button
                               onClick={() => setModal({ type: 'delete', card })}
                               className="h-8 w-8 flex items-center justify-center rounded-lg text-slate-400 hover:text-rose-500 hover:bg-rose-50 transition-colors"
-                              title="Remove card"
+                              title={t.removeCard}
                             >
                               <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                                 <path strokeLinecap="round" strokeLinejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
@@ -762,9 +769,9 @@ export default function GiftCardsClient({ cards, onAddCard }: { cards: CardWithB
                           {formatCurrency(card.balance)}
                         </div>
                         {card.isReloadable ? (
-                          <span className="text-xs text-emerald-600">Reloadable</span>
+                          <span className="text-xs text-emerald-600">{t.reloadableLabel}</span>
                         ) : (
-                          <span className="text-xs text-slate-400">One-time</span>
+                          <span className="text-xs text-slate-400">{t.oneTime}</span>
                         )}
                       </div>
                     </div>
@@ -773,14 +780,14 @@ export default function GiftCardsClient({ cards, onAddCard }: { cards: CardWithB
                         onClick={() => setModal({ type: 'transaction', card, txType: 'SPEND' })}
                         className="flex-1 min-h-[44px] text-sm font-medium rounded-xl border border-rose-200 text-rose-600 hover:bg-rose-50 transition-colors"
                       >
-                        Spend
+                        {t.spend}
                       </button>
                       {card.isReloadable && (
                         <button
                           onClick={() => setModal({ type: 'transaction', card, txType: 'RECHARGE' })}
                           className="flex-1 min-h-[44px] text-sm font-medium rounded-xl border border-emerald-200 text-emerald-600 hover:bg-emerald-50 transition-colors"
                         >
-                          Recharge
+                          {t.recharge}
                         </button>
                       )}
                       <button
