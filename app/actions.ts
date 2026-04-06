@@ -1,8 +1,24 @@
 'use server'
 
+import { auth } from '@clerk/nextjs/server'
 import { revalidatePath } from 'next/cache'
+import { redirect } from 'next/navigation'
 import { z } from 'zod'
 import prisma from '../lib/prisma'
+
+async function getAuthenticatedFamilyId(): Promise<string> {
+  const { userId } = await auth()
+  if (!userId) redirect('/sign-in')
+
+  const user = await prisma.user.findUnique({
+    where: { clerkId: userId },
+    select: { familyId: true },
+  })
+
+  if (!user?.familyId) redirect('/onboarding')
+
+  return user.familyId
+}
 
 const CreateCardSchema = z.object({
   name: z.string().min(1, 'Name is required'),
@@ -16,8 +32,7 @@ const CreateCardSchema = z.object({
 })
 
 export async function createCard(formData: FormData) {
-  const familyId = process.env.DEV_FAMILY_ID
-  if (!familyId) throw new Error('No family ID configured')
+  const familyId = await getAuthenticatedFamilyId()
 
   const rawBalance = parseFloat(formData.get('defaultBalance') as string)
   const raw = {
@@ -59,6 +74,8 @@ export async function createCard(formData: FormData) {
 }
 
 export async function deactivateCard(cardId: string) {
+  await getAuthenticatedFamilyId()
+
   await prisma.giftCard.update({
     where: { id: cardId },
     data: { isActive: false },
@@ -79,6 +96,8 @@ export async function createTransaction(input: {
   amount: number
   notes?: string
 }) {
+  await getAuthenticatedFamilyId()
+
   const data = CreateTransactionSchema.parse(input)
 
   await prisma.transaction.create({

@@ -1,6 +1,8 @@
 import React from "react";
 import type { Metadata } from "next";
 import "./globals.css";
+import { ClerkProvider } from "@clerk/nextjs";
+import Link from "next/link";
 import LanguageProvider from "../components/LanguageProvider";
 import LanguageToggle from "../components/LanguageToggle";
 
@@ -21,12 +23,13 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
+    <ClerkProvider>
     <html lang="en" dir="ltr">
       <head>
         <meta name="theme-color" content="#0f172a" />
         <link rel="apple-touch-icon" href="/icons/icon-192.png" />
       </head>
-      <body className="min-h-screen bg-slate-50 text-slate-900 antialiased">
+      <body className="min-h-screen bg-slate-50 text-slate-900 antialiased flex flex-col">
         <LanguageProvider>
           <header className="bg-white border-b border-slate-200 sticky top-0 z-10 shadow-sm">
             <div className="max-w-6xl mx-auto px-4 sm:px-6 py-3 flex items-center justify-between">
@@ -55,12 +58,18 @@ export default function RootLayout({
                   </span>
                 </div>
               </div>
-              <LanguageToggle />
+              <div className="flex items-center gap-2">
+                <Link href="/settings" className="min-h-[44px] flex items-center px-3 text-sm text-slate-500 hover:text-slate-900 transition-colors">
+                  Settings
+                </Link>
+                <LanguageToggle />
+              </div>
             </div>
           </header>
-          <main className="max-w-6xl mx-auto px-4 sm:px-6 py-6">{children}</main>
+          <main className="max-w-6xl w-full mx-auto px-4 sm:px-6 py-6 flex-1 flex flex-col">{children}</main>
         </LanguageProvider>
       </body>
     </html>
+    </ClerkProvider>
   );
 }
