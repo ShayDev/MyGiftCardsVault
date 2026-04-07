@@ -39,7 +39,7 @@ export default function OnboardingClient() {
             </svg>
           </div>
           <span className="font-bold text-slate-900">
-            {t.brandFirst}<span className="text-emerald-600">{t.brandSecond}</span>
+            GiftCards<span className="text-emerald-600">Vault</span>
           </span>
         </div>
 

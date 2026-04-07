@@ -12,7 +12,7 @@ type LanguageStore = {
 export const useLanguageStore = create<LanguageStore>()(
   persist(
     (set) => ({
-      locale: 'en',
+      locale: 'he',
       setLocale: (locale) => set({ locale }),
     }),
     { name: 'gcv-language' }
