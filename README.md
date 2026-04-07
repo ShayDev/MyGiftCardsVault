@@ -83,10 +83,27 @@ This ledger approach ensures a full audit trail and eliminates balance drift.
 
 ## Scripts
 
-| Command | Description |
-|---|---|
-| `npm run dev` | Start development server |
-| `npm run build` | Build for production |
-| `npm run start` | Start production server |
+| Command                   | Description              |
+| ------------------------- | ------------------------ |
+| `npm run dev`             | Start development server |
+| `npm run build`           | Build for production     |
+| `npm run start`           | Start production server  |
 | `npm run prisma:generate` | Regenerate Prisma client |
-| `npm run seed` | Seed the database |
+| `npm run seed`            | Seed the database        |
+
+## Supporting Systems Links
+
+- **CODE REPO**
+- https://github.com/ShayDev/MyGiftCardsVault
+
+- **DB**
+  https://console.neon.tech/app/projects/solitary-boat-71971957
+
+- **AUTH**
+- https://dashboard.clerk.com/apps
+
+- **HOST**
+- https://vercel.com/shaydev-9479s-projects/my_gift_cards_vault
+
+- **APP**
+- https://mygiftcardsvault.vercel.app/
