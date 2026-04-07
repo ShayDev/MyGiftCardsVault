@@ -10,6 +10,10 @@ export const metadata: Metadata = {
   title: "MyGiftCardsVault",
   description: "Family gift card management",
   manifest: "/manifest.json",
+  icons: {
+    icon: "/favicon.svg",
+    apple: "/icons/icon-192.png",
+  },
   appleWebApp: {
     capable: true,
     statusBarStyle: "black-translucent",
