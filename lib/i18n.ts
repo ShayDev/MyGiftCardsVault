@@ -79,6 +79,16 @@ const translations = {
     hide: 'Hide',
     notesLabel: 'Notes',
     failedToCreateCard: 'Failed to create card',
+    // Settings
+    copy: 'Copy',
+    copied: 'Copied!',
+    settingsTitle: 'Settings',
+    settingsFamily: 'Your Family',
+    settingsFamilyName: 'Family name',
+    settingsInviteCode: 'Invite code',
+    settingsInviteHint: 'Share your family name + code with family members so they can join.',
+    settingsAccount: 'Account',
+    settingsLink: 'Settings',
     // Onboarding
     onboardingWelcome: 'Welcome!',
     onboardingSubtitle: 'Set up your family vault to get started.',
@@ -177,6 +187,16 @@ const translations = {
     hide: 'הסתר',
     notesLabel: 'הערות',
     failedToCreateCard: 'יצירת הכרטיס נכשלה',
+    // Settings
+    copy: 'העתק',
+    copied: '!הועתק',
+    settingsTitle: 'הגדרות',
+    settingsFamily: 'המשפחה שלך',
+    settingsFamilyName: 'שם משפחה',
+    settingsInviteCode: 'קוד הזמנה',
+    settingsInviteHint: 'שתף את שם המשפחה והקוד עם בני המשפחה כדי שיוכלו להצטרף.',
+    settingsAccount: 'חשבון',
+    settingsLink: 'הגדרות',
     // Onboarding
     onboardingWelcome: '!ברוכים הבאים',
     onboardingSubtitle: 'הגדר את כספת המשפחה שלך כדי להתחיל.',

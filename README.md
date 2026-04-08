@@ -104,6 +104,7 @@ This ledger approach ensures a full audit trail and eliminates balance drift.
 
 - **HOST**
 - https://vercel.com/shaydev-9479s-projects/my_gift_cards_vault
+- vercel --prod
 
 - **APP**
 - https://mygiftcardsvault.vercel.app/

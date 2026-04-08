@@ -2,9 +2,9 @@ import React from "react";
 import type { Metadata } from "next";
 import "./globals.css";
 import { ClerkProvider } from "@clerk/nextjs";
-import Link from "next/link";
 import LanguageProvider from "../components/LanguageProvider";
 import LanguageToggle from "../components/LanguageToggle";
+import HeaderNav from "../components/HeaderNav";
 
 export const metadata: Metadata = {
   title: "MyGiftCardsVault",
@@ -63,9 +63,7 @@ export default function RootLayout({
                 </div>
               </div>
               <div className="flex items-center gap-2">
-                <Link href="/settings" className="min-h-[44px] flex items-center px-3 text-sm text-slate-500 hover:text-slate-900 transition-colors">
-                  Settings
-                </Link>
+                <HeaderNav />
                 <LanguageToggle />
               </div>
             </div>
