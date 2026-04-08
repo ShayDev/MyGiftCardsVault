@@ -1,7 +1,7 @@
 'use client'
 
 import React, { useState, useTransition } from 'react'
-import { createCard, deactivateCard, createTransaction } from '../app/actions'
+import { createCard, deactivateCard, createTransaction, getCardTransactions, type TransactionItem } from '../app/actions'
 import { useLanguageStore } from '../hooks/useLanguageStore'
 import { getT } from '../lib/i18n'
 
@@ -233,6 +233,11 @@ function CardDetailModal({
 }) {
   const t = getT(useLanguageStore((s) => s.locale))
   const [showFull, setShowFull] = useState(false)
+  const [transactions, setTransactions] = useState<TransactionItem[] | null>(null)
+
+  React.useEffect(() => {
+    getCardTransactions(card.id).then(setTransactions)
+  }, [card.id])
 
   const maskedFull = card.fullNumber
     ? card.fullNumber.replace(/.(?=.{4})/g, '•')
@@ -318,6 +323,40 @@ function CardDetailModal({
             <p className="text-sm text-slate-700">{card.notes}</p>
           </div>
         )}
+
+        {/* Transactions */}
+        <div className="border border-slate-100 rounded-xl overflow-hidden">
+          <p className="text-xs font-semibold text-slate-500 uppercase tracking-wide px-3 py-2 bg-slate-50 border-b border-slate-100">
+            {t.transactionHistory}
+          </p>
+          {transactions === null ? (
+            <div className="px-3 py-4 text-center text-sm text-slate-400">…</div>
+          ) : transactions.length === 0 ? (
+            <div className="px-3 py-4 text-center text-sm text-slate-400">{t.noTransactions}</div>
+          ) : (
+            <ul className="divide-y divide-slate-100 max-h-48 overflow-y-auto">
+              {transactions.map((tx) => (
+                <li key={tx.id} className="flex items-center justify-between px-3 py-2.5">
+                  <div className="flex items-center gap-2">
+                    <span className={`w-2 h-2 rounded-full flex-shrink-0 ${tx.type === 'RECHARGE' ? 'bg-emerald-500' : 'bg-rose-400'}`} />
+                    <div>
+                      <p className="text-xs font-medium text-slate-700">
+                        {tx.type === 'RECHARGE' ? t.txTypeRecharge : t.txTypeSpend}
+                      </p>
+                      {tx.notes && <p className="text-xs text-slate-400">{tx.notes}</p>}
+                    </div>
+                  </div>
+                  <div className="text-right flex-shrink-0">
+                    <p className={`font-mono text-sm font-semibold ${tx.type === 'RECHARGE' ? 'text-emerald-600' : 'text-rose-500'}`}>
+                      {tx.type === 'RECHARGE' ? '+' : '-'}{formatCurrency(tx.amount, t.currencyLocale, t.currencyCode)}
+                    </p>
+                    <p className="text-xs text-slate-400">{formatDate(tx.createdAt)}</p>
+                  </div>
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
 
         {/* Actions */}
         <div className="flex gap-2 pt-1">

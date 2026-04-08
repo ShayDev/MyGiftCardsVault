@@ -111,3 +111,28 @@ export async function createTransaction(input: {
 
   revalidatePath('/cards')
 }
+
+export type TransactionItem = {
+  id: string
+  type: 'SPEND' | 'RECHARGE'
+  amount: number
+  notes: string | null
+  createdAt: string
+}
+
+export async function getCardTransactions(cardId: string): Promise<TransactionItem[]> {
+  await getAuthenticatedFamilyId()
+
+  const transactions = await prisma.transaction.findMany({
+    where: { giftCardId: cardId },
+    orderBy: { createdAt: 'desc' },
+  })
+
+  return transactions.map((tx: { id: string; type: 'SPEND' | 'RECHARGE'; amount: { toString(): string }; notes: string | null; createdAt: Date }) => ({
+    id: tx.id,
+    type: tx.type,
+    amount: parseFloat(tx.amount.toString()),
+    notes: tx.notes,
+    createdAt: tx.createdAt.toISOString(),
+  }))
+}

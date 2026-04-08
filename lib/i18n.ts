@@ -79,6 +79,11 @@ const translations = {
     hide: 'Hide',
     notesLabel: 'Notes',
     failedToCreateCard: 'Failed to create card',
+    // Transactions
+    transactionHistory: 'Transaction History',
+    noTransactions: 'No transactions yet',
+    txTypeSpend: 'Spend',
+    txTypeRecharge: 'Recharge',
     // Currency
     currencySymbol: '$',
     currencyCode: 'USD',
@@ -192,6 +197,11 @@ const translations = {
     hide: 'הסתר',
     notesLabel: 'הערות',
     failedToCreateCard: 'יצירת הכרטיס נכשלה',
+    // Transactions
+    transactionHistory: 'היסטוריית עסקאות',
+    noTransactions: 'אין עסקאות עדיין',
+    txTypeSpend: 'הוצאה',
+    txTypeRecharge: 'טעינה',
     // Currency
     currencySymbol: '₪',
     currencyCode: 'ILS',

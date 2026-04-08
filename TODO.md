@@ -16,6 +16,17 @@ Encrypt `fullNumber` before storing in the DB and decrypt on read, so raw card n
 
 ---
 
+### CVV Support
+Add an optional CVV field to gift cards for cards that require it at checkout.
+
+**What's needed:**
+- Add `cvv String?` column to `GiftCard` in Prisma schema + migration
+- Add CVV input to the Add Card form (optional, masked)
+- Show CVV in Card Detail modal with reveal/hide toggle (same pattern as `fullNumber`)
+- Consider encrypting CVV at rest alongside `fullNumber` (see Encrypt Card Numbers task)
+
+---
+
 ### Multi-Family Support (Option A)
 Allow a single user to belong to multiple families and switch between them in the app.
 
