@@ -1,5 +1,6 @@
 'use client'
 
+import Link from 'next/link'
 import { useLanguageStore } from '../../hooks/useLanguageStore'
 import { getT, localeDir } from '../../lib/i18n'
 import { UserButton } from '@clerk/nextjs'
@@ -19,6 +20,11 @@ export default function SettingsClient({ familyName, inviteCode, userName, email
 
   return (
     <div className="max-w-md mx-auto py-8 px-4" dir={dir}>
+      <div className="mb-4">
+        <Link href="/cards" className="text-sm text-slate-400 hover:text-slate-600 transition-colors">
+          {t.back}
+        </Link>
+      </div>
       <h1 className="text-xl font-bold text-slate-900 mb-6">{t.settingsTitle}</h1>
 
       <div className="bg-white rounded-2xl border border-slate-200 p-5 mb-4">

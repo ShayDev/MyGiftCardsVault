@@ -42,10 +42,10 @@ function providerColor(provider: string): string {
   return palette[provider.charCodeAt(0) % palette.length]
 }
 
-function formatCurrency(amount: number): string {
-  return new Intl.NumberFormat('en-US', {
+function formatCurrency(amount: number, currencyLocale: string, currencyCode: string): string {
+  return new Intl.NumberFormat(currencyLocale, {
     style: 'currency',
-    currency: 'USD',
+    currency: currencyCode,
     minimumFractionDigits: 2,
   }).format(amount)
 }
@@ -160,7 +160,7 @@ function AddCardModal({ onClose }: { onClose: () => void }) {
         </Field>
         <Field label={t.defaultBalance}>
           <div className="relative">
-            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 font-medium text-sm">$</span>
+            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 font-medium text-sm">{t.currencySymbol}</span>
             <input
               name="defaultBalance"
               type="number"
@@ -253,7 +253,7 @@ function CardDetailModal({
           <div className="text-right flex-shrink-0">
             <p className="text-xs text-slate-400">{t.colBalance}</p>
             <p className={`font-mono font-bold text-base ${card.balance > 0 ? 'text-emerald-600' : 'text-rose-500'}`}>
-              {formatCurrency(card.balance)}
+              {formatCurrency(card.balance, t.currencyLocale, t.currencyCode)}
             </p>
           </div>
         </div>
@@ -321,12 +321,6 @@ function CardDetailModal({
 
         {/* Actions */}
         <div className="flex gap-2 pt-1">
-          <button
-            onClick={() => { onClose(); onSpend() }}
-            className="flex-1 min-h-[44px] text-sm font-medium rounded-xl border border-rose-200 text-rose-600 hover:bg-rose-50 transition-colors"
-          >
-            {t.spend}
-          </button>
           {card.isReloadable && (
             <button
               onClick={() => { onClose(); onRecharge() }}
@@ -335,6 +329,13 @@ function CardDetailModal({
               {t.recharge}
             </button>
           )}
+          <button
+            onClick={() => { onClose(); onSpend() }}
+            disabled={card.balance <= 0}
+            className="flex-1 min-h-[44px] text-sm font-medium rounded-xl border border-rose-200 text-rose-600 hover:bg-rose-50 transition-colors disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-transparent"
+          >
+            {t.spend}
+          </button>
           <button
             onClick={() => { onClose(); onDelete() }}
             className="min-h-[44px] w-11 flex items-center justify-center rounded-xl border border-slate-200 text-slate-400 hover:text-rose-500 hover:border-rose-200 transition-colors"
@@ -407,7 +408,7 @@ function TransactionModal({
         <div className="text-right">
           <p className="text-xs text-slate-400">{t.colBalance}</p>
           <p className={`font-mono font-semibold text-sm ${currentBalance > 0 ? 'text-emerald-600' : 'text-rose-500'}`}>
-            {formatCurrency(currentBalance)}
+            {formatCurrency(currentBalance, t.currencyLocale, t.currencyCode)}
           </p>
         </div>
       </div>
@@ -415,10 +416,11 @@ function TransactionModal({
       <form onSubmit={handleSubmit} className="space-y-4">
         <Field label={t.amount}>
           <div className="relative">
-            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 font-medium text-sm">$</span>
+            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 font-medium text-sm">{t.currencySymbol}</span>
             <input
               type="number"
               min="0.01"
+              max={isSpend ? currentBalance : undefined}
               step="0.01"
               value={amount}
               onChange={(e) => setAmount(e.target.value)}
@@ -432,7 +434,7 @@ function TransactionModal({
         {amount && amountNum > 0 && (
           <div className={`flex items-center justify-between text-sm px-3 py-2 rounded-xl ${projected >= 0 ? 'bg-emerald-50 text-emerald-700' : 'bg-rose-50 text-rose-600'}`}>
             <span>{t.newBalance}</span>
-            <span className="font-mono font-semibold">{formatCurrency(projected)}</span>
+            <span className="font-mono font-semibold">{formatCurrency(projected, t.currencyLocale, t.currencyCode)}</span>
           </div>
         )}
 
@@ -576,7 +578,7 @@ export default function GiftCardsClient({ cards }: { cards: CardWithBalance[] })
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
           <StatCard
             label={t.totalBalance}
-            value={formatCurrency(totalBalance)}
+            value={formatCurrency(totalBalance, t.currencyLocale, t.currencyCode)}
             valueClass="text-emerald-600"
             iconClass="bg-emerald-50 text-emerald-600"
             icon={
@@ -705,20 +707,14 @@ export default function GiftCardsClient({ cards }: { cards: CardWithBalance[] })
                         </td>
                         <td className="px-4 py-3.5 text-right">
                           <span className={`font-mono font-semibold text-sm ${card.balance > 0 ? 'text-emerald-600' : 'text-rose-500'}`}>
-                            {formatCurrency(card.balance)}
+                            {formatCurrency(card.balance, t.currencyLocale, t.currencyCode)}
                           </span>
                         </td>
                         <td className="px-4 py-3.5 text-slate-400 text-xs whitespace-nowrap">
                           {formatDate(card.createdAt)}
                         </td>
                         <td className="px-5 py-3.5">
-                          <div className="flex items-center justify-end gap-1.5 opacity-0 group-hover:opacity-100 transition-opacity">
-                            <button
-                              onClick={() => setModal({ type: 'transaction', card, txType: 'SPEND' })}
-                              className="h-8 px-2.5 text-xs font-medium rounded-lg border border-rose-200 text-rose-600 hover:bg-rose-50 transition-colors"
-                            >
-                              {t.spend}
-                            </button>
+                          <div className="flex items-center justify-end gap-1.5">
                             {card.isReloadable && (
                               <button
                                 onClick={() => setModal({ type: 'transaction', card, txType: 'RECHARGE' })}
@@ -727,6 +723,13 @@ export default function GiftCardsClient({ cards }: { cards: CardWithBalance[] })
                                 {t.recharge}
                               </button>
                             )}
+                            <button
+                              onClick={() => setModal({ type: 'transaction', card, txType: 'SPEND' })}
+                              disabled={card.balance <= 0}
+                              className="h-8 px-2.5 text-xs font-medium rounded-lg border border-rose-200 text-rose-600 hover:bg-rose-50 transition-colors disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-transparent"
+                            >
+                              {t.spend}
+                            </button>
                             <button
                               onClick={() => setModal({ type: 'delete', card })}
                               className="h-8 w-8 flex items-center justify-center rounded-lg text-slate-400 hover:text-rose-500 hover:bg-rose-50 transition-colors"
@@ -766,7 +769,7 @@ export default function GiftCardsClient({ cards }: { cards: CardWithBalance[] })
                       </button>
                       <div className="text-right flex-shrink-0">
                         <div className={`font-mono font-bold text-base ${card.balance > 0 ? 'text-emerald-600' : 'text-rose-500'}`}>
-                          {formatCurrency(card.balance)}
+                          {formatCurrency(card.balance, t.currencyLocale, t.currencyCode)}
                         </div>
                         {card.isReloadable ? (
                           <span className="text-xs text-emerald-600">{t.reloadableLabel}</span>
@@ -776,12 +779,6 @@ export default function GiftCardsClient({ cards }: { cards: CardWithBalance[] })
                       </div>
                     </div>
                     <div className="flex gap-2">
-                      <button
-                        onClick={() => setModal({ type: 'transaction', card, txType: 'SPEND' })}
-                        className="flex-1 min-h-[44px] text-sm font-medium rounded-xl border border-rose-200 text-rose-600 hover:bg-rose-50 transition-colors"
-                      >
-                        {t.spend}
-                      </button>
                       {card.isReloadable && (
                         <button
                           onClick={() => setModal({ type: 'transaction', card, txType: 'RECHARGE' })}
@@ -790,6 +787,13 @@ export default function GiftCardsClient({ cards }: { cards: CardWithBalance[] })
                           {t.recharge}
                         </button>
                       )}
+                      <button
+                        onClick={() => setModal({ type: 'transaction', card, txType: 'SPEND' })}
+                        disabled={card.balance <= 0}
+                        className="flex-1 min-h-[44px] text-sm font-medium rounded-xl border border-rose-200 text-rose-600 hover:bg-rose-50 transition-colors disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-transparent"
+                      >
+                        {t.spend}
+                      </button>
                       <button
                         onClick={() => setModal({ type: 'delete', card })}
                         className="min-h-[44px] w-11 flex items-center justify-center rounded-xl border border-slate-200 text-slate-400 hover:text-rose-500 hover:border-rose-200 transition-colors"

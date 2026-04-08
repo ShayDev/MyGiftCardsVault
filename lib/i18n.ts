@@ -79,7 +79,12 @@ const translations = {
     hide: 'Hide',
     notesLabel: 'Notes',
     failedToCreateCard: 'Failed to create card',
+    // Currency
+    currencySymbol: '$',
+    currencyCode: 'USD',
+    currencyLocale: 'en-US',
     // Settings
+    back: '← Back',
     copy: 'Copy',
     copied: 'Copied!',
     settingsTitle: 'Settings',
@@ -187,7 +192,12 @@ const translations = {
     hide: 'הסתר',
     notesLabel: 'הערות',
     failedToCreateCard: 'יצירת הכרטיס נכשלה',
+    // Currency
+    currencySymbol: '₪',
+    currencyCode: 'ILS',
+    currencyLocale: 'he-IL',
     // Settings
+    back: 'חזור ←',
     copy: 'העתק',
     copied: '!הועתק',
     settingsTitle: 'הגדרות',
