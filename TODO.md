@@ -16,6 +16,19 @@ Encrypt `fullNumber` before storing in the DB and decrypt on read, so raw card n
 
 ---
 
+### Per-Card Currency Support
+Allow each gift card to have its own currency (e.g. USD, ILS, EUR) instead of using the app-wide locale currency.
+
+**What's needed:**
+- Add `currency String` column to `GiftCard` schema + migration (no DB default — resolved at create time)
+- Default currency derived from active locale at card creation time (`he` → ILS, `en` → USD)
+- Add currency selector to the Add Card form (pre-filled with locale default, overridable)
+- Pass `currency` field through `CardWithBalance` type
+- Use card's own currency in `formatCurrency()` calls for balance display and transactions
+- Display currency code alongside balance in card list and detail modal
+
+---
+
 ### CVV Support
 Add an optional CVV field to gift cards for cards that require it at checkout.
 
