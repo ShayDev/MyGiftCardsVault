@@ -11,7 +11,7 @@ const translations = {
     // Stats
     totalBalance: 'Total Balance',
     totalCards: 'Total Cards',
-    reloadable: 'Reloadable',
+    reloadable: 'Rechargeable',
     emptyCards: 'Empty Cards',
     // Table headers
     allCards: 'All Cards',
@@ -23,7 +23,7 @@ const translations = {
     colAdded: 'Added',
     colActions: 'Actions',
     // Card types
-    reloadableLabel: 'Reloadable',
+    reloadableLabel: 'Rechargeable',
     oneTime: 'One-time',
     // Buttons
     addCard: 'Add Card',

@@ -103,7 +103,7 @@ const inputClass =
 function AddCardModal({ onClose }: { onClose: () => void }) {
   const t = getT(useLanguageStore((s) => s.locale))
   const [isPending, startTransition] = useTransition()
-  const [isReloadable, setIsReloadable] = useState(true)
+  const [isReloadable, setIsReloadable] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
   function handleSubmit(e: React.SyntheticEvent<HTMLFormElement>) {
