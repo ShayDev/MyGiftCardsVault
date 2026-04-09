@@ -11,6 +11,7 @@ export type CardWithBalance = {
   provider: string
   last4?: string | null
   fullNumber?: string
+  cvv?: string
   expiresAt?: string
   notes?: string
   isReloadable: boolean
@@ -149,6 +150,16 @@ function AddCardModal({ onClose }: { onClose: () => void }) {
             className={`${inputClass} font-mono`}
           />
         </Field>
+        <Field label={t.cvvOptional}>
+          <input
+            name="cvv"
+            type="password"
+            maxLength={4}
+            pattern="[0-9]{3,4}"
+            placeholder={t.cvvPlaceholder}
+            className={`${inputClass} font-mono`}
+          />
+        </Field>
         <Field label={t.expirationOptional}>
           <input
             name="expiresAt"
@@ -233,6 +244,7 @@ function CardDetailModal({
 }) {
   const t = getT(useLanguageStore((s) => s.locale))
   const [showFull, setShowFull] = useState(false)
+  const [showCvv, setShowCvv] = useState(false)
   const [transactions, setTransactions] = useState<TransactionItem[] | null>(null)
 
   React.useEffect(() => {
@@ -312,6 +324,25 @@ function CardDetailModal({
             </div>
             <p className="font-mono text-slate-700 text-sm tracking-wider break-all">
               {showFull ? card.fullNumber : maskedFull}
+            </p>
+          </div>
+        )}
+
+        {/* CVV */}
+        {card.cvv && (
+          <div className="p-3 rounded-xl border border-slate-100 bg-white">
+            <div className="flex items-center justify-between mb-1">
+              <p className="text-xs text-slate-400">{t.cvvLabel}</p>
+              <button
+                type="button"
+                onClick={() => setShowCvv(!showCvv)}
+                className="text-xs text-emerald-600 hover:text-emerald-700 font-medium"
+              >
+                {showCvv ? t.hide : t.reveal}
+              </button>
+            </div>
+            <p className="font-mono text-slate-700 text-sm tracking-wider">
+              {showCvv ? card.cvv : '•••'}
             </p>
           </div>
         )}

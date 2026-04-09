@@ -1,0 +1,2 @@
+-- AlterTable
+ALTER TABLE "GiftCard" ADD COLUMN IF NOT EXISTS "cvv" TEXT;
