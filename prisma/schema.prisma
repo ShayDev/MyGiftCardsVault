@@ -40,6 +40,7 @@ model GiftCard {
   provider     String
   last4        String        // last 4 digits, required for display
   fullNumber   String?       // full card number, optional
+  cvv          String?       // CVV/CVC, optional
   expiresAt    String?       // expiration as MMYY, e.g. "1228"
   notes        String?       // card notes, optional
   isReloadable Boolean       @default(true)
