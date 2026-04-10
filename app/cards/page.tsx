@@ -26,11 +26,13 @@ export default async function Page() {
 
   const payload: CardWithBalance[] = cards.map((c) => ({
     id: c.id,
+    seq: c.seq,
     name: c.name,
     provider: c.provider,
     last4: c.last4,
     fullNumber: c.fullNumber ?? undefined,
     cvv: c.cvv ?? undefined,
+    link: c.link ?? undefined,
     expiresAt: c.expiresAt ?? undefined,
     notes: c.notes ?? undefined,
     isReloadable: c.isReloadable,

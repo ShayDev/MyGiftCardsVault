@@ -6,7 +6,7 @@ import { redirect } from 'next/navigation'
 import { z } from 'zod'
 import prisma from '../lib/prisma'
 
-async function getAuthenticatedFamilyId(): Promise<string> {
+async function getAuthenticatedFamilyId(): Promise<{ familyId: string; userId: string }> {
   const { userId } = await auth()
   if (!userId) redirect('/sign-in')
 
@@ -17,7 +17,7 @@ async function getAuthenticatedFamilyId(): Promise<string> {
 
   if (!user?.familyId) redirect('/onboarding')
 
-  return user.familyId
+  return { familyId: user.familyId, userId }
 }
 
 const CreateCardSchema = z.object({
@@ -26,6 +26,7 @@ const CreateCardSchema = z.object({
   last4: z.string().regex(/^\d{4}$/, 'Must be exactly 4 digits'),
   fullNumber: z.string().min(1).optional(),
   cvv: z.string().regex(/^\d{3,4}$/, 'Must be 3 or 4 digits').optional(),
+  link: z.string().url('Must be a valid URL').optional(),
   expiresAt: z.string().regex(/^(0[1-9]|1[0-2])\d{2}$/, 'Must be MMYY format').optional(),
   defaultBalance: z.number().positive('Default balance must be positive'),
   notes: z.string().optional(),
@@ -33,7 +34,7 @@ const CreateCardSchema = z.object({
 })
 
 export async function createCard(formData: FormData) {
-  const familyId = await getAuthenticatedFamilyId()
+  const { familyId, userId } = await getAuthenticatedFamilyId()
 
   const rawBalance = parseFloat(formData.get('defaultBalance') as string)
   const raw = {
@@ -42,6 +43,7 @@ export async function createCard(formData: FormData) {
     last4: formData.get('last4') as string,
     fullNumber: (formData.get('fullNumber') as string) || undefined,
     cvv: (formData.get('cvv') as string) || undefined,
+    link: (formData.get('link') as string) || undefined,
     expiresAt: (formData.get('expiresAt') as string) || undefined,
     defaultBalance: isNaN(rawBalance) ? 0 : rawBalance,
     notes: (formData.get('notes') as string) || undefined,
@@ -58,9 +60,11 @@ export async function createCard(formData: FormData) {
       last4: data.last4,
       fullNumber: data.fullNumber ?? null,
       cvv: data.cvv ?? null,
+      link: data.link ?? null,
       expiresAt: data.expiresAt ?? null,
       notes: data.notes ?? null,
       isReloadable: data.isReloadable,
+      createdBy: userId,
     },
   })
 
@@ -70,6 +74,7 @@ export async function createCard(formData: FormData) {
       type: 'RECHARGE',
       amount: data.defaultBalance,
       notes: 'Initial balance',
+      createdBy: userId,
     },
   })
 
@@ -99,7 +104,7 @@ export async function createTransaction(input: {
   amount: number
   notes?: string
 }) {
-  await getAuthenticatedFamilyId()
+  const { userId } = await getAuthenticatedFamilyId()
 
   const data = CreateTransactionSchema.parse(input)
 
@@ -109,6 +114,7 @@ export async function createTransaction(input: {
       type: data.type,
       amount: data.amount,
       notes: data.notes ?? null,
+      createdBy: userId,
     },
   })
 
