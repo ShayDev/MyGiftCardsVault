@@ -276,6 +276,7 @@ function CardDetailModal({
           <div className="flex-1 min-w-0">
             <p className="font-semibold text-slate-800 truncate">{card.name}</p>
             <p className="text-xs text-slate-400">#{card.seq} · {card.provider}</p>
+
           </div>
           <div className="text-right flex-shrink-0">
             <p className="text-xs text-slate-400">{t.colBalance}</p>
@@ -761,6 +762,7 @@ export default function GiftCardsClient({ cards }: { cards: CardWithBalance[] })
                 <table className="w-full text-sm">
                   <thead>
                     <tr className="border-b border-slate-100 bg-slate-50/60">
+                      <th className="px-3 py-3 w-10"></th>
                       <th className="text-start font-medium text-slate-500 px-5 py-3 w-[28%]">{t.colCard}</th>
                       <th className="text-start font-medium text-slate-500 px-4 py-3">{t.colProvider}</th>
                       <th className="text-start font-medium text-slate-500 px-4 py-3">{t.colCardNumber}</th>
@@ -773,6 +775,7 @@ export default function GiftCardsClient({ cards }: { cards: CardWithBalance[] })
                   <tbody className="divide-y divide-slate-100">
                     {cards.map((card) => (
                       <tr key={card.id} className="hover:bg-slate-50/70 transition-colors group">
+                        <td className="px-3 py-3.5 text-xs font-mono text-slate-400 text-right">#{card.seq}</td>
                         <td className="px-5 py-3.5">
                           <button
                             onClick={() => setModal({ type: 'detail', card })}
@@ -781,10 +784,7 @@ export default function GiftCardsClient({ cards }: { cards: CardWithBalance[] })
                             <div className={`w-9 h-9 rounded-lg flex items-center justify-center text-sm font-bold flex-shrink-0 ${providerColor(card.provider)}`}>
                               {card.provider.slice(0, 2).toUpperCase()}
                             </div>
-                            <div>
-                              <span className="font-medium text-slate-800 truncate underline-offset-2 hover:underline">{card.name}</span>
-                              <span className="block text-xs text-slate-400">#{card.seq}</span>
-                            </div>
+                            <span className="font-medium text-slate-800 truncate underline-offset-2 hover:underline">{card.name}</span>
                           </button>
                         </td>
                         <td className="px-4 py-3.5 text-slate-600">{card.provider}</td>
@@ -860,9 +860,12 @@ export default function GiftCardsClient({ cards }: { cards: CardWithBalance[] })
                         onClick={() => setModal({ type: 'detail', card })}
                         className="flex-1 min-w-0 text-left"
                       >
-                        <div className="font-medium text-slate-800 truncate">{card.name}</div>
+                        <div className="flex items-center gap-1.5">
+                          <span className="text-xs font-mono text-slate-400">#{card.seq}</span>
+                          <span className="font-medium text-slate-800 truncate">{card.name}</span>
+                        </div>
                         <div className="text-xs text-slate-400">
-                          #{card.seq} · {card.provider}
+                          {card.provider}
                           {card.last4 && (
                             <span className="font-mono ml-1.5 tracking-widest">•••• {card.last4}</span>
                           )}
