@@ -83,6 +83,7 @@ A separate tab for percentage-off and promo discount codes (e.g. "20% off next o
 **What's needed:**
 - ⬜ Decide on coupon fields: code, discount type (% or fixed), value, provider, expiry, notes
 - ⬜ Add `Coupon` model to Prisma schema + migration
+- ⬜ Include `seq`, `createdBy`, `usedBy`, `usedAt` fields — same pattern as Voucher
 - ⬜ Build Coupons tab alongside Gift Cards and Vouchers tabs
 
 ---

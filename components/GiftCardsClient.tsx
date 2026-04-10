@@ -7,11 +7,13 @@ import { getT } from '../lib/i18n'
 
 export type CardWithBalance = {
   id: string
+  seq: number
   name: string
   provider: string
   last4?: string | null
   fullNumber?: string
   cvv?: string
+  link?: string
   expiresAt?: string
   notes?: string
   isReloadable: boolean
@@ -160,6 +162,14 @@ function AddCardModal({ onClose }: { onClose: () => void }) {
             className={`${inputClass} font-mono`}
           />
         </Field>
+        <Field label={t.cardLink}>
+          <input
+            name="link"
+            type="url"
+            placeholder="https://"
+            className={inputClass}
+          />
+        </Field>
         <Field label={t.expirationOptional}>
           <input
             name="expiresAt"
@@ -265,7 +275,7 @@ function CardDetailModal({
           </div>
           <div className="flex-1 min-w-0">
             <p className="font-semibold text-slate-800 truncate">{card.name}</p>
-            <p className="text-xs text-slate-400">{card.provider}</p>
+            <p className="text-xs text-slate-400">#{card.seq} · {card.provider}</p>
           </div>
           <div className="text-right flex-shrink-0">
             <p className="text-xs text-slate-400">{t.colBalance}</p>
@@ -344,6 +354,24 @@ function CardDetailModal({
             <p className="font-mono text-slate-700 text-sm tracking-wider">
               {showCvv ? card.cvv : '•••'}
             </p>
+          </div>
+        )}
+
+        {/* Link */}
+        {card.link && (
+          <div className="p-3 rounded-xl border border-slate-100 bg-white">
+            <p className="text-xs text-slate-400 mb-2">{t.cardLink}</p>
+            <a
+              href={card.link}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-1.5 h-9 px-3 rounded-xl bg-emerald-500 hover:bg-emerald-600 text-white text-sm font-medium transition-colors"
+            >
+              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+              </svg>
+              {t.openLink}
+            </a>
           </div>
         )}
 
@@ -753,7 +781,10 @@ export default function GiftCardsClient({ cards }: { cards: CardWithBalance[] })
                             <div className={`w-9 h-9 rounded-lg flex items-center justify-center text-sm font-bold flex-shrink-0 ${providerColor(card.provider)}`}>
                               {card.provider.slice(0, 2).toUpperCase()}
                             </div>
-                            <span className="font-medium text-slate-800 truncate underline-offset-2 hover:underline">{card.name}</span>
+                            <div>
+                              <span className="font-medium text-slate-800 truncate underline-offset-2 hover:underline">{card.name}</span>
+                              <span className="block text-xs text-slate-400">#{card.seq}</span>
+                            </div>
                           </button>
                         </td>
                         <td className="px-4 py-3.5 text-slate-600">{card.provider}</td>
@@ -831,7 +862,7 @@ export default function GiftCardsClient({ cards }: { cards: CardWithBalance[] })
                       >
                         <div className="font-medium text-slate-800 truncate">{card.name}</div>
                         <div className="text-xs text-slate-400">
-                          {card.provider}
+                          #{card.seq} · {card.provider}
                           {card.last4 && (
                             <span className="font-mono ml-1.5 tracking-widest">•••• {card.last4}</span>
                           )}

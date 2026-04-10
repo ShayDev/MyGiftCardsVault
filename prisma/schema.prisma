@@ -18,6 +18,7 @@ model FamilyGroup {
   inviteCode  String        @unique
   users       User[]
   giftCards   GiftCard[]
+  vouchers    Voucher[]
   createdAt   DateTime      @default(now())
 }
 
@@ -34,6 +35,7 @@ model User {
 
 model GiftCard {
   id           String        @id @default(uuid())
+  seq          Int           @default(autoincrement())
   familyId     String
   family       FamilyGroup   @relation(fields: [familyId], references: [id])
   name         String
@@ -41,12 +43,14 @@ model GiftCard {
   last4        String        // last 4 digits, required for display
   fullNumber   String?       // full card number, optional
   cvv          String?       // CVV/CVC, optional
+  link         String?       // one-time URL (dynamic code via link)
   expiresAt    String?       // expiration as MMYY, e.g. "1228"
   notes        String?       // card notes, optional
   isReloadable Boolean       @default(true)
   isActive     Boolean       @default(true)
   metadata     Json?
   transactions Transaction[]
+  createdBy    String?
   createdAt    DateTime      @default(now())
 }
 
@@ -58,5 +62,26 @@ model Transaction {
   // Positive decimal amount. Interpretation: RECHARGE adds, SPEND subtracts.
   amount     Decimal         @db.Decimal(65, 30)
   notes      String?
+  createdBy  String?
   createdAt  DateTime        @default(now())
+}
+
+model Voucher {
+  id          String      @id @default(uuid())
+  seq         Int         @default(autoincrement())
+  familyId    String
+  family      FamilyGroup @relation(fields: [familyId], references: [id])
+  name        String
+  provider    String
+  code        String?
+  link        String?
+  value       Decimal?    @db.Decimal(65, 30)
+  expiresAt   String?
+  notes       String?
+  isUsed      Boolean     @default(false)
+  usedAt      DateTime?
+  usedBy      String?
+  isActive    Boolean     @default(true)
+  createdBy   String?
+  createdAt   DateTime    @default(now())
 }
