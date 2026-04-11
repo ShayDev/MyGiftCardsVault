@@ -853,6 +853,7 @@ export default function GiftCardsClient({ cards }: { cards: CardWithBalance[] })
                 {cards.map((card) => (
                   <div key={card.id} className="px-4 py-4">
                     <div className="flex items-center gap-3 mb-3">
+                      <span className="text-xs font-mono text-slate-400 flex-shrink-0 w-7 text-right">#{card.seq}</span>
                       <div className={`w-10 h-10 rounded-xl flex items-center justify-center text-sm font-bold flex-shrink-0 ${providerColor(card.provider)}`}>
                         {card.provider.slice(0, 2).toUpperCase()}
                       </div>
@@ -860,10 +861,7 @@ export default function GiftCardsClient({ cards }: { cards: CardWithBalance[] })
                         onClick={() => setModal({ type: 'detail', card })}
                         className="flex-1 min-w-0 text-left"
                       >
-                        <div className="flex items-center gap-1.5">
-                          <span className="text-xs font-mono text-slate-400">#{card.seq}</span>
-                          <span className="font-medium text-slate-800 truncate">{card.name}</span>
-                        </div>
+                        <div className="font-medium text-slate-800 truncate">{card.name}</div>
                         <div className="text-xs text-slate-400">
                           {card.provider}
                           {card.last4 && (

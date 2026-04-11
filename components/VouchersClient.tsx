@@ -347,6 +347,7 @@ function VoucherRow({ voucher, onClick }: { voucher: VoucherItem; onClick: () =>
       onClick={onClick}
       className="w-full text-left bg-white rounded-2xl border border-slate-100 shadow-sm hover:shadow-md hover:border-slate-200 transition-all p-4 flex items-center gap-3"
     >
+      <span className="text-xs font-mono text-slate-400 flex-shrink-0 w-8 text-right">#{voucher.seq}</span>
       <div className="flex-shrink-0">
         <span className={`px-2.5 py-1 rounded-full text-xs font-semibold ${providerColor(voucher.provider)}`}>
           {voucher.provider}
@@ -354,7 +355,6 @@ function VoucherRow({ voucher, onClick }: { voucher: VoucherItem; onClick: () =>
       </div>
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-2">
-          <span className="text-xs text-slate-400 font-mono">#{voucher.seq}</span>
           <span className="text-sm font-medium text-slate-800 truncate">{voucher.name}</span>
         </div>
         <div className="flex items-center gap-2 mt-0.5">
