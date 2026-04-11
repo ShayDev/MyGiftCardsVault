@@ -41,10 +41,10 @@ function formatDate(iso: string): string {
 
 function Modal({ title, onClose, children }: { title: string; onClose: () => void; children: React.ReactNode }) {
   return (
-    <div id="modal-overlay" className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4">
+    <div className="modal-overlay fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4">
       <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={onClose} />
-      <div id="modal-panel" className="relative w-full sm:max-w-md bg-white rounded-t-3xl sm:rounded-2xl shadow-2xl overflow-hidden max-h-[90dvh] flex flex-col">
-        <div id="modal-header" className="flex items-center justify-between px-5 py-4 border-b border-slate-100 flex-shrink-0">
+      <div className="modal-panel relative w-full sm:max-w-md bg-white rounded-t-3xl sm:rounded-2xl shadow-2xl overflow-hidden max-h-[90dvh] flex flex-col">
+        <div className="modal-header flex items-center justify-between px-5 py-4 border-b border-slate-100 flex-shrink-0">
           <h2 className="font-semibold text-slate-800 text-base">{title}</h2>
           <button
             onClick={onClose}
@@ -392,9 +392,9 @@ export default function VouchersClient({ vouchers }: { vouchers: VoucherItem[] }
   const used = vouchers.filter((v) => v.isUsed)
 
   return (
-    <div id="vouchers-page" className="space-y-6">
+    <div className="vouchers-page space-y-6">
       {/* Page header */}
-      <div id="vouchers-page-header" className="flex items-center justify-between">
+      <div className="vouchers-page-header flex items-center justify-between">
         <h1 className="text-xl font-bold text-slate-800">{t.vouchersTab}</h1>
         <button
           type="button"
@@ -409,7 +409,7 @@ export default function VouchersClient({ vouchers }: { vouchers: VoucherItem[] }
       </div>
 
       {/* Active vouchers */}
-      <section id="vouchers-section-active">
+      <section className="vouchers-section-active">
         <h2 className="text-sm font-semibold text-slate-500 uppercase tracking-wide mb-3">{t.activeVouchers}</h2>
         {active.length === 0 ? (
           <div className="bg-white rounded-2xl border border-slate-100 shadow-sm p-8 text-center">
@@ -433,7 +433,7 @@ export default function VouchersClient({ vouchers }: { vouchers: VoucherItem[] }
       </section>
 
       {/* Used vouchers */}
-      <section id="vouchers-section-used">
+      <section className="vouchers-section-used">
         <h2 className="text-sm font-semibold text-slate-500 uppercase tracking-wide mb-3">{t.usedVouchers}</h2>
         {used.length === 0 ? (
           <div className="bg-white rounded-2xl border border-slate-100 shadow-sm p-6 text-center">

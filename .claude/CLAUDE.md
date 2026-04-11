@@ -54,7 +54,15 @@ myGiftCardsVault is a gift card management application.
 - **Validation:** Use **Zod** for all form schemas and API request validation.
 - **Composition:** Prefer composition patterns over deeply nested prop drilling.
 
-### 3. UI/UX Principles (Mobile-First)
+### 3. HTML Structure & Naming
+
+- **Descriptive class names:** Every meaningful layout element must have a descriptive class name as its **first** token in `className`, before Tailwind utilities. Use `id=` only for true single-instance anchors (e.g. skip-to-content links). Examples:
+  - `<main className="app-main max-w-6xl ...">`
+  - `<section className="vouchers-section-active">`
+  - `<div className="modal-panel relative w-full ...">`
+- **No bare `id=` for layout:** Use descriptive class names instead — they work with multiple instances, DevTools, and testing selectors without uniqueness constraints.
+
+### 4. UI/UX Principles (Mobile-First)
 
 - **Touch Targets:** Minimum interactive targets of 44x44px for one-handed mobile use.
 - **Typography:** Use `font-mono` for currency and card numbers to ensure perfect vertical alignment in lists.
