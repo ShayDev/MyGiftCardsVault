@@ -65,10 +65,10 @@ function formatDate(iso: string): string {
 
 function Modal({ title, onClose, children }: { title: string; onClose: () => void; children: React.ReactNode }) {
   return (
-    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4">
+    <div id="modal-overlay" className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4">
       <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={onClose} />
-      <div className="relative w-full sm:max-w-md bg-white rounded-t-3xl sm:rounded-2xl shadow-2xl overflow-hidden max-h-[90dvh] flex flex-col">
-        <div className="flex items-center justify-between px-5 py-4 border-b border-slate-100 flex-shrink-0">
+      <div id="modal-panel" className="relative w-full sm:max-w-md bg-white rounded-t-3xl sm:rounded-2xl shadow-2xl overflow-hidden max-h-[90dvh] flex flex-col">
+        <div id="modal-header" className="flex items-center justify-between px-5 py-4 border-b border-slate-100 flex-shrink-0">
           <h2 className="font-semibold text-slate-800 text-base">{title}</h2>
           <button
             onClick={onClose}
@@ -672,9 +672,9 @@ export default function GiftCardsClient({ cards }: { cards: CardWithBalance[] })
 
   return (
     <>
-      <div className="space-y-6">
+      <div id="cards-page" className="space-y-6">
         {/* Summary Stats */}
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+        <div id="cards-stats" className="grid grid-cols-2 sm:grid-cols-4 gap-3">
           <StatCard
             label={t.totalBalance}
             value={formatCurrency(totalBalance, t.currencyLocale, t.currencyCode)}
@@ -720,8 +720,8 @@ export default function GiftCardsClient({ cards }: { cards: CardWithBalance[] })
         </div>
 
         {/* Table */}
-        <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
-          <div className="px-5 py-4 border-b border-slate-100 flex items-center justify-between">
+        <div id="cards-table-container" className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+          <div id="cards-table-header" className="px-5 py-4 border-b border-slate-100 flex items-center justify-between">
             <h2 className="font-semibold text-slate-800 text-base">{t.allCards}</h2>
             <div className="flex items-center gap-2">
               <span className="text-xs text-slate-400 bg-slate-100 px-2 py-0.5 rounded-full">
@@ -758,7 +758,7 @@ export default function GiftCardsClient({ cards }: { cards: CardWithBalance[] })
           ) : (
             <>
               {/* Desktop Table */}
-              <div className="hidden sm:block overflow-x-auto">
+              <div id="cards-table-desktop" className="hidden sm:block overflow-x-auto">
                 <table className="w-full text-sm">
                   <thead>
                     <tr className="border-b border-slate-100 bg-slate-50/60">
@@ -849,7 +849,7 @@ export default function GiftCardsClient({ cards }: { cards: CardWithBalance[] })
               </div>
 
               {/* Mobile Cards */}
-              <div className="sm:hidden divide-y divide-slate-100">
+              <div id="cards-list-mobile" className="sm:hidden divide-y divide-slate-100">
                 {cards.map((card) => (
                   <div key={card.id} className="px-4 py-4">
                     <div className="flex items-center gap-3 mb-3">
