@@ -39,8 +39,8 @@ export default function BottomNav() {
   ]
 
   return (
-    <nav className="fixed bottom-0 left-0 right-0 z-40 bg-white border-t border-slate-200 safe-area-inset-bottom">
-      <div className="max-w-6xl mx-auto flex">
+    <nav className="bottom-nav fixed bottom-0 left-0 right-0 z-40 bg-white border-t border-slate-200 safe-area-inset-bottom">
+      <div className="bottom-nav-tabs max-w-6xl mx-auto flex">
         {tabs.map((tab) => (
           <Link
             key={tab.href}
