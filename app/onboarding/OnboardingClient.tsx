@@ -82,6 +82,11 @@ export default function OnboardingClient() {
                   type="text"
                   required
                   placeholder={t.onboardingFamilyNamePlaceholder}
+                  pattern="[A-Za-z0-9 '_-]+"
+                  onInput={(e) => {
+                    const el = e.currentTarget
+                    el.value = el.value.replace(/[^A-Za-z0-9 '_-]/g, '')
+                  }}
                   className="w-full border border-slate-200 rounded-xl px-3 py-2.5 text-sm uppercase placeholder:normal-case focus:outline-none focus:ring-2 focus:ring-emerald-500"
                 />
               </div>
@@ -112,6 +117,11 @@ export default function OnboardingClient() {
                   type="text"
                   required
                   placeholder={t.onboardingFamilyNamePlaceholder}
+                  pattern="[A-Za-z0-9 '_-]+"
+                  onInput={(e) => {
+                    const el = e.currentTarget
+                    el.value = el.value.replace(/[^A-Za-z0-9 '_-]/g, '')
+                  }}
                   className="w-full border border-slate-200 rounded-xl px-3 py-2.5 text-sm uppercase placeholder:normal-case focus:outline-none focus:ring-2 focus:ring-emerald-500"
                 />
                 <p className="text-xs text-slate-400 mt-1">{t.onboardingNameHint}</p>
