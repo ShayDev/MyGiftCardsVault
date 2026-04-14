@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { useLanguageStore } from '../../hooks/useLanguageStore'
 import { getT, localeDir } from '../../lib/i18n'
 import { createFamily, joinFamily } from './actions'
+import Spinner from '../../components/Spinner'
 
 type Mode = 'choose' | 'create' | 'join'
 
@@ -82,6 +83,11 @@ export default function OnboardingClient() {
                   type="text"
                   required
                   placeholder={t.onboardingFamilyNamePlaceholder}
+                  pattern="[A-Za-z0-9 '_-]+"
+                  onInput={(e) => {
+                    const el = e.currentTarget
+                    el.value = el.value.replace(/[^A-Za-z0-9 '_-]/g, '')
+                  }}
                   className="w-full border border-slate-200 rounded-xl px-3 py-2.5 text-sm uppercase placeholder:normal-case focus:outline-none focus:ring-2 focus:ring-emerald-500"
                 />
               </div>
@@ -91,7 +97,7 @@ export default function OnboardingClient() {
                 disabled={pending}
                 className="w-full min-h-[44px] bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50 text-white font-medium rounded-xl px-4 py-3 transition-colors"
               >
-                {pending ? t.onboardingCreating : t.onboardingCreateButton}
+                {pending ? <span className="flex items-center justify-center gap-2"><Spinner />{t.onboardingCreating}</span> : t.onboardingCreateButton}
               </button>
             </form>
           </>
@@ -112,6 +118,11 @@ export default function OnboardingClient() {
                   type="text"
                   required
                   placeholder={t.onboardingFamilyNamePlaceholder}
+                  pattern="[A-Za-z0-9 '_-]+"
+                  onInput={(e) => {
+                    const el = e.currentTarget
+                    el.value = el.value.replace(/[^A-Za-z0-9 '_-]/g, '')
+                  }}
                   className="w-full border border-slate-200 rounded-xl px-3 py-2.5 text-sm uppercase placeholder:normal-case focus:outline-none focus:ring-2 focus:ring-emerald-500"
                 />
                 <p className="text-xs text-slate-400 mt-1">{t.onboardingNameHint}</p>
@@ -132,7 +143,7 @@ export default function OnboardingClient() {
                 disabled={pending}
                 className="w-full min-h-[44px] bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50 text-white font-medium rounded-xl px-4 py-3 transition-colors"
               >
-                {pending ? t.onboardingJoining : t.onboardingJoinButton}
+                {pending ? <span className="flex items-center justify-center gap-2"><Spinner />{t.onboardingJoining}</span> : t.onboardingJoinButton}
               </button>
             </form>
           </>

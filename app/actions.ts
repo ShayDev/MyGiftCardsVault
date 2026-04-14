@@ -23,7 +23,7 @@ async function getAuthenticatedFamilyId(): Promise<{ familyId: string; userId: s
 const CreateCardSchema = z.object({
   name: z.string().min(1, 'Name is required'),
   provider: z.string().min(1, 'Provider is required'),
-  last4: z.string().regex(/^\d{4}$/, 'Must be exactly 4 digits'),
+  last4: z.string().regex(/^\d{4}$/, 'Must be exactly 4 digits').optional(),
   fullNumber: z.string().min(1).optional(),
   cvv: z.string().regex(/^\d{3,4}$/, 'Must be 3 or 4 digits').optional(),
   link: z.string().url('Must be a valid URL').optional(),
@@ -31,7 +31,7 @@ const CreateCardSchema = z.object({
   defaultBalance: z.number().positive('Default balance must be positive'),
   notes: z.string().optional(),
   isReloadable: z.boolean(),
-})
+}).refine((d) => d.last4 || d.link, { message: 'Last 4 digits or a link is required' })
 
 export async function createCard(formData: FormData) {
   const { familyId, userId } = await getAuthenticatedFamilyId()
