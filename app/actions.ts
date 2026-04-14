@@ -57,7 +57,7 @@ export async function createCard(formData: FormData) {
       familyId,
       name: data.name,
       provider: data.provider,
-      last4: data.last4,
+      last4: data.last4 ?? null,
       fullNumber: data.fullNumber ?? null,
       cvv: data.cvv ?? null,
       link: data.link ?? null,
