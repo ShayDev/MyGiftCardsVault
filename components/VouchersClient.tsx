@@ -4,6 +4,7 @@ import React, { useState, useTransition } from 'react'
 import { createVoucher, markVoucherUsed, deleteVoucher, type VoucherItem } from '../app/vouchers/actions'
 import { useLanguageStore } from '../hooks/useLanguageStore'
 import { getT } from '../lib/i18n'
+import Spinner from './Spinner'
 
 // ── Helpers ────────────────────────────────────────────────────────────────────
 
@@ -149,7 +150,7 @@ function AddVoucherModal({ onClose }: { onClose: () => void }) {
             disabled={isPending}
             className="flex-1 h-11 rounded-xl bg-emerald-500 hover:bg-emerald-600 disabled:opacity-60 text-white text-sm font-medium transition-colors"
           >
-            {isPending ? t.adding : t.addVoucher}
+            {isPending ? <span className="flex items-center justify-center gap-2"><Spinner />{t.adding}</span> : t.addVoucher}
           </button>
         </div>
       </form>
@@ -320,7 +321,7 @@ function VoucherDetailModal({
                 : 'bg-slate-800 hover:bg-slate-900 text-white'
             }`}
           >
-            {isPending ? t.saving : voucher.isUsed ? t.markAsUnused : t.markAsUsed}
+            {isPending ? <span className="flex items-center justify-center gap-2"><Spinner />{t.saving}</span> : voucher.isUsed ? t.markAsUnused : t.markAsUsed}
           </button>
           <button
             type="button"

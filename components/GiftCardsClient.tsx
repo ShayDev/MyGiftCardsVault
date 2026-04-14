@@ -4,6 +4,7 @@ import React, { useState, useTransition } from 'react'
 import { createCard, deactivateCard, createTransaction, getCardTransactions, type TransactionItem } from '../app/actions'
 import { useLanguageStore } from '../hooks/useLanguageStore'
 import { getT } from '../lib/i18n'
+import Spinner from './Spinner'
 
 export type CardWithBalance = {
   id: string
@@ -229,7 +230,7 @@ function AddCardModal({ onClose }: { onClose: () => void }) {
             disabled={isPending}
             className="flex-1 h-11 rounded-xl bg-emerald-500 hover:bg-emerald-600 disabled:opacity-60 text-white text-sm font-medium transition-colors"
           >
-            {isPending ? t.adding : t.addCard}
+            {isPending ? <span className="flex items-center justify-center gap-2"><Spinner />{t.adding}</span> : t.addCard}
           </button>
         </div>
       </form>
@@ -562,7 +563,7 @@ function TransactionModal({
             disabled={isPending}
             className={`flex-1 h-11 rounded-xl text-white text-sm font-medium transition-colors disabled:opacity-60 ${isSpend ? 'bg-rose-500 hover:bg-rose-600' : 'bg-emerald-500 hover:bg-emerald-600'}`}
           >
-            {isPending ? t.saving : isSpend ? t.confirmSpend : t.confirmRecharge}
+            {isPending ? <span className="flex items-center justify-center gap-2"><Spinner />{t.saving}</span> : isSpend ? t.confirmSpend : t.confirmRecharge}
           </button>
         </div>
       </form>
@@ -617,7 +618,7 @@ function DeleteDialog({ card, onClose }: { card: CardWithBalance; onClose: () =>
             disabled={isPending}
             className="flex-1 h-11 rounded-xl bg-rose-500 hover:bg-rose-600 disabled:opacity-60 text-white text-sm font-medium transition-colors"
           >
-            {isPending ? t.removing : t.removeCard}
+            {isPending ? <span className="flex items-center justify-center gap-2"><Spinner />{t.removing}</span> : t.removeCard}
           </button>
         </div>
       </div>
