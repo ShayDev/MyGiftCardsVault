@@ -19,6 +19,12 @@ export async function createFamily(formData: FormData) {
   const { userId } = await auth()
   if (!userId) redirect('/sign-in')
 
+  const existing = await prisma.user.findUnique({
+    where: { clerkId: userId },
+    select: { familyId: true },
+  })
+  if (existing?.familyId) redirect('/cards')
+
   const parsed = createSchema.safeParse({
     familyName: formData.get('familyName'),
   })
@@ -28,17 +34,18 @@ export async function createFamily(formData: FormData) {
   const email = clerkUser?.emailAddresses[0]?.emailAddress ?? ''
   const name = clerkUser?.fullName ?? null
 
-  const family = await prisma.familyGroup.create({
-    data: {
-      name: parsed.data.familyName.toUpperCase(),
-      inviteCode: nanoid(12),
-    },
-  })
-
-  await prisma.user.upsert({
-    where: { clerkId: userId },
-    update: { familyId: family.id },
-    create: { clerkId: userId, email, name, familyId: family.id, role: 'owner' },
+  await prisma.$transaction(async (tx) => {
+    const family = await tx.familyGroup.create({
+      data: {
+        name: parsed.data.familyName.toUpperCase(),
+        inviteCode: nanoid(12),
+      },
+    })
+    await tx.user.upsert({
+      where: { clerkId: userId },
+      update: { familyId: family.id },
+      create: { clerkId: userId, email, name, familyId: family.id, role: 'owner' },
+    })
   })
 
   redirect('/cards')
@@ -47,6 +54,12 @@ export async function createFamily(formData: FormData) {
 export async function joinFamily(formData: FormData) {
   const { userId } = await auth()
   if (!userId) redirect('/sign-in')
+
+  const existing = await prisma.user.findUnique({
+    where: { clerkId: userId },
+    select: { familyId: true },
+  })
+  if (existing?.familyId) redirect('/cards')
 
   const parsed = joinSchema.safeParse({
     familyName: formData.get('familyName'),
