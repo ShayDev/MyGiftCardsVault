@@ -357,7 +357,7 @@ function CardDetailModal({
             </div>
             {showFull ? (
               <div className="card-fullnumber-revealed px-3 pb-3 flex items-center justify-between gap-2">
-                <p className="font-mono text-slate-800 text-xl font-semibold tracking-widest break-all">
+                <p className="font-mono text-slate-800 text-xl font-extrabold tracking-widest break-all">
                   {card.fullNumber}
                 </p>
                 <button
