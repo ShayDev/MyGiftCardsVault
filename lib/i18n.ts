@@ -55,7 +55,7 @@ const translations = {
     // Transaction modal
     spendFromCard: 'Spend from Card',
     rechargeCard: 'Recharge Card',
-    amount: 'Amount (USD)',
+    amount: 'Amount',
     newBalance: 'New balance',
     confirmSpend: 'Confirm Spend',
     confirmRecharge: 'Confirm Recharge',
@@ -201,7 +201,7 @@ const translations = {
     // Transaction modal
     spendFromCard: 'הוצאה מהכרטיס',
     rechargeCard: 'טעינת כרטיס',
-    amount: 'סכום (USD)',
+    amount: 'סכום',
     newBalance: 'יתרה חדשה',
     confirmSpend: 'אשר הוצאה',
     confirmRecharge: 'אשר טעינה',

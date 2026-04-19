@@ -54,6 +54,15 @@ function formatCurrency(amount: number, currencyLocale: string, currencyCode: st
   }).format(amount)
 }
 
+function formatTransactionAmount(amount: number, type: 'RECHARGE' | 'SPEND', currencyLocale: string, currencyCode: string): string {
+  return new Intl.NumberFormat(currencyLocale, {
+    style: 'currency',
+    currency: currencyCode,
+    minimumFractionDigits: 2,
+    signDisplay: 'always',
+  }).format(type === 'SPEND' ? -amount : amount)
+}
+
 function formatDate(iso: string): string {
   return new Date(iso).toLocaleDateString('en-US', {
     month: 'short',
@@ -259,7 +268,16 @@ function CardDetailModal({
   const t = getT(useLanguageStore((s) => s.locale))
   const [showFull, setShowFull] = useState(false)
   const [showCvv, setShowCvv] = useState(false)
+  const [copiedFull, setCopiedFull] = useState(false)
   const [transactions, setTransactions] = useState<TransactionItem[] | null>(null)
+
+  function copyFullNumber() {
+    if (!card.fullNumber) return
+    navigator.clipboard.writeText(card.fullNumber).then(() => {
+      setCopiedFull(true)
+      setTimeout(() => setCopiedFull(false), 2000)
+    })
+  }
 
   React.useEffect(() => {
     getCardTransactions(card.id).then(setTransactions)
@@ -326,8 +344,8 @@ function CardDetailModal({
 
         {/* Full number */}
         {card.fullNumber && (
-          <div className="p-3 rounded-xl border border-slate-100 bg-white">
-            <div className="flex items-center justify-between mb-1">
+          <div className="card-fullnumber-section rounded-xl border border-slate-100 bg-white overflow-hidden">
+            <div className="flex items-center justify-between px-3 pt-3 pb-1">
               <p className="text-xs text-slate-400">{t.fullCardNumber}</p>
               <button
                 type="button"
@@ -337,9 +355,39 @@ function CardDetailModal({
                 {showFull ? t.hide : t.reveal}
               </button>
             </div>
-            <p className="font-mono text-slate-700 text-sm tracking-wider break-all">
-              {showFull ? card.fullNumber : maskedFull}
-            </p>
+            {showFull ? (
+              <div className="card-fullnumber-revealed px-3 pb-3 flex items-center justify-between gap-2">
+                <p className="font-mono text-slate-800 text-xl font-semibold tracking-widest break-all">
+                  {card.fullNumber}
+                </p>
+                <button
+                  type="button"
+                  onClick={copyFullNumber}
+                  className="card-copy-btn flex-shrink-0 flex items-center gap-1.5 h-9 px-3 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-600 text-xs font-medium transition-colors"
+                >
+                  {copiedFull ? (
+                    <>
+                      <svg className="w-4 h-4 text-emerald-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                      </svg>
+                      {t.copied}
+                    </>
+                  ) : (
+                    <>
+                      <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                        <rect x="9" y="9" width="13" height="13" rx="2" ry="2" />
+                        <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
+                      </svg>
+                      {t.copy}
+                    </>
+                  )}
+                </button>
+              </div>
+            ) : (
+              <p className="font-mono text-slate-700 text-sm tracking-wider break-all px-3 pb-3">
+                {maskedFull}
+              </p>
+            )}
           </div>
         )}
 
@@ -412,7 +460,7 @@ function CardDetailModal({
                   </div>
                   <div className="text-right flex-shrink-0">
                     <p className={`font-mono text-sm font-semibold ${tx.type === 'RECHARGE' ? 'text-emerald-600' : 'text-rose-500'}`}>
-                      {tx.type === 'RECHARGE' ? '+' : '-'}{formatCurrency(tx.amount, t.currencyLocale, t.currencyCode)}
+                      {formatTransactionAmount(tx.amount, tx.type, t.currencyLocale, t.currencyCode)}
                     </p>
                     <p className="text-xs text-slate-400">{formatDate(tx.createdAt)}</p>
                   </div>
