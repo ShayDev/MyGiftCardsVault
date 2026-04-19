@@ -269,7 +269,14 @@ function CardDetailModal({
   const [showFull, setShowFull] = useState(false)
   const [showCvv, setShowCvv] = useState(false)
   const [copiedFull, setCopiedFull] = useState(false)
+  const [formattedFull, setFormattedFull] = useState(true)
   const [transactions, setTransactions] = useState<TransactionItem[] | null>(null)
+
+  function formatCardNumber(raw: string): string {
+    const sep = raw.includes('-') ? '·' : '-'
+    const digits = raw.replace(/[-\s·]/g, '')
+    return digits.match(/.{1,4}/g)?.join(sep) ?? raw
+  }
 
   function copyFullNumber() {
     if (!card.fullNumber) return
@@ -356,14 +363,22 @@ function CardDetailModal({
               </button>
             </div>
             {showFull ? (
-              <div className="card-fullnumber-revealed px-3 pb-3 flex items-center justify-between gap-2">
-                <p className="font-mono text-slate-800 text-xl font-extrabold tracking-widest break-all">
-                  {card.fullNumber}
+              <div className="card-fullnumber-revealed px-3 pb-3 space-y-2">
+                <p className="font-mono text-slate-800 text-xl font-extrabold tracking-widest break-all" dir="ltr">
+                  {formattedFull ? formatCardNumber(card.fullNumber) : card.fullNumber}
                 </p>
+                <div className="flex items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setFormattedFull(!formattedFull)}
+                    className="card-format-btn flex items-center gap-1 h-8 px-2.5 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-500 text-xs font-medium transition-colors"
+                  >
+                    {formattedFull ? '123...' : '1234-...'}
+                  </button>
                 <button
                   type="button"
                   onClick={copyFullNumber}
-                  className="card-copy-btn flex-shrink-0 flex items-center gap-1.5 h-9 px-3 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-600 text-xs font-medium transition-colors"
+                  className="card-copy-btn flex-shrink-0 flex items-center gap-1.5 h-8 px-2.5 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-600 text-xs font-medium transition-colors"
                 >
                   {copiedFull ? (
                     <>
@@ -382,9 +397,10 @@ function CardDetailModal({
                     </>
                   )}
                 </button>
+                </div>
               </div>
             ) : (
-              <p className="font-mono text-slate-700 text-sm tracking-wider break-all px-3 pb-3">
+              <p className="font-mono text-slate-700 text-sm tracking-wider break-all px-3 pb-3" dir="ltr">
                 {maskedFull}
               </p>
             )}
