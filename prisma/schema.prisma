@@ -19,6 +19,7 @@ model FamilyGroup {
   users       User[]
   giftCards   GiftCard[]
   vouchers    Voucher[]
+  clubMembers ClubMember[]
   createdAt   DateTime      @default(now())
 }
 
@@ -64,6 +65,23 @@ model Transaction {
   notes      String?
   createdBy  String?
   createdAt  DateTime        @default(now())
+}
+
+model ClubMember {
+  id          String      @id @default(uuid())
+  seq         Int         @default(autoincrement())
+  familyId    String
+  family      FamilyGroup @relation(fields: [familyId], references: [id])
+  name        String
+  provider    String
+  memberId    String?
+  ownerName   String?
+  idType      String?
+  expiresAt   String?
+  notes       String?
+  isActive    Boolean     @default(true)
+  createdBy   String?
+  createdAt   DateTime    @default(now())
 }
 
 model Voucher {
