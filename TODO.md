@@ -40,40 +40,40 @@ Add an optional CVV field to gift cards for cards that require it at checkout.
 
 ---
 
-### ⬜ Vouchers Tab/Screen
+### ✅ Vouchers Tab/Screen
 Add a separate vouchers section for one-time use codes (promo codes, store credits, gift vouchers).
 
 **What's needed:**
-- ⬜ Add `Voucher` model to Prisma schema + migration
-- ⬜ Create `/vouchers` page (Server Component) with voucher list
-- ⬜ Add voucher Server Actions: `createVoucher`, `markVoucherUsed`, `deleteVoucher`
-- ⬜ Build `VouchersClient` with Add/Detail modals (code reveal pattern like `fullNumber`)
-- ⬜ Two-section layout: "Active" on top, "Used" below (always visible, no toggle)
-- ⬜ Navigation: decide between bottom tab bar vs top tab switcher (prototype both)
-- ⬜ Add all voucher translation keys to `i18n.ts` (en + he)
+- ✅ Add `Voucher` model to Prisma schema + migration
+- ✅ Create `/vouchers` page (Server Component) with voucher list
+- ✅ Add voucher Server Actions: `createVoucher`, `markVoucherUsed`, `deleteVoucher`
+- ✅ Build `VouchersClient` with Add/Detail modals (code reveal pattern like `fullNumber`)
+- ✅ Two-section layout: "Active" on top, "Used" below (always visible, no toggle)
+- ✅ Navigation: bottom tab bar with Vouchers tab in `BottomNav`
+- ✅ Add all voucher translation keys to `i18n.ts` (en + he)
 - ⬜ Consider applying same two-section pattern to Gift Cards (zero-balance cards in a "Used" section)
 
 **See:** `plans/vouchers-hld.md` for full design.
 
 ---
 
-### ⬜ Add `createdBy` to All Relevant Tables
+### ✅ Add `createdBy` to All Relevant Tables
 Track which user created each record, mirroring the existing `createdAt` pattern.
 
 **What's needed:**
-- ⬜ Add `createdBy String?` (FK → `User.id`) to `GiftCard`, `Transaction`, and future `Voucher` table
-- ⬜ Migration with `ADD COLUMN IF NOT EXISTS` (nullable — existing rows have no author)
-- ⬜ Populate `createdBy` from `getAuthenticatedFamilyId()` context in all relevant Server Actions
+- ✅ Add `createdBy String?` (FK → `User.id`) to `GiftCard`, `Transaction`, `Voucher`, and `ClubMember` tables
+- ✅ Migration (column present in schema + Neon)
+- ✅ Populate `createdBy` in all relevant Server Actions (`app/actions.ts`, `app/vouchers/actions.ts`)
 - ⬜ Optionally display "Added by" in card/voucher detail modals
 
 ---
 
-### ⬜ Add Sequence Number to Gift Cards
+### ✅ Add Sequence Number to Gift Cards
 Add an auto-increment `seq` column to `GiftCard` so each card has a human-readable number (#1, #2…), consistent with the Voucher model.
 
 **What's needed:**
-- ⬜ Add `seq Int @default(autoincrement())` to `GiftCard` in Prisma schema + migration
-- ⬜ Display `#seq` in the card list and detail modal
+- ✅ Add `seq Int @default(autoincrement())` to `GiftCard` in Prisma schema + migration
+- ✅ Display `#seq` in the card list and detail modal
 
 ---
 
