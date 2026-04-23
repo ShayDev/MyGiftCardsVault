@@ -21,7 +21,8 @@ Encrypt sensitive text fields before storing in the DB and decrypt on read. Cove
 - ✅ `scripts/test-encrypt.ts` — round-trip, uniqueness, tamper detection, optional DB test
 - ✅ Add `ENCRYPTION_KEY` to `.env.example` and Vercel env vars
 - ✅ Add `ENCRYPTION_KEY` to `.env.local` and Vercel
-- ✅ Run `migrate-encrypt.ts` against the DB after adding the key
+- ✅ Run `migrate-encrypt.ts` against dev DB (3 cards, 2 vouchers)
+- ✅ Run `migrate-encrypt.ts` against production DB (8 cards, 5 vouchers)
 - ✅ Also covers CVV (see CVV Support task above)
 
 **Note:** This is encryption (reversible), not hashing — values need to be retrieved for display.
