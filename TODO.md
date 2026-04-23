@@ -2,17 +2,25 @@
 
 ## Future Features
 
-### ⬜ Encrypt Card Numbers at Rest
-Encrypt `fullNumber` before storing in the DB and decrypt on read, so raw card numbers are never stored in plain text.
+### ⬜ Encrypt Sensitive Fields at Rest
+Encrypt sensitive text fields before storing in the DB and decrypt on read. Covers cards and vouchers.
+
+**Fields to encrypt:**
+- `GiftCard.fullNumber` — full card number
+- `GiftCard.link` — card URL (may contain auth tokens or personal links)
+- `Voucher.code` — redemption code
+- `Voucher.link` — voucher URL
 
 **What's needed:**
 - ⬜ Choose an encryption strategy (AES-256-GCM with a server-side `ENCRYPTION_KEY` env var)
-- ⬜ Encrypt `fullNumber` in `createCard` server action before writing to DB
-- ⬜ Decrypt in `cards/page.tsx` before passing to the client (only when the user requests reveal)
-- ⬜ Migrate existing plain-text `fullNumber` values in the DB
+- ⬜ Build a shared `lib/encrypt.ts` with `encrypt(plain: string): string` and `decrypt(cipher: string): string`
+- ⬜ Encrypt the four fields above in their respective `create*` server actions before writing to DB
+- ⬜ Decrypt in `cards/page.tsx` and `vouchers/page.tsx` before passing to the client
+- ⬜ Migrate existing plain-text values in the DB (one-time script)
 - ⬜ Add `ENCRYPTION_KEY` to `.env.local`, `.env.example`, and Vercel env vars
+- ⬜ Also covers CVV (see CVV Support task above)
 
-**Note:** This is encryption (reversible), not hashing — card numbers need to be retrieved for display.
+**Note:** This is encryption (reversible), not hashing — values need to be retrieved for display.
 
 ---
 
@@ -36,7 +44,7 @@ Add an optional CVV field to gift cards for cards that require it at checkout.
 - ✅ Add `cvv String?` column to `GiftCard` in Prisma schema + migration
 - ✅ Add CVV input to the Add Card form (optional, masked)
 - ✅ Show CVV in Card Detail modal with reveal/hide toggle (same pattern as `fullNumber`)
-- ⬜ Consider encrypting CVV at rest alongside `fullNumber` (see Encrypt Card Numbers task)
+- ⬜ Encrypt CVV at rest alongside `fullNumber` (see Encrypt Sensitive Fields task)
 
 ---
 
