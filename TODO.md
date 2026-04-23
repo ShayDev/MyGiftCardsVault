@@ -107,6 +107,20 @@ A dedicated section for loyalty/membership cards (supermarket clubs, gym members
 
 ---
 
+### ⬜ Refunds Tab
+A dedicated section to track pending and received store refunds (credit notes, return credits, pending bank refunds).
+
+**What's needed:**
+- ⬜ Define refund fields: provider, amount, refundType (store credit / bank / original payment), status (pending / received), reference number, notes, expectedBy date
+- ⬜ Add `Refund` model to Prisma schema + migration (seq, familyId, provider, amount, currency, refundType, status, referenceId, notes, expectedBy, receivedAt, isActive, createdBy, createdAt)
+- ⬜ Server actions: `createRefund`, `markRefundReceived`, `deleteRefund`
+- ⬜ Two-section layout: "Pending" on top, "Received" below — same pattern as Vouchers
+- ⬜ Add EN + HE translations
+- ⬜ Add Refunds tab to `BottomNav`
+- ⬜ **Future:** Parse refund from image — upload a receipt or confirmation screenshot, extract provider/amount/reference via Claude vision API, pre-fill the add form
+
+---
+
 ### ⬜ Coupons Tab (Future)
 A separate tab for percentage-off and promo discount codes (e.g. "20% off next order").
 
