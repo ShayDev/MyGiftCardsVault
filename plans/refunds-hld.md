@@ -25,11 +25,14 @@ Unlike gift cards there is no ledger. Unlike vouchers there is no code to reveal
 | 9  | `notes`       | `String?`               | Free-text notes                                              |
 | 10 | `expectedBy`  | `DateTime?`             | Expected receive date (optional)                             |
 | 11 | `receivedAt`  | `DateTime?`             | Set when status flipped to `"received"`                      |
-| 12 | `isActive`    | `Boolean`               | Default `true` — soft delete                                 |
-| 13 | `createdBy`   | `String?`               | FK → `User.id`                                               |
-| 14 | `createdAt`   | `DateTime`              | Default `now()`                                              |
+| 12 | `code`        | `String?`               | Store credit code / barcode — encrypted at rest              |
+| 13 | `link`        | `String?`               | URL to online credit page — encrypted at rest                |
+| 14 | `imageUrl`    | `String?`               | URL of uploaded receipt/confirmation screenshot (optional)   |
+| 15 | `isActive`    | `Boolean`               | Default `true` — soft delete                                 |
+| 16 | `createdBy`   | `String?`               | FK → `User.id`                                               |
+| 17 | `createdAt`   | `DateTime`              | Default `now()`                                              |
 
-**No encryption** — no sensitive fields. Amount, provider, and reference number are not considered secrets.
+**Encryption:** `code` and `link` are encrypted at rest using AES-256-GCM (same pattern as `Voucher.code` / `Voucher.link`). All other fields are not considered secrets.
 
 **Future field:** `refundType String?` — will distinguish `"store_credit"` from `"original_payment"` once the second type is supported.
 
@@ -49,6 +52,9 @@ model Refund {
   notes       String?
   expectedBy  DateTime?
   receivedAt  DateTime?
+  code        String?
+  link        String?
+  imageUrl    String?
   isActive    Boolean   @default(true)
   createdBy   String?
   createdAt   DateTime  @default(now())
@@ -74,6 +80,9 @@ CREATE TABLE IF NOT EXISTS "Refund" (
   "notes"       TEXT,
   "expectedBy"  TIMESTAMPTZ,
   "receivedAt"  TIMESTAMPTZ,
+  "code"        TEXT,
+  "link"        TEXT,
+  "imageUrl"    TEXT,
   "isActive"    BOOLEAN     NOT NULL DEFAULT true,
   "createdBy"   TEXT,
   "createdAt"   TIMESTAMPTZ NOT NULL DEFAULT now(),
@@ -103,6 +112,9 @@ const CreateRefundSchema = z.object({
   referenceId: z.string().optional(),
   notes:       z.string().optional(),
   expectedBy:  z.string().datetime().optional(),
+  code:        z.string().optional(),
+  link:        z.string().url().optional(),
+  imageUrl:    z.string().url().optional(),
 })
 ```
 
@@ -120,6 +132,9 @@ export type RefundItem = {
   notes?: string
   expectedBy?: string
   receivedAt?: string
+  code?: string
+  link?: string
+  imageUrl?: string
   createdAt: string
 }
 ```
@@ -149,8 +164,9 @@ export type RefundItem = {
 - Reference / order number (optional)
 - Expected by date (optional, date picker)
 - Notes (optional)
+- Image (optional) — file upload input; uploaded to Vercel Blob, URL stored in `imageUrl`
 
-**RefundDetailModal** — shows all fields, Mark as Received / Mark as Pending toggle button, delete button. No code reveal needed.
+**RefundDetailModal** — shows all fields, Mark as Received / Mark as Pending toggle button, delete button. If `code` is set, shows it with mask → reveal → format → copy treatment (same pattern as `Voucher.code`). If `link` is set, renders as a tappable link. If `imageUrl` is set, shows a tappable thumbnail that opens the image full-screen.
 
 ### Two-section layout
 - **Pending** section on top — ordered by `expectedBy asc` (soonest first), falling back to `createdAt desc`

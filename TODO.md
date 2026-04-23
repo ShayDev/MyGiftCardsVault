@@ -139,6 +139,22 @@ A dedicated section to track pending and received store refunds (credit notes, r
 
 ---
 
+### ⬜ Edit Support (All Tables)
+
+Allow editing existing records across all entity types — Gift Cards, Vouchers, Clubs, and Refunds.
+
+**What's needed:**
+
+- ⬜ `updateCard` server action — editable fields: provider, fullNumber, cvv, link, notes, expiresAt, isReloadable
+- ⬜ `updateVoucher` server action — editable fields: provider, code, link, notes, expiresAt
+- ⬜ `updateClub` server action — editable fields: name, provider, memberId, ownerName, idType, expiresAt, notes
+- ⬜ `updateRefund` server action — editable fields: provider, amount, currency, referenceId, code, link, notes, expectedBy
+- ⬜ Edit mode in each detail modal — tap an Edit button to switch fields to inputs, Save / Cancel
+- ⬜ Re-encrypt sensitive fields on save (fullNumber, cvv, link for cards; code, link for vouchers; memberId for clubs; code, link for refunds)
+- ⬜ Revalidate the relevant path after each update
+
+---
+
 ### ⬜ Coupons Tab (Future)
 
 A separate tab for percentage-off and promo discount codes (e.g. "20% off next order").
