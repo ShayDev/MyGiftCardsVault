@@ -3,15 +3,18 @@
 ## Future Features
 
 ### ✅ Encrypt Sensitive Fields at Rest
+
 Encrypt sensitive text fields before storing in the DB and decrypt on read. Covers cards and vouchers.
 
 **Fields to encrypt:**
+
 - `GiftCard.fullNumber` — full card number
 - `GiftCard.link` — card URL (may contain auth tokens or personal links)
 - `Voucher.code` — redemption code
 - `Voucher.link` — voucher URL
 
 **What's needed:**
+
 - ✅ Choose an encryption strategy (AES-256-GCM with a server-side `ENCRYPTION_KEY` env var)
 - ✅ Build a shared `lib/encrypt.ts` with `encrypt`, `decrypt`, and `isEncrypted`
 - ✅ Encrypt the four fields above in their respective `create*` server actions before writing to DB
@@ -30,9 +33,11 @@ Encrypt sensitive text fields before storing in the DB and decrypt on read. Cove
 ---
 
 ### ⬜ Per-Card Currency Support
+
 Allow each gift card to have its own currency (e.g. USD, ILS, EUR) instead of using the app-wide locale currency.
 
 **What's needed:**
+
 - ⬜ Add `currency String` column to `GiftCard` schema + migration (no DB default — resolved at create time)
 - ⬜ Default currency derived from active locale at card creation time (`he` → ILS, `en` → USD)
 - ⬜ Add currency selector to the Add Card form (pre-filled with locale default, overridable)
@@ -43,9 +48,11 @@ Allow each gift card to have its own currency (e.g. USD, ILS, EUR) instead of us
 ---
 
 ### ✅ CVV Support
+
 Add an optional CVV field to gift cards for cards that require it at checkout.
 
 **What's needed:**
+
 - ✅ Add `cvv String?` column to `GiftCard` in Prisma schema + migration
 - ✅ Add CVV input to the Add Card form (optional, masked)
 - ✅ Show CVV in Card Detail modal with reveal/hide toggle (same pattern as `fullNumber`)
@@ -54,9 +61,11 @@ Add an optional CVV field to gift cards for cards that require it at checkout.
 ---
 
 ### ✅ Vouchers Tab/Screen
+
 Add a separate vouchers section for one-time use codes (promo codes, store credits, gift vouchers).
 
 **What's needed:**
+
 - ✅ Add `Voucher` model to Prisma schema + migration
 - ✅ Create `/vouchers` page (Server Component) with voucher list
 - ✅ Add voucher Server Actions: `createVoucher`, `markVoucherUsed`, `deleteVoucher`
@@ -71,9 +80,11 @@ Add a separate vouchers section for one-time use codes (promo codes, store credi
 ---
 
 ### ✅ Add `createdBy` to All Relevant Tables
+
 Track which user created each record, mirroring the existing `createdAt` pattern.
 
 **What's needed:**
+
 - ✅ Add `createdBy String?` (FK → `User.id`) to `GiftCard`, `Transaction`, `Voucher`, and `ClubMember` tables
 - ✅ Migration (column present in schema + Neon)
 - ✅ Populate `createdBy` in all relevant Server Actions (`app/actions.ts`, `app/vouchers/actions.ts`)
@@ -82,18 +93,22 @@ Track which user created each record, mirroring the existing `createdAt` pattern
 ---
 
 ### ✅ Add Sequence Number to Gift Cards
+
 Add an auto-increment `seq` column to `GiftCard` so each card has a human-readable number (#1, #2…), consistent with the Voucher model.
 
 **What's needed:**
+
 - ✅ Add `seq Int @default(autoincrement())` to `GiftCard` in Prisma schema + migration
 - ✅ Display `#seq` in the card list and detail modal
 
 ---
 
 ### ✅ Club Members Tab
+
 A dedicated section for loyalty/membership cards (supermarket clubs, gym memberships, etc.).
 
 **What's needed:**
+
 - ✅ Add `ClubMember` model to Prisma schema (seq, name, provider, memberId, ownerName, idType, expiresAt, notes, isActive, createdBy)
 - ✅ Run Neon migration: CREATE SEQUENCE + CREATE TABLE ClubMember + FK to FamilyGroup (dev + prod)
 - ✅ Add EN + HE translations for clubs section to `lib/i18n.ts`
@@ -108,11 +123,14 @@ A dedicated section for loyalty/membership cards (supermarket clubs, gym members
 ---
 
 ### ⬜ Refunds Tab
-A dedicated section to track pending and received store refunds (credit notes, return credits, pending bank refunds).
+
+A dedicated section to track pending and received store refunds (credit notes, return credits).
 
 **What's needed:**
-- ⬜ Define refund fields: provider, amount, refundType (store credit / bank / original payment), status (pending / received), reference number, notes, expectedBy date
-- ⬜ Add `Refund` model to Prisma schema + migration (seq, familyId, provider, amount, currency, refundType, status, referenceId, notes, expectedBy, receivedAt, isActive, createdBy, createdAt)
+
+- ⬜ Define refund fields: provider, amount, status (pending / received), reference number, notes, expectedBy date — store credit only for now
+- ⬜ Add `Refund` model to Prisma schema + migration (seq, familyId, provider, amount, currency, status, referenceId, notes, expectedBy, receivedAt, isActive, createdBy, createdAt)
+- ⬜ **Future:** Add `refundType` (store credit / original payment method) once original payment method flow is defined
 - ⬜ Server actions: `createRefund`, `markRefundReceived`, `deleteRefund`
 - ⬜ Two-section layout: "Pending" on top, "Received" below — same pattern as Vouchers
 - ⬜ Add EN + HE translations
@@ -122,9 +140,11 @@ A dedicated section to track pending and received store refunds (credit notes, r
 ---
 
 ### ⬜ Coupons Tab (Future)
+
 A separate tab for percentage-off and promo discount codes (e.g. "20% off next order").
 
 **What's needed:**
+
 - ⬜ Decide on coupon fields: code, discount type (% or fixed), value, provider, expiry, notes
 - ⬜ Add `Coupon` model to Prisma schema + migration
 - ⬜ Include `seq`, `createdBy`, `usedBy`, `usedAt` fields — same pattern as Voucher
@@ -132,10 +152,26 @@ A separate tab for percentage-off and promo discount codes (e.g. "20% off next o
 
 ---
 
+### ⬜ Global Search
+
+Search across all tabs (Gift Cards, Vouchers, Clubs, Refunds) from a single input.
+
+**What's needed:**
+
+- ⬜ Search input in the app header or a dedicated search page (`/search`)
+- ⬜ Query across all entity types by name, provider, notes, and masked ID/code
+- ⬜ Results grouped by type (Cards / Vouchers / Clubs / Refunds) with tap-to-open detail modal
+- ⬜ Client-side filtering for small families; server-side `ILIKE` query for scale
+- ⬜ Debounced input — no search-on-every-keystroke
+
+---
+
 ### ⬜ Multi-Family Support (Option A)
+
 Allow a single user to belong to multiple families and switch between them in the app.
 
 **What's needed:**
+
 - ⬜ Replace `User.familyId` (single) with a `FamilyMembership` join table (many-to-many)
 - ⬜ Add a family switcher to the header
 - ⬜ All server actions need to know the "active family" (cookie or session)
