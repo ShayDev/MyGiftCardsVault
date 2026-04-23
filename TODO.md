@@ -90,18 +90,19 @@ Add an auto-increment `seq` column to `GiftCard` so each card has a human-readab
 
 ---
 
-### ⬜ Club Members Tab
+### ✅ Club Members Tab
 A dedicated section for loyalty/membership cards (supermarket clubs, gym memberships, etc.).
 
 **What's needed:**
 - ✅ Add `ClubMember` model to Prisma schema (seq, name, provider, memberId, ownerName, idType, expiresAt, notes, isActive, createdBy)
-- ⬜ Run Neon migration: CREATE SEQUENCE + CREATE TABLE ClubMember + FK to FamilyGroup
-- ⬜ Add local migration file under `prisma/migrations/`
-- ⬜ Add EN + HE translations for clubs section to `lib/i18n.ts`
-- ⬜ Create server actions `app/clubs/actions.ts` (createClub, deleteClub, type ClubItem)
-- ⬜ Create clubs page `app/clubs/page.tsx`
-- ⬜ Create `ClubsClient` component (add form, card list, detail modal)
-- ⬜ Add Clubs tab to `BottomNav`
+- ✅ Run Neon migration: CREATE SEQUENCE + CREATE TABLE ClubMember + FK to FamilyGroup (dev + prod)
+- ✅ Add EN + HE translations for clubs section to `lib/i18n.ts`
+- ✅ Create server actions `app/clubs/actions.ts` (createClub, deleteClub, type ClubItem)
+- ✅ Create clubs page `app/clubs/page.tsx`
+- ✅ Create `ClubsClient` component (add form, card list, detail modal)
+- ✅ Add Clubs tab to `BottomNav`
+- ✅ `memberId` encrypted at rest (uses shared `lib/encrypt.ts`)
+- ⬜ Add local migration file under `prisma/migrations/` (used raw SQL scripts instead)
 - ⬜ Create `vw_clubs_overview` view on Neon
 
 ---
