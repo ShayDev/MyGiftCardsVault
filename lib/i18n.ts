@@ -82,6 +82,8 @@ const translations = {
     hide: 'Hide',
     notesLabel: 'Notes',
     failedToCreateCard: 'Failed to create card',
+    usedCards: 'Used',
+    noUsedCards: 'No used cards',
     // Transactions
     transactionHistory: 'Transaction History',
     noTransactions: 'No transactions yet',
@@ -277,6 +279,8 @@ const translations = {
     hide: 'הסתר',
     notesLabel: 'הערות',
     failedToCreateCard: 'יצירת הכרטיס נכשלה',
+    usedCards: 'נוצלו',
+    noUsedCards: 'אין כרטיסים שנוצלו',
     // Transactions
     transactionHistory: 'היסטוריית עסקאות',
     noTransactions: 'אין עסקאות עדיין',

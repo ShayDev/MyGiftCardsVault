@@ -73,7 +73,7 @@ Add a separate vouchers section for one-time use codes (promo codes, store credi
 - ✅ Two-section layout: "Active" on top, "Used" below (always visible, no toggle)
 - ✅ Navigation: bottom tab bar with Vouchers tab in `BottomNav`
 - ✅ Add all voucher translation keys to `i18n.ts` (en + he)
-- ⬜ Consider applying same two-section pattern to Gift Cards (zero-balance cards in a "Used" section)
+- ✅ Consider applying same two-section pattern to Gift Cards (zero-balance cards in a "Used" section)
 
 **See:** `plans/vouchers-hld.md` for full design.
 

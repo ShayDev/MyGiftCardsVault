@@ -554,7 +554,12 @@ export default function RefundsClient({ refunds }: { refunds: RefundItem[] }) {
 
       {/* Pending */}
       <section className="refunds-section-pending">
-        <h2 className="text-sm font-semibold text-slate-500 uppercase tracking-wide mb-3">{t.pendingRefunds}</h2>
+        <div className="flex items-center gap-2 mb-3">
+          <h2 className="text-sm font-semibold text-slate-500 uppercase tracking-wide">{t.pendingRefunds}</h2>
+          {pending.length > 0 && (
+            <span className="text-xs text-slate-400 bg-slate-100 px-2 py-0.5 rounded-full">{pending.length}</span>
+          )}
+        </div>
         {pending.length === 0 ? (
           <div className="bg-white rounded-2xl border border-slate-100 shadow-sm p-8 text-center">
             <p className="text-slate-500 font-medium mb-1">{t.noRefundsYet}</p>
@@ -578,7 +583,12 @@ export default function RefundsClient({ refunds }: { refunds: RefundItem[] }) {
 
       {/* Received */}
       <section className="refunds-section-received">
-        <h2 className="text-sm font-semibold text-slate-500 uppercase tracking-wide mb-3">{t.receivedRefunds}</h2>
+        <div className="flex items-center gap-2 mb-3">
+          <h2 className="text-sm font-semibold text-slate-500 uppercase tracking-wide">{t.receivedRefunds}</h2>
+          {received.length > 0 && (
+            <span className="text-xs text-slate-400 bg-slate-100 px-2 py-0.5 rounded-full">{received.length}</span>
+          )}
+        </div>
         {received.length === 0 ? (
           <div className="bg-white rounded-2xl border border-slate-100 shadow-sm p-6 text-center">
             <p className="text-slate-400 text-sm">{t.noReceivedRefunds}</p>

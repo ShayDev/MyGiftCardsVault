@@ -465,7 +465,12 @@ export default function VouchersClient({ vouchers }: { vouchers: VoucherItem[] }
 
       {/* Active vouchers */}
       <section className="vouchers-section-active">
-        <h2 className="text-sm font-semibold text-slate-500 uppercase tracking-wide mb-3">{t.activeVouchers}</h2>
+        <div className="flex items-center gap-2 mb-3">
+          <h2 className="text-sm font-semibold text-slate-500 uppercase tracking-wide">{t.activeVouchers}</h2>
+          {active.length > 0 && (
+            <span className="text-xs text-slate-400 bg-slate-100 px-2 py-0.5 rounded-full">{active.length}</span>
+          )}
+        </div>
         {active.length === 0 ? (
           <div className="bg-white rounded-2xl border border-slate-100 shadow-sm p-8 text-center">
             <p className="text-slate-500 font-medium mb-1">{t.noVouchersYet}</p>
@@ -489,7 +494,12 @@ export default function VouchersClient({ vouchers }: { vouchers: VoucherItem[] }
 
       {/* Used vouchers */}
       <section className="vouchers-section-used">
-        <h2 className="text-sm font-semibold text-slate-500 uppercase tracking-wide mb-3">{t.usedVouchers}</h2>
+        <div className="flex items-center gap-2 mb-3">
+          <h2 className="text-sm font-semibold text-slate-500 uppercase tracking-wide">{t.usedVouchers}</h2>
+          {used.length > 0 && (
+            <span className="text-xs text-slate-400 bg-slate-100 px-2 py-0.5 rounded-full">{used.length}</span>
+          )}
+        </div>
         {used.length === 0 ? (
           <div className="bg-white rounded-2xl border border-slate-100 shadow-sm p-6 text-center">
             <p className="text-slate-400 text-sm">{t.noUsedVouchers}</p>
