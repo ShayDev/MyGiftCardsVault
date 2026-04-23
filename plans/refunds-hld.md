@@ -32,7 +32,7 @@ Unlike gift cards there is no ledger. Unlike vouchers there is no code to reveal
 | 16 | `createdBy`   | `String?`               | FK → `User.id`                                               |
 | 17 | `createdAt`   | `DateTime`              | Default `now()`                                              |
 
-**Encryption:** `code` and `link` are encrypted at rest using AES-256-GCM (same pattern as `Voucher.code` / `Voucher.link`). All other fields are not considered secrets.
+**Encryption:** `code`, `link`, and `imageUrl` are encrypted at rest using AES-256-GCM (same pattern as `Voucher.code` / `Voucher.link`). All other fields are not considered secrets.
 
 **Future field:** `refundType String?` — will distinguish `"store_credit"` from `"original_payment"` once the second type is supported.
 

@@ -9,7 +9,8 @@
       "Bash(find c:/Dev/CloudeProjects/MyGiftCardsVault -type f \\\\\\(-name manifest.json -o -name service-worker* -o -name *.webmanifest \\\\\\))",
       "Bash(node -e \"require\\(''@next/env''\\); console.log\\(''ok''\\)\")",
       "Bash(node -e \"const {loadEnvConfig} = require\\(''@next/env''\\); loadEnvConfig\\(process.cwd\\(\\)\\); console.log\\(''DB:'', process.env.DATABASE_URL ? ''set'' : ''not set''\\)\")",
-      "Bash(PRISMA_USER_CONSENT_FOR_DANGEROUS_AI_ACTION=\"yes\" npx prisma migrate reset --force)"
+      "Bash(PRISMA_USER_CONSENT_FOR_DANGEROUS_AI_ACTION=\"yes\" npx prisma migrate reset --force)",
+      "Bash(npx tsc *)"
     ]
   }
 }

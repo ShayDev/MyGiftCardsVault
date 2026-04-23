@@ -20,6 +20,7 @@ model FamilyGroup {
   giftCards   GiftCard[]
   vouchers    Voucher[]
   clubMembers ClubMember[]
+  refunds     Refund[]
   createdAt   DateTime      @default(now())
 }
 
@@ -82,6 +83,27 @@ model ClubMember {
   isActive    Boolean     @default(true)
   createdBy   String?
   createdAt   DateTime    @default(now())
+}
+
+model Refund {
+  id          String    @id @default(uuid())
+  seq         Int       @default(autoincrement())
+  familyId    String
+  family      FamilyGroup @relation(fields: [familyId], references: [id])
+  provider    String
+  amount      Decimal   @db.Decimal(65, 30)
+  currency    String
+  status      String    @default("pending")
+  referenceId String?
+  notes       String?
+  expectedBy  DateTime?
+  receivedAt  DateTime?
+  code        String?
+  link        String?
+  imageUrl    String?
+  isActive    Boolean   @default(true)
+  createdBy   String?
+  createdAt   DateTime  @default(now())
 }
 
 model Voucher {

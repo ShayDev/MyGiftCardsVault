@@ -37,6 +37,16 @@ export default function BottomNav() {
       ),
     },
     {
+      href: '/refunds',
+      label: t.refundsTab,
+      active: pathname.startsWith('/refunds'),
+      icon: (
+        <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
+          <path strokeLinecap="round" strokeLinejoin="round" d="M9 14l-4-4m0 0l4-4m-4 4h11a4 4 0 010 8h-1" />
+        </svg>
+      ),
+    },
+    {
       href: '/clubs',
       label: t.clubsTab,
       active: pathname.startsWith('/clubs'),
