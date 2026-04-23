@@ -194,6 +194,8 @@ const translations = {
     refundReceivedOn: 'Received on',
     failedToCreateRefund: 'Failed to add refund',
     failedToUpdateRefund: 'Failed to update refund',
+    refundImageOptional: 'Receipt / Confirmation (optional)',
+    refundImageHint: 'Tap to attach photo',
     // Misc
     cards: (n: number) => `${n} card${n !== 1 ? 's' : ''}`,
   },
@@ -387,6 +389,8 @@ const translations = {
     refundReceivedOn: 'התקבל בתאריך',
     failedToCreateRefund: 'הוספת ההחזר נכשלה',
     failedToUpdateRefund: 'עדכון ההחזר נכשל',
+    refundImageOptional: 'קבלה / אישור (אופציונלי)',
+    refundImageHint: 'לחץ לצירוף תמונה',
     // Misc
     cards: (n: number) => n === 1 ? 'כרטיס אחד' : `${n} כרטיסים`,
   },

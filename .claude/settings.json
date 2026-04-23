@@ -10,7 +10,8 @@
       "Bash(node -e \"require\\(''@next/env''\\); console.log\\(''ok''\\)\")",
       "Bash(node -e \"const {loadEnvConfig} = require\\(''@next/env''\\); loadEnvConfig\\(process.cwd\\(\\)\\); console.log\\(''DB:'', process.env.DATABASE_URL ? ''set'' : ''not set''\\)\")",
       "Bash(PRISMA_USER_CONSENT_FOR_DANGEROUS_AI_ACTION=\"yes\" npx prisma migrate reset --force)",
-      "Bash(npx tsc *)"
+      "Bash(npx tsc *)",
+      "Bash(npx vercel *)"
     ]
   }
 }

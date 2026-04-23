@@ -97,6 +97,19 @@ function AddRefundModal({ onClose }: { onClose: () => void }) {
   const defaultCurrency = locale === 'he' ? 'ILS' : 'USD'
   const [isPending, startTransition] = useTransition()
   const [error, setError] = useState<string | null>(null)
+  const [imagePreview, setImagePreview] = useState<string | null>(null)
+  const [imageFile, setImageFile] = useState<File | null>(null)
+
+  function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0] ?? null
+    setImageFile(file)
+    if (file) {
+      const url = URL.createObjectURL(file)
+      setImagePreview(url)
+    } else {
+      setImagePreview(null)
+    }
+  }
 
   function handleSubmit(e: React.SyntheticEvent<HTMLFormElement>) {
     e.preventDefault()
@@ -104,6 +117,14 @@ function AddRefundModal({ onClose }: { onClose: () => void }) {
     setError(null)
     startTransition(async () => {
       try {
+        if (imageFile) {
+          const uploadForm = new FormData()
+          uploadForm.append('file', imageFile)
+          const res = await fetch('/api/upload', { method: 'POST', body: uploadForm })
+          if (!res.ok) throw new Error('Image upload failed')
+          const { url } = await res.json()
+          fd.set('imageUrl', url)
+        }
         await createRefund(fd)
         onClose()
       } catch (err) {
@@ -154,6 +175,30 @@ function AddRefundModal({ onClose }: { onClose: () => void }) {
         </Field>
         <Field label={t.notesOptional}>
           <input name="notes" placeholder={t.notesPlaceholder} className={inputClass} />
+        </Field>
+        <Field label={t.refundImageOptional}>
+          <label className="refund-image-upload flex flex-col items-center justify-center w-full h-28 rounded-xl border-2 border-dashed border-slate-200 hover:border-emerald-400 cursor-pointer transition-colors bg-slate-50 hover:bg-emerald-50 overflow-hidden">
+            {imagePreview ? (
+              <img src={imagePreview} alt="preview" className="w-full h-full object-cover" />
+            ) : (
+              <div className="flex flex-col items-center gap-1 text-slate-400">
+                <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5" />
+                </svg>
+                <span className="text-xs">{t.refundImageHint}</span>
+              </div>
+            )}
+            <input type="file" accept="image/*" className="hidden" onChange={handleFileChange} />
+          </label>
+          {imagePreview && (
+            <button
+              type="button"
+              onClick={() => { setImagePreview(null); setImageFile(null) }}
+              className="text-xs text-rose-500 hover:text-rose-600 mt-1"
+            >
+              {t.removeCard}
+            </button>
+          )}
         </Field>
 
         {error && <p className="text-sm text-rose-500 bg-rose-50 px-3 py-2 rounded-lg">{error}</p>}
@@ -364,6 +409,20 @@ function RefundDetailModal({
           <div>
             <p className="text-xs text-slate-400 mb-0.5">{t.notesLabel}</p>
             <p className="text-sm text-slate-700">{refund.notes}</p>
+          </div>
+        )}
+
+        {/* Image */}
+        {refund.imageUrl && (
+          <div>
+            <p className="text-xs text-slate-400 mb-1.5">{t.refundImageOptional}</p>
+            <a href={refund.imageUrl} target="_blank" rel="noopener noreferrer">
+              <img
+                src={refund.imageUrl}
+                alt="refund receipt"
+                className="refund-image-thumbnail w-full max-h-48 object-cover rounded-xl border border-slate-100 hover:opacity-90 transition-opacity"
+              />
+            </a>
           </div>
         )}
 
