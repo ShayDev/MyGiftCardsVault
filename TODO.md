@@ -2,7 +2,7 @@
 
 ## Future Features
 
-### ⬜ Encrypt Sensitive Fields at Rest
+### ✅ Encrypt Sensitive Fields at Rest
 Encrypt sensitive text fields before storing in the DB and decrypt on read. Covers cards and vouchers.
 
 **Fields to encrypt:**
@@ -12,13 +12,17 @@ Encrypt sensitive text fields before storing in the DB and decrypt on read. Cove
 - `Voucher.link` — voucher URL
 
 **What's needed:**
-- ⬜ Choose an encryption strategy (AES-256-GCM with a server-side `ENCRYPTION_KEY` env var)
-- ⬜ Build a shared `lib/encrypt.ts` with `encrypt(plain: string): string` and `decrypt(cipher: string): string`
-- ⬜ Encrypt the four fields above in their respective `create*` server actions before writing to DB
-- ⬜ Decrypt in `cards/page.tsx` and `vouchers/page.tsx` before passing to the client
-- ⬜ Migrate existing plain-text values in the DB (one-time script)
-- ⬜ Add `ENCRYPTION_KEY` to `.env.local`, `.env.example`, and Vercel env vars
-- ⬜ Also covers CVV (see CVV Support task above)
+- ✅ Choose an encryption strategy (AES-256-GCM with a server-side `ENCRYPTION_KEY` env var)
+- ✅ Build a shared `lib/encrypt.ts` with `encrypt`, `decrypt`, and `isEncrypted`
+- ✅ Encrypt the four fields above in their respective `create*` server actions before writing to DB
+- ✅ Decrypt in `cards/page.tsx` and `vouchers/page.tsx` before passing to the client
+- ✅ `scripts/migrate-encrypt.ts` — one-time migration, safe to re-run
+- ✅ `scripts/decrypt.ts` — CLI tool to decrypt any stored value locally
+- ✅ `scripts/test-encrypt.ts` — round-trip, uniqueness, tamper detection, optional DB test
+- ✅ Add `ENCRYPTION_KEY` to `.env.example` and Vercel env vars
+- ✅ Add `ENCRYPTION_KEY` to `.env.local` and Vercel
+- ✅ Run `migrate-encrypt.ts` against the DB after adding the key
+- ✅ Also covers CVV (see CVV Support task above)
 
 **Note:** This is encryption (reversible), not hashing — values need to be retrieved for display.
 
@@ -44,7 +48,7 @@ Add an optional CVV field to gift cards for cards that require it at checkout.
 - ✅ Add `cvv String?` column to `GiftCard` in Prisma schema + migration
 - ✅ Add CVV input to the Add Card form (optional, masked)
 - ✅ Show CVV in Card Detail modal with reveal/hide toggle (same pattern as `fullNumber`)
-- ⬜ Encrypt CVV at rest alongside `fullNumber` (see Encrypt Sensitive Fields task)
+- ✅ Encrypt CVV at rest alongside `fullNumber` (see Encrypt Sensitive Fields task)
 
 ---
 

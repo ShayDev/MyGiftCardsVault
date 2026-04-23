@@ -5,6 +5,7 @@ import { revalidatePath } from 'next/cache'
 import { redirect } from 'next/navigation'
 import { z } from 'zod'
 import prisma from '../lib/prisma'
+import { encrypt } from '../lib/encrypt'
 
 async function getAuthenticatedFamilyId(): Promise<{ familyId: string; userId: string }> {
   const { userId } = await auth()
@@ -58,9 +59,9 @@ export async function createCard(formData: FormData) {
       name: data.name,
       provider: data.provider,
       last4: data.last4 ?? null,
-      fullNumber: data.fullNumber ?? null,
-      cvv: data.cvv ?? null,
-      link: data.link ?? null,
+      fullNumber: data.fullNumber ? encrypt(data.fullNumber) : null,
+      cvv:        data.cvv        ? encrypt(data.cvv)        : null,
+      link:       data.link       ? encrypt(data.link)       : null,
       expiresAt: data.expiresAt ?? null,
       notes: data.notes ?? null,
       isReloadable: data.isReloadable,

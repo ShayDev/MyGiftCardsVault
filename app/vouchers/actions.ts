@@ -5,6 +5,7 @@ import { revalidatePath } from 'next/cache'
 import { redirect } from 'next/navigation'
 import { z } from 'zod'
 import prisma from '../../lib/prisma'
+import { encrypt } from '../../lib/encrypt'
 
 async function getAuth(): Promise<{ familyId: string; userId: string }> {
   const { userId } = await auth()
@@ -53,8 +54,8 @@ export async function createVoucher(formData: FormData) {
       familyId,
       name: data.name,
       provider: data.provider,
-      code: data.code ?? null,
-      link: data.link ?? null,
+      code: data.code ? encrypt(data.code) : null,
+      link: data.link ? encrypt(data.link) : null,
       value: data.value ?? null,
       expiresAt: data.expiresAt ?? null,
       notes: data.notes ?? null,
