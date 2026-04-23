@@ -4,6 +4,7 @@ import React, { useState, useTransition } from 'react'
 import { createCard, deactivateCard, createTransaction, getCardTransactions, type TransactionItem } from '../app/actions'
 import { useLanguageStore } from '../hooks/useLanguageStore'
 import { getT } from '../lib/i18n'
+import { formatCode } from '../lib/formatCode'
 import Spinner from './Spinner'
 
 export type CardWithBalance = {
@@ -272,25 +273,6 @@ function CardDetailModal({
   const [formattedFull, setFormattedFull] = useState(true)
   const [transactions, setTransactions] = useState<TransactionItem[] | null>(null)
 
-  function formatCardNumber(raw: string): string {
-    const sep = raw.includes('-') ? '·' : '-'
-    const digits = raw.replace(/[-\s·]/g, '')
-    const chunks: string[] = []
-    for (let i = 0; i < digits.length; i += 4) chunks.push(digits.slice(i, i + 4))
-    if (chunks.length > 1 && chunks[chunks.length - 1].length < 3) {
-      const last = chunks.pop()!
-      const prev = chunks.pop()!
-      const combined = prev + last
-      if (combined.length <= 5) {
-        chunks.push(combined)
-      } else {
-        const half = Math.floor(combined.length / 2)
-        chunks.push(combined.slice(0, half), combined.slice(half))
-      }
-    }
-    return chunks.join(sep)
-  }
-
   function copyFullNumber() {
     if (!card.fullNumber) return
     navigator.clipboard.writeText(card.fullNumber).then(() => {
@@ -378,7 +360,7 @@ function CardDetailModal({
             {showFull ? (
               <div className="card-fullnumber-revealed px-3 pb-3 space-y-2">
                 <p className="font-mono text-slate-800 text-xl font-extrabold tracking-widest break-all" dir="ltr">
-                  {formattedFull ? formatCardNumber(card.fullNumber) : card.fullNumber}
+                  {formattedFull ? formatCode(card.fullNumber) : card.fullNumber}
                 </p>
                 <div className="flex items-center gap-2">
                   <button

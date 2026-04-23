@@ -4,6 +4,7 @@ import React, { useState, useTransition } from 'react'
 import { createVoucher, markVoucherUsed, deleteVoucher, type VoucherItem } from '../app/vouchers/actions'
 import { useLanguageStore } from '../hooks/useLanguageStore'
 import { getT } from '../lib/i18n'
+import { formatCode } from '../lib/formatCode'
 import Spinner from './Spinner'
 
 // ── Helpers ────────────────────────────────────────────────────────────────────
@@ -171,8 +172,22 @@ function VoucherDetailModal({
 }) {
   const t = getT(useLanguageStore((s) => s.locale))
   const [showCode, setShowCode] = useState(false)
+  const [copiedCode, setCopiedCode] = useState(false)
+  const [formattedCode, setFormattedCode] = useState(true)
   const [isPending, startTransition] = useTransition()
   const [error, setError] = useState<string | null>(null)
+
+  function copyCode() {
+    if (!voucher.code) return
+    navigator.clipboard.writeText(voucher.code).then(() => {
+      setCopiedCode(true)
+      setTimeout(() => setCopiedCode(false), 2000)
+    })
+  }
+
+  const maskedCode = voucher.code
+    ? voucher.code.replace(/.(?=.{4})/g, '•')
+    : null
 
   function handleToggleUsed() {
     setError(null)
@@ -228,12 +243,9 @@ function VoucherDetailModal({
 
         {/* Code */}
         {voucher.code && (
-          <div>
-            <p className="text-xs text-slate-400 mb-0.5">{t.voucherCode}</p>
-            <div className="flex items-center gap-2">
-              <p className={`text-sm font-mono text-slate-800 ${showCode ? '' : 'blur-sm select-none'}`}>
-                {voucher.code}
-              </p>
+          <div className="voucher-code-section rounded-xl border border-slate-100 bg-white overflow-hidden">
+            <div className="flex items-center justify-between px-3 pt-3 pb-1">
+              <p className="text-xs text-slate-400">{t.voucherCode}</p>
               <button
                 type="button"
                 onClick={() => setShowCode(!showCode)}
@@ -242,6 +254,48 @@ function VoucherDetailModal({
                 {showCode ? t.hide : t.reveal}
               </button>
             </div>
+            {showCode ? (
+              <div className="voucher-code-revealed px-3 pb-3 space-y-2">
+                <p className="font-mono text-slate-800 text-xl font-extrabold tracking-widest break-all" dir="ltr">
+                  {formattedCode ? formatCode(voucher.code) : voucher.code}
+                </p>
+                <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => setFormattedCode(!formattedCode)}
+                  className="voucher-format-btn flex items-center gap-1 h-8 px-2.5 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-500 text-xs font-medium transition-colors"
+                >
+                  {formattedCode ? 'ABC...' : 'ABCD-...'}
+                </button>
+                <button
+                  type="button"
+                  onClick={copyCode}
+                  className="voucher-copy-btn flex items-center gap-1.5 h-8 px-2.5 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-600 text-xs font-medium transition-colors"
+                >
+                  {copiedCode ? (
+                    <>
+                      <svg className="w-4 h-4 text-emerald-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                      </svg>
+                      {t.copied}
+                    </>
+                  ) : (
+                    <>
+                      <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                        <rect x="9" y="9" width="13" height="13" rx="2" ry="2" />
+                        <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
+                      </svg>
+                      {t.copy}
+                    </>
+                  )}
+                </button>
+              </div>
+              </div>
+            ) : (
+              <p className="font-mono text-slate-700 text-sm tracking-wider break-all px-3 pb-3" dir="ltr">
+                {maskedCode}
+              </p>
+            )}
           </div>
         )}
 
