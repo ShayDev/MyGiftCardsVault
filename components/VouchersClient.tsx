@@ -329,7 +329,7 @@ function VoucherDetailModal({
         {voucher.expiresAt && (
           <div>
             <p className="text-xs text-slate-400 mb-0.5">{t.expires}</p>
-            <p className="text-sm font-mono text-slate-800">{voucher.expiresAt}</p>
+            <p className="text-sm font-mono text-slate-800">{`${voucher.expiresAt!.slice(0, 2)}/${voucher.expiresAt!.slice(2)}`}</p>
           </div>
         )}
 
@@ -393,46 +393,71 @@ function VoucherDetailModal({
 
 // ── Voucher Row ────────────────────────────────────────────────────────────────
 
-function VoucherRow({ voucher, onClick }: { voucher: VoucherItem; onClick: () => void }) {
+function VoucherRow({ voucher, onClick, onDelete }: { voucher: VoucherItem; onClick: () => void; onDelete?: () => Promise<void> }) {
   const t = getT(useLanguageStore((s) => s.locale))
+  const [deleting, startDelete] = useTransition()
+
+  function handleDelete(e: React.MouseEvent) {
+    e.stopPropagation()
+    startDelete(async () => { await onDelete?.() })
+  }
 
   return (
-    <button
-      type="button"
-      onClick={onClick}
-      className="w-full text-left bg-white rounded-2xl border border-slate-100 shadow-sm hover:shadow-md hover:border-slate-200 transition-all p-4 flex items-center gap-3"
-    >
-      <span className="text-xs font-mono text-slate-400 flex-shrink-0 w-8 text-right">#{voucher.seq}</span>
-      <div className="flex-shrink-0">
-        <span className={`px-2.5 py-1 rounded-full text-xs font-semibold ${providerColor(voucher.provider)}`}>
-          {voucher.provider}
-        </span>
-      </div>
-      <div className="flex-1 min-w-0">
-        <div className="flex items-center gap-2">
-          <span className="text-sm font-medium text-slate-800 truncate">{voucher.name}</span>
-        </div>
-        <div className="flex items-center gap-2 mt-0.5">
-          {voucher.value !== undefined && (
-            <span className="text-xs font-mono text-slate-500">{voucher.value.toFixed(2)}</span>
-          )}
-          {voucher.expiresAt && (
-            <span className="text-xs font-mono text-slate-400">{voucher.expiresAt}</span>
-          )}
-        </div>
-      </div>
-      <div className="flex-shrink-0">
-        {voucher.isUsed ? (
-          <span className="px-2.5 py-1 rounded-full text-xs font-semibold bg-slate-100 text-slate-500">
-            {t.usedVouchers}
+    <div className="voucher-row w-full bg-white rounded-2xl border border-slate-100 shadow-sm hover:shadow-md hover:border-slate-200 transition-all flex items-center gap-3 pr-2">
+      <button
+        type="button"
+        onClick={onClick}
+        className="flex-1 min-w-0 text-left p-4 flex items-center gap-3"
+      >
+        <span className="text-xs font-mono text-slate-400 flex-shrink-0 w-8 text-right">#{voucher.seq}</span>
+        <div className="flex-shrink-0">
+          <span className={`px-2.5 py-1 rounded-full text-xs font-semibold ${providerColor(voucher.provider)}`}>
+            {voucher.provider}
           </span>
-        ) : (
-          <span className="px-2.5 py-1 rounded-full text-xs font-semibold bg-emerald-100 text-emerald-700">
-            {t.activeVouchers}
-          </span>
+        </div>
+        <div className="flex-1 min-w-0">
+          <div className="flex items-center gap-2">
+            <span className="text-sm font-medium text-slate-800 truncate">{voucher.name}</span>
+          </div>
+          <div className="flex items-center gap-2 mt-0.5">
+            {voucher.value !== undefined && (
+              <span className="text-xs font-mono text-slate-500">{voucher.value.toFixed(2)}</span>
+            )}
+            {voucher.expiresAt && (
+              <span className="text-xs font-mono text-slate-400">{`${voucher.expiresAt!.slice(0, 2)}/${voucher.expiresAt!.slice(2)}`}</span>
+            )}
+          </div>
+        </div>
+        {!onDelete && (
+          <div className="flex-shrink-0">
+            {voucher.isUsed ? (
+              <span className="px-2.5 py-1 rounded-full text-xs font-semibold bg-slate-100 text-slate-500">
+                {t.usedVouchers}
+              </span>
+            ) : (
+              <span className="px-2.5 py-1 rounded-full text-xs font-semibold bg-emerald-100 text-emerald-700">
+                {t.activeVouchers}
+              </span>
+            )}
+          </div>
         )}
-      </div>
-    </button>
+      </button>
+      {onDelete && (
+        <button
+          type="button"
+          onClick={handleDelete}
+          disabled={deleting}
+          className="flex-shrink-0 w-9 h-9 flex items-center justify-center rounded-xl text-slate-400 hover:text-rose-500 hover:bg-rose-50 transition-colors disabled:opacity-40"
+          title={t.removeCard}
+        >
+          {deleting ? <Spinner /> : (
+            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+            </svg>
+          )}
+        </button>
+      )}
+    </div>
   )
 }
 
@@ -507,7 +532,7 @@ export default function VouchersClient({ vouchers }: { vouchers: VoucherItem[] }
         ) : (
           <div className="space-y-2">
             {used.map((v) => (
-              <VoucherRow key={v.id} voucher={v} onClick={() => setSelected(v)} />
+              <VoucherRow key={v.id} voucher={v} onClick={() => setSelected(v)} onDelete={() => deleteVoucher(v.id)} />
             ))}
           </div>
         )}

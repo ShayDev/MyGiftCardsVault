@@ -294,7 +294,7 @@ function ClubDetailModal({
         {club.expiresAt && (
           <div>
             <p className="text-xs text-slate-400 mb-0.5">{t.expires}</p>
-            <p className="text-sm font-mono text-slate-800">{club.expiresAt}</p>
+            <p className="text-sm font-mono text-slate-800">{`${club.expiresAt!.slice(0, 2)}/${club.expiresAt!.slice(2)}`}</p>
           </div>
         )}
 
@@ -364,7 +364,7 @@ function ClubRow({ club, onClick }: { club: ClubItem; onClick: () => void }) {
         </div>
       </div>
       {club.expiresAt && (
-        <span className="flex-shrink-0 text-xs font-mono text-slate-400">{club.expiresAt}</span>
+        <span className="flex-shrink-0 text-xs font-mono text-slate-400">{`${club.expiresAt!.slice(0, 2)}/${club.expiresAt!.slice(2)}`}</span>
       )}
     </button>
   )

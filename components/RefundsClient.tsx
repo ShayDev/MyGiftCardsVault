@@ -593,12 +593,18 @@ function RefundDetailModal({
 
 // ── Refund Row ─────────────────────────────────────────────────────────────────
 
-function RefundRow({ refund, onClick }: { refund: RefundItem; onClick: () => void }) {
+function RefundRow({ refund, onClick, onDelete }: { refund: RefundItem; onClick: () => void; onDelete?: () => Promise<void> }) {
   const locale = useLanguageStore((s) => s.locale)
   const t = getT(locale)
   const dir = localeDir[locale]
   const isPending = refund.status === 'pending'
   const [toggling, startToggle] = useTransition()
+  const [deleting, startDelete] = useTransition()
+
+  function handleDelete(e: React.MouseEvent) {
+    e.stopPropagation()
+    startDelete(async () => { await onDelete?.() })
+  }
 
   function handleToggle(e: React.MouseEvent) {
     e.stopPropagation()
@@ -610,7 +616,7 @@ function RefundRow({ refund, onClick }: { refund: RefundItem; onClick: () => voi
   return (
     <div
       dir={dir}
-      className="refund-row w-full bg-white rounded-2xl border border-slate-100 shadow-sm hover:shadow-md hover:border-slate-200 transition-all p-4 flex items-center gap-3"
+      className="refund-row w-full bg-white rounded-2xl border border-slate-100 shadow-sm hover:shadow-md hover:border-slate-200 transition-all p-4 flex items-center gap-3 pr-2"
     >
       {/* Radio toggle */}
       <button
@@ -673,6 +679,21 @@ function RefundRow({ refund, onClick }: { refund: RefundItem; onClick: () => voi
           </span>
         )}
       </button>
+      {onDelete && (
+        <button
+          type="button"
+          onClick={handleDelete}
+          disabled={deleting}
+          className="flex-shrink-0 w-9 h-9 flex items-center justify-center rounded-xl text-slate-400 hover:text-rose-500 hover:bg-rose-50 transition-colors disabled:opacity-40"
+          title={t.removeCard}
+        >
+          {deleting ? <Spinner /> : (
+            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+            </svg>
+          )}
+        </button>
+      )}
     </div>
   )
 }
@@ -751,7 +772,7 @@ export default function RefundsClient({ refunds }: { refunds: RefundItem[] }) {
         {used.length > 0 && (
           <div className="space-y-2">
             {used.map((r) => (
-              <RefundRow key={r.id} refund={r} onClick={() => setSelected(r)} />
+              <RefundRow key={r.id} refund={r} onClick={() => setSelected(r)} onDelete={() => deleteRefund(r.id)} />
             ))}
           </div>
         )}
