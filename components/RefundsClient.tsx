@@ -1,7 +1,7 @@
 'use client'
 
 import React, { useState, useTransition } from 'react'
-import { createRefund, markRefundReceived, deleteRefund, type RefundItem } from '../app/refunds/actions'
+import { createRefund, markRefundReceived, markRefundUsed, deleteRefund, type RefundItem } from '../app/refunds/actions'
 import { useLanguageStore } from '../hooks/useLanguageStore'
 import { getT } from '../lib/i18n'
 import { localeDir } from '../lib/i18n'
@@ -136,6 +136,18 @@ function AddRefundModal({ onClose }: { onClose: () => void }) {
   return (
     <Modal title={t.addNewRefund} onClose={onClose}>
       <form onSubmit={handleSubmit} className="space-y-4">
+        {/* Status radio */}
+        <div className="flex gap-3">
+          {(['received', 'pending'] as const).map((s) => (
+            <label key={s} className="flex-1 flex items-center gap-2 h-11 px-3 rounded-xl border border-slate-200 cursor-pointer has-[:checked]:border-emerald-500 has-[:checked]:bg-emerald-50 transition-colors">
+              <input type="radio" name="status" value={s} defaultChecked={s === 'received'} className="accent-emerald-500" />
+              <span className="text-sm text-slate-700">
+                {s === 'received' ? t.receivedRefunds : t.pendingRefunds}
+              </span>
+            </label>
+          ))}
+        </div>
+
         <Field label={t.refundProvider}>
           <input name="provider" required placeholder="e.g. Zara, IKEA" className={inputClass} />
         </Field>
@@ -452,6 +464,23 @@ function RefundDetailModal({
           </button>
           <button
             type="button"
+            onClick={() => {
+              startTransition(async () => {
+                try {
+                  await markRefundUsed(refund.id, !refund.isUsed)
+                  onClose()
+                } catch {
+                  setError(t.failedToUpdateRefund)
+                }
+              })
+            }}
+            disabled={isPending}
+            className="flex-1 h-11 rounded-xl border border-slate-200 text-sm font-medium text-slate-600 hover:bg-slate-50 transition-colors disabled:opacity-60"
+          >
+            {refund.isUsed ? t.markAsUnused : t.markAsUsed}
+          </button>
+          <button
+            type="button"
             onClick={handleDelete}
             disabled={isPending}
             className="h-11 px-4 rounded-xl border border-rose-200 text-sm font-medium text-rose-600 hover:bg-rose-50 transition-colors disabled:opacity-60"
@@ -471,45 +500,71 @@ function RefundRow({ refund, onClick }: { refund: RefundItem; onClick: () => voi
   const t = getT(locale)
   const dir = localeDir[locale]
   const isPending = refund.status === 'pending'
+  const [toggling, startToggle] = useTransition()
+
+  function handleToggle(e: React.MouseEvent) {
+    e.stopPropagation()
+    startToggle(async () => {
+      await markRefundReceived(refund.id, isPending)
+    })
+  }
 
   return (
-    <button
-      type="button"
-      onClick={onClick}
+    <div
       dir={dir}
-      className="refund-row w-full text-start bg-white rounded-2xl border border-slate-100 shadow-sm hover:shadow-md hover:border-slate-200 transition-all p-4 flex items-center gap-3"
+      className="refund-row w-full bg-white rounded-2xl border border-slate-100 shadow-sm hover:shadow-md hover:border-slate-200 transition-all p-4 flex items-center gap-3"
     >
-      <span className="text-xs font-mono text-slate-400 flex-shrink-0 w-8 text-right" dir="ltr">#{refund.seq}</span>
-      <div className="flex-shrink-0">
-        <span className={`px-2.5 py-1 rounded-full text-xs font-semibold ${providerColor(refund.provider)}`}>
+      {/* Radio toggle */}
+      <button
+        type="button"
+        onClick={handleToggle}
+        disabled={toggling}
+        title={isPending ? t.markAsReceived : t.markAsPending}
+        className="flex-shrink-0 w-6 h-6 flex items-center justify-center transition-opacity disabled:opacity-40"
+      >
+        {isPending ? (
+          <svg className="w-5 h-5 text-slate-300 hover:text-emerald-400 transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+            <circle cx="12" cy="12" r="9" />
+          </svg>
+        ) : (
+          <svg className="w-5 h-5 text-emerald-500" viewBox="0 0 24 24" fill="currentColor">
+            <path fillRule="evenodd" d="M12 2a10 10 0 100 20A10 10 0 0012 2zm4.707 7.293a1 1 0 00-1.414 0L10 14.586l-2.293-2.293a1 1 0 00-1.414 1.414l3 3a1 1 0 001.414 0l6-6a1 1 0 000-1.414z" clipRule="evenodd" />
+          </svg>
+        )}
+      </button>
+
+      {/* Clickable content */}
+      <button
+        type="button"
+        onClick={onClick}
+        className="flex-1 min-w-0 flex items-center gap-3 text-start"
+      >
+        <span className="text-xs font-mono text-slate-400 flex-shrink-0 w-6" dir="ltr">#{refund.seq}</span>
+        <span className={`flex-shrink-0 px-2.5 py-1 rounded-full text-xs font-semibold ${providerColor(refund.provider)}`}>
           {refund.provider}
         </span>
-      </div>
-      <div className="flex-1 min-w-0">
-        <p className="text-sm font-mono font-semibold text-slate-800" dir="ltr">
-          {formatAmount(refund.amount, refund.currency)}
-        </p>
-        <div className="flex items-center gap-2 mt-0.5">
-          {refund.referenceId && (
-            <span className="text-xs font-mono text-slate-400 truncate">{refund.referenceId}</span>
-          )}
-          {isPending && refund.expectedBy && (
-            <span className="text-xs text-amber-600">{formatDate(refund.expectedBy)}</span>
+        <div className="flex-1 min-w-0">
+          <p className="text-sm font-mono font-semibold text-slate-800" dir="ltr">
+            {formatAmount(refund.amount, refund.currency)}
+          </p>
+          {(refund.referenceId || (isPending && refund.expectedBy)) && (
+            <div className="flex items-center gap-2 mt-0.5">
+              {refund.referenceId && (
+                <span className="text-xs font-mono text-slate-400 truncate">{refund.referenceId}</span>
+              )}
+              {isPending && refund.expectedBy && (
+                <span className="text-xs text-amber-600">{formatDate(refund.expectedBy)}</span>
+              )}
+            </div>
           )}
         </div>
-      </div>
-      <div className="flex-shrink-0">
-        {isPending ? (
-          <span className="px-2.5 py-1 rounded-full text-xs font-semibold bg-amber-100 text-amber-700">
+        {isPending && (
+          <span className="flex-shrink-0 px-2.5 py-1 rounded-full text-xs font-semibold bg-amber-100 text-amber-700">
             {t.pendingRefunds}
           </span>
-        ) : (
-          <span className="px-2.5 py-1 rounded-full text-xs font-semibold bg-emerald-100 text-emerald-700">
-            {t.receivedRefunds}
-          </span>
         )}
-      </div>
-    </button>
+      </button>
+    </div>
   )
 }
 
@@ -522,18 +577,13 @@ export default function RefundsClient({ refunds }: { refunds: RefundItem[] }) {
   const [showAdd, setShowAdd] = useState(false)
   const [selected, setSelected] = useState<RefundItem | null>(null)
 
-  const pending = refunds
-    .filter((r) => r.status === 'pending')
-    .sort((a, b) => {
-      if (a.expectedBy && b.expectedBy) return a.expectedBy.localeCompare(b.expectedBy)
-      if (a.expectedBy) return -1
-      if (b.expectedBy) return 1
-      return b.createdAt.localeCompare(a.createdAt)
-    })
+  const active = refunds
+    .filter((r) => !r.isUsed)
+    .sort((a, b) => b.createdAt.localeCompare(a.createdAt))
 
-  const received = refunds
-    .filter((r) => r.status === 'received')
-    .sort((a, b) => (b.receivedAt ?? b.createdAt).localeCompare(a.receivedAt ?? a.createdAt))
+  const used = refunds
+    .filter((r) => r.isUsed)
+    .sort((a, b) => (b.usedAt ?? b.createdAt).localeCompare(a.usedAt ?? a.createdAt))
 
   return (
     <div className="refunds-page space-y-6" dir={dir}>
@@ -552,15 +602,15 @@ export default function RefundsClient({ refunds }: { refunds: RefundItem[] }) {
         </button>
       </div>
 
-      {/* Pending */}
-      <section className="refunds-section-pending">
+      {/* Active */}
+      <section className="refunds-section-active">
         <div className="flex items-center gap-2 mb-3">
-          <h2 className="text-sm font-semibold text-slate-500 uppercase tracking-wide">{t.pendingRefunds}</h2>
-          {pending.length > 0 && (
-            <span className="text-xs text-slate-400 bg-slate-100 px-2 py-0.5 rounded-full">{pending.length}</span>
+          <h2 className="text-sm font-semibold text-slate-500 uppercase tracking-wide">{t.activeVouchers}</h2>
+          {active.length > 0 && (
+            <span className="text-xs text-slate-400 bg-slate-100 px-2 py-0.5 rounded-full">{active.length}</span>
           )}
         </div>
-        {pending.length === 0 ? (
+        {active.length === 0 ? (
           <div className="bg-white rounded-2xl border border-slate-100 shadow-sm p-8 text-center">
             <p className="text-slate-500 font-medium mb-1">{t.noRefundsYet}</p>
             <p className="text-slate-400 text-sm">{t.addFirstRefundPrompt}</p>
@@ -574,28 +624,24 @@ export default function RefundsClient({ refunds }: { refunds: RefundItem[] }) {
           </div>
         ) : (
           <div className="space-y-2">
-            {pending.map((r) => (
+            {active.map((r) => (
               <RefundRow key={r.id} refund={r} onClick={() => setSelected(r)} />
             ))}
           </div>
         )}
       </section>
 
-      {/* Received */}
-      <section className="refunds-section-received">
+      {/* Used */}
+      <section className="refunds-section-used">
         <div className="flex items-center gap-2 mb-3">
-          <h2 className="text-sm font-semibold text-slate-500 uppercase tracking-wide">{t.receivedRefunds}</h2>
-          {received.length > 0 && (
-            <span className="text-xs text-slate-400 bg-slate-100 px-2 py-0.5 rounded-full">{received.length}</span>
+          <h2 className="text-sm font-semibold text-slate-500 uppercase tracking-wide">{t.usedVouchers}</h2>
+          {used.length > 0 && (
+            <span className="text-xs text-slate-400 bg-slate-100 px-2 py-0.5 rounded-full">{used.length}</span>
           )}
         </div>
-        {received.length === 0 ? (
-          <div className="bg-white rounded-2xl border border-slate-100 shadow-sm p-6 text-center">
-            <p className="text-slate-400 text-sm">{t.noReceivedRefunds}</p>
-          </div>
-        ) : (
+        {used.length > 0 && (
           <div className="space-y-2">
-            {received.map((r) => (
+            {used.map((r) => (
               <RefundRow key={r.id} refund={r} onClick={() => setSelected(r)} />
             ))}
           </div>

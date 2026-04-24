@@ -101,6 +101,8 @@ model Refund {
   code        String?
   link        String?
   imageUrl    String?
+  isUsed      Boolean   @default(false)
+  usedAt      DateTime?
   isActive    Boolean   @default(true)
   createdBy   String?
   createdAt   DateTime  @default(now())

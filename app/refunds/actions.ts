@@ -25,6 +25,7 @@ const CreateRefundSchema = z.object({
   provider:    z.string().min(1, 'Provider is required'),
   amount:      z.string().min(1).transform((v) => parseFloat(v)),
   currency:    z.string().length(3),
+  status:      z.enum(['pending', 'received']).default('received'),
   referenceId: z.string().optional(),
   notes:       z.string().optional(),
   expectedBy:  z.string().optional(),
@@ -40,6 +41,7 @@ export async function createRefund(formData: FormData) {
     provider:    formData.get('provider') as string,
     amount:      formData.get('amount') as string,
     currency:    formData.get('currency') as string,
+    status:      (formData.get('status') as string) || 'received',
     referenceId: (formData.get('referenceId') as string) || undefined,
     notes:       (formData.get('notes') as string) || undefined,
     expectedBy:  (formData.get('expectedBy') as string) || undefined,
@@ -56,6 +58,8 @@ export async function createRefund(formData: FormData) {
       provider:    data.provider,
       amount:      data.amount,
       currency:    data.currency,
+      status:      data.status,
+      receivedAt:  data.status === 'received' ? new Date() : null,
       referenceId: data.referenceId ?? null,
       notes:       data.notes ?? null,
       expectedBy:  data.expectedBy ? new Date(data.expectedBy) : null,
@@ -83,6 +87,20 @@ export async function markRefundReceived(refundId: string, received: boolean) {
   revalidatePath('/refunds')
 }
 
+export async function markRefundUsed(refundId: string, used: boolean) {
+  await getAuth()
+
+  await prisma.refund.update({
+    where: { id: refundId },
+    data: {
+      isUsed: used,
+      usedAt: used ? new Date() : null,
+    },
+  })
+
+  revalidatePath('/refunds')
+}
+
 export async function deleteRefund(refundId: string) {
   await getAuth()
 
@@ -101,6 +119,8 @@ export type RefundItem = {
   amount: number
   currency: string
   status: 'pending' | 'received'
+  isUsed: boolean
+  usedAt?: string
   referenceId?: string
   notes?: string
   expectedBy?: string
