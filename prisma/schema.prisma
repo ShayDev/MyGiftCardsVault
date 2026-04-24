@@ -96,7 +96,7 @@ model Refund {
   status      String    @default("pending")
   referenceId String?
   notes       String?
-  expectedBy  DateTime?
+  expiresAt   String?
   receivedAt  DateTime?
   code        String?
   link        String?

@@ -38,7 +38,7 @@ export default async function Page() {
     usedAt:      r.usedAt?.toISOString() ?? undefined,
     referenceId: r.referenceId ?? undefined,
     notes:       r.notes ?? undefined,
-    expectedBy:  r.expectedBy?.toISOString() ?? undefined,
+    expiresAt:   r.expiresAt ?? undefined,
     receivedAt:  r.receivedAt?.toISOString() ?? undefined,
     code:        dec(r.code ?? null),
     link:        dec(r.link ?? null),

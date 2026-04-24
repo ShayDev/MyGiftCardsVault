@@ -176,8 +176,14 @@ function AddRefundModal({ onClose }: { onClose: () => void }) {
         <Field label={t.refundReference}>
           <input name="referenceId" placeholder={t.refundReferencePlaceholder} className={inputClass} />
         </Field>
-        <Field label={t.refundExpectedBy}>
-          <input name="expectedBy" type="date" className={inputClass} />
+        <Field label={t.expirationOptional}>
+          <input
+            name="expiresAt"
+            maxLength={4}
+            pattern="(0[1-9]|1[0-2])\d{2}"
+            placeholder="MMYY"
+            className={`${inputClass} font-mono uppercase`}
+          />
         </Field>
         <Field label={t.refundCode}>
           <input name="code" placeholder={t.refundCodePlaceholder} className={`${inputClass} font-mono`} />
@@ -398,11 +404,13 @@ function RefundDetailModal({
           </div>
         )}
 
-        {/* Expected by */}
-        {isPending_ && refund.expectedBy && (
+        {/* Expires */}
+        {refund.expiresAt && (
           <div>
-            <p className="text-xs text-slate-400 mb-0.5">{t.refundExpectedBy}</p>
-            <p className="text-sm text-slate-700">{formatDate(refund.expectedBy)}</p>
+            <p className="text-xs text-slate-400 mb-0.5">{t.expires}</p>
+            <p className="text-sm font-mono text-slate-800">
+              {`${refund.expiresAt.slice(0, 2)}/${refund.expiresAt.slice(2)}`}
+            </p>
           </div>
         )}
 
@@ -644,13 +652,15 @@ function RefundRow({ refund, onClick }: { refund: RefundItem; onClick: () => voi
               </p>
             )}
           </div>
-          {(refund.referenceId || (isPending && refund.expectedBy)) && (
+          {(refund.referenceId || refund.expiresAt) && (
             <div className="flex items-center gap-2 mt-0.5">
               {refund.referenceId && (
                 <span className="text-xs font-mono text-slate-400 truncate">{refund.referenceId}</span>
               )}
-              {isPending && refund.expectedBy && (
-                <span className="text-xs text-amber-600">{formatDate(refund.expectedBy)}</span>
+              {refund.expiresAt && (
+                <span className="text-xs font-mono text-slate-400">
+                  {`${refund.expiresAt.slice(0, 2)}/${refund.expiresAt.slice(2)}`}
+                </span>
               )}
             </div>
           )}

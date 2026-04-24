@@ -28,7 +28,7 @@ const CreateRefundSchema = z.object({
   status:      z.enum(['pending', 'received']).default('received'),
   referenceId: z.string().optional(),
   notes:       z.string().optional(),
-  expectedBy:  z.string().optional(),
+  expiresAt:   z.string().regex(/^(0[1-9]|1[0-2])\d{2}$/).optional(),
   code:        z.string().optional(),
   link:        z.string().optional(),
   imageUrl:    z.string().optional(),
@@ -44,7 +44,7 @@ export async function createRefund(formData: FormData) {
     status:      (formData.get('status') as string) || 'received',
     referenceId: (formData.get('referenceId') as string) || undefined,
     notes:       (formData.get('notes') as string) || undefined,
-    expectedBy:  (formData.get('expectedBy') as string) || undefined,
+    expiresAt:   (formData.get('expiresAt') as string) || undefined,
     code:        (formData.get('code') as string) || undefined,
     link:        (formData.get('link') as string) || undefined,
     imageUrl:    (formData.get('imageUrl') as string) || undefined,
@@ -62,7 +62,7 @@ export async function createRefund(formData: FormData) {
       receivedAt:  data.status === 'received' ? new Date() : null,
       referenceId: data.referenceId ?? null,
       notes:       data.notes ?? null,
-      expectedBy:  data.expectedBy ? new Date(data.expectedBy) : null,
+      expiresAt:   data.expiresAt ?? null,
       code:        data.code ? encrypt(data.code) : null,
       link:        data.link ? encrypt(data.link) : null,
       imageUrl:    data.imageUrl ? encrypt(data.imageUrl) : null,
@@ -149,7 +149,7 @@ export type RefundItem = {
   usedAt?: string
   referenceId?: string
   notes?: string
-  expectedBy?: string
+  expiresAt?: string
   receivedAt?: string
   code?: string
   link?: string
