@@ -93,8 +93,33 @@ export async function markRefundUsed(refundId: string, used: boolean) {
   await prisma.refund.update({
     where: { id: refundId },
     data: {
-      isUsed: used,
-      usedAt: used ? new Date() : null,
+      isUsed:     used,
+      usedAt:     used ? new Date() : null,
+      usedAmount: used ? await prisma.refund.findUnique({ where: { id: refundId }, select: { amount: true } }).then(r => r?.amount ?? 0) : 0,
+    },
+  })
+
+  revalidatePath('/refunds')
+}
+
+export async function useRefundAmount(refundId: string, amount: number) {
+  await getAuth()
+
+  const refund = await prisma.refund.findUnique({
+    where: { id: refundId },
+    select: { amount: true, usedAmount: true },
+  })
+  if (!refund) throw new Error('Refund not found')
+
+  const newUsed = Number(refund.usedAmount) + amount
+  const fullyUsed = newUsed >= Number(refund.amount)
+
+  await prisma.refund.update({
+    where: { id: refundId },
+    data: {
+      usedAmount: newUsed,
+      isUsed:     fullyUsed,
+      usedAt:     fullyUsed ? new Date() : null,
     },
   })
 
@@ -120,6 +145,7 @@ export type RefundItem = {
   currency: string
   status: 'pending' | 'received'
   isUsed: boolean
+  usedAmount: number
   usedAt?: string
   referenceId?: string
   notes?: string

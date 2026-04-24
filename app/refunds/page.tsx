@@ -34,6 +34,7 @@ export default async function Page() {
     currency:    r.currency,
     status:      r.status as 'pending' | 'received',
     isUsed:      r.isUsed,
+    usedAmount:  Number(r.usedAmount),
     usedAt:      r.usedAt?.toISOString() ?? undefined,
     referenceId: r.referenceId ?? undefined,
     notes:       r.notes ?? undefined,

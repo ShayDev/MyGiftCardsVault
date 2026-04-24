@@ -198,6 +198,9 @@ const translations = {
     failedToUpdateRefund: 'Failed to update refund',
     refundImageOptional: 'Receipt / Confirmation (optional)',
     refundImageHint: 'Tap to attach photo',
+    useAmount: 'Use Amount',
+    refundRemaining: 'Remaining',
+    amountExceedsRefund: 'Amount exceeds remaining credit',
     // Misc
     cards: (n: number) => `${n} card${n !== 1 ? 's' : ''}`,
   },
@@ -395,6 +398,9 @@ const translations = {
     failedToUpdateRefund: 'עדכון ההחזר נכשל',
     refundImageOptional: 'קבלה / אישור (אופציונלי)',
     refundImageHint: 'לחץ לצירוף תמונה',
+    useAmount: 'השתמש בסכום',
+    refundRemaining: 'נותר',
+    amountExceedsRefund: 'הסכום חורג מהזיכוי הנותר',
     // Misc
     cards: (n: number) => n === 1 ? 'כרטיס אחד' : `${n} כרטיסים`,
   },

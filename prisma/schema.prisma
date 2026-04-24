@@ -101,6 +101,7 @@ model Refund {
   code        String?
   link        String?
   imageUrl    String?
+  usedAmount  Decimal   @default(0) @db.Decimal(65, 30)
   isUsed      Boolean   @default(false)
   usedAt      DateTime?
   isActive    Boolean   @default(true)

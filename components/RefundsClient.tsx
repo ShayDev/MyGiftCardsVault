@@ -1,7 +1,7 @@
 'use client'
 
 import React, { useState, useTransition } from 'react'
-import { createRefund, markRefundReceived, markRefundUsed, deleteRefund, type RefundItem } from '../app/refunds/actions'
+import { createRefund, markRefundReceived, markRefundUsed, useRefundAmount, deleteRefund, type RefundItem } from '../app/refunds/actions'
 import { useLanguageStore } from '../hooks/useLanguageStore'
 import { getT } from '../lib/i18n'
 import { localeDir } from '../lib/i18n'
@@ -235,6 +235,79 @@ function AddRefundModal({ onClose }: { onClose: () => void }) {
   )
 }
 
+// ── Use Amount Modal ───────────────────────────────────────────────────────────
+
+function UseAmountModal({ refund, onClose }: { refund: RefundItem; onClose: () => void }) {
+  const locale = useLanguageStore((s) => s.locale)
+  const t = getT(locale)
+  const remaining = refund.amount - refund.usedAmount
+  const [amount, setAmount] = useState('')
+  const [error, setError] = useState<string | null>(null)
+  const [isPending, startTransition] = useTransition()
+
+  function handleSubmit(e: React.FormEvent) {
+    e.preventDefault()
+    const val = parseFloat(amount)
+    if (!val || val <= 0) return
+    if (val > remaining) {
+      setError(t.amountExceedsRefund)
+      return
+    }
+    setError(null)
+    startTransition(async () => {
+      try {
+        await useRefundAmount(refund.id, val)
+        onClose()
+      } catch (err) {
+        setError(err instanceof Error ? err.message : t.failedToUpdateRefund)
+      }
+    })
+  }
+
+  return (
+    <Modal title={t.useAmount} onClose={onClose}>
+      <form onSubmit={handleSubmit} className="space-y-4">
+        <div className="bg-slate-50 rounded-xl px-4 py-3 flex items-center justify-between">
+          <span className="text-sm text-slate-500">{t.refundRemaining}</span>
+          <span className="text-sm font-mono font-semibold text-slate-800" dir="ltr">
+            {formatAmount(remaining, refund.currency)}
+          </span>
+        </div>
+        <Field label={t.refundAmount}>
+          <input
+            type="number"
+            min="0.01"
+            max={remaining}
+            step="0.01"
+            placeholder="0.00"
+            value={amount}
+            onChange={(e) => setAmount(e.target.value)}
+            className={`${inputClass} font-mono`}
+            autoFocus
+          />
+        </Field>
+        {error && <p className="text-sm text-rose-500 bg-rose-50 px-3 py-2 rounded-lg">{error}</p>}
+        <div className="flex gap-3 pt-1">
+          <button
+            type="button"
+            onClick={onClose}
+            className="flex-1 h-11 rounded-xl border border-slate-200 text-sm font-medium text-slate-600 hover:bg-slate-50 transition-colors"
+          >
+            {t.cancel}
+          </button>
+          <button
+            type="submit"
+            disabled={isPending || !amount}
+            className="flex-1 h-11 rounded-xl bg-emerald-500 hover:bg-emerald-600 disabled:opacity-60 text-white text-sm font-medium transition-colors"
+          >
+            {isPending ? <span className="flex items-center justify-center gap-2"><Spinner />{t.saving}</span> : t.useAmount}
+          </button>
+        </div>
+      </form>
+    </Modal>
+  )
+}
+
 // ── Refund Detail Modal ────────────────────────────────────────────────────────
 
 function RefundDetailModal({
@@ -251,6 +324,7 @@ function RefundDetailModal({
   const [formattedCode, setFormattedCode] = useState(true)
   const [isPending, startTransition] = useTransition()
   const [error, setError] = useState<string | null>(null)
+  const [showUseAmount, setShowUseAmount] = useState(false)
 
   const maskedCode = refund.code ? refund.code.replace(/.(?=.{4})/g, '•') : null
 
@@ -462,6 +536,16 @@ function RefundDetailModal({
               <span className="flex items-center justify-center gap-2"><Spinner />{t.saving}</span>
             ) : isPending_ ? t.markAsReceived : t.markAsPending}
           </button>
+          {!refund.isUsed && (
+            <button
+              type="button"
+              onClick={() => setShowUseAmount(true)}
+              disabled={isPending}
+              className="flex-1 h-11 rounded-xl bg-slate-100 hover:bg-slate-200 text-sm font-medium text-slate-700 transition-colors disabled:opacity-60"
+            >
+              {t.useAmount}
+            </button>
+          )}
           <button
             type="button"
             onClick={() => {
@@ -475,7 +559,7 @@ function RefundDetailModal({
               })
             }}
             disabled={isPending}
-            className="flex-1 h-11 rounded-xl border border-slate-200 text-sm font-medium text-slate-600 hover:bg-slate-50 transition-colors disabled:opacity-60"
+            className="h-11 px-3 rounded-xl border border-slate-200 text-sm font-medium text-slate-600 hover:bg-slate-50 transition-colors disabled:opacity-60"
           >
             {refund.isUsed ? t.markAsUnused : t.markAsUsed}
           </button>
@@ -489,6 +573,12 @@ function RefundDetailModal({
           </button>
         </div>
       </div>
+      {showUseAmount && (
+        <UseAmountModal
+          refund={refund}
+          onClose={() => { setShowUseAmount(false); onClose() }}
+        />
+      )}
     </Modal>
   )
 }
@@ -544,9 +634,16 @@ function RefundRow({ refund, onClick }: { refund: RefundItem; onClick: () => voi
           {refund.provider}
         </span>
         <div className="flex-1 min-w-0">
-          <p className="text-sm font-mono font-semibold text-slate-800" dir="ltr">
-            {formatAmount(refund.amount, refund.currency)}
-          </p>
+          <div className="flex items-baseline gap-2" dir="ltr">
+            <p className="text-sm font-mono font-semibold text-slate-800">
+              {formatAmount(refund.amount - refund.usedAmount, refund.currency)}
+            </p>
+            {refund.usedAmount > 0 && (
+              <p className="text-xs font-mono text-slate-400 line-through">
+                {formatAmount(refund.amount, refund.currency)}
+              </p>
+            )}
+          </div>
           {(refund.referenceId || (isPending && refund.expectedBy)) && (
             <div className="flex items-center gap-2 mt-0.5">
               {refund.referenceId && (
@@ -558,9 +655,11 @@ function RefundRow({ refund, onClick }: { refund: RefundItem; onClick: () => voi
             </div>
           )}
         </div>
-        {isPending && (
-          <span className="flex-shrink-0 px-2.5 py-1 rounded-full text-xs font-semibold bg-amber-100 text-amber-700">
-            {t.pendingRefunds}
+        {!refund.isUsed && (
+          <span className={`flex-shrink-0 px-2.5 py-1 rounded-full text-xs font-semibold ${
+            isPending ? 'bg-amber-100 text-amber-700' : 'bg-emerald-100 text-emerald-700'
+          }`}>
+            {isPending ? t.pendingRefunds : t.receivedRefunds}
           </span>
         )}
       </button>
