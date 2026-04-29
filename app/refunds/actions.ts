@@ -24,7 +24,7 @@ async function getAuth(): Promise<{ familyId: string; userId: string }> {
 const CreateRefundSchema = z.object({
   provider:    z.string().min(1, 'Provider is required'),
   amount:      z.string().min(1).transform((v) => parseFloat(v)),
-  currency:    z.string().length(3),
+  currency:    z.string().length(3).transform((v) => v.toUpperCase()),
   status:      z.enum(['pending', 'received']).default('received'),
   referenceId: z.string().optional(),
   notes:       z.string().optional(),

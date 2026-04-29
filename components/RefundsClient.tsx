@@ -42,9 +42,9 @@ function formatDate(iso: string): string {
   })
 }
 
-function formatAmount(amount: number, currency: string): string {
+function formatAmount(amount: number, currency: string, locale: string): string {
   try {
-    return new Intl.NumberFormat(undefined, { style: 'currency', currency }).format(amount)
+    return new Intl.NumberFormat(locale, { style: 'currency', currency, minimumFractionDigits: 2 }).format(amount)
   } catch {
     return `${amount.toFixed(2)} ${currency}`
   }
@@ -169,6 +169,7 @@ function AddRefundModal({ onClose }: { onClose: () => void }) {
               required
               maxLength={3}
               defaultValue={defaultCurrency}
+              onChange={(e) => { e.target.value = e.target.value.toUpperCase() }}
               className={`${inputClass} font-mono uppercase w-24`}
             />
           </Field>
@@ -276,7 +277,7 @@ function UseAmountModal({ refund, onClose }: { refund: RefundItem; onClose: () =
         <div className="bg-slate-50 rounded-xl px-4 py-3 flex items-center justify-between">
           <span className="text-sm text-slate-500">{t.refundRemaining}</span>
           <span className="text-sm font-mono font-semibold text-slate-800" dir="ltr">
-            {formatAmount(remaining, refund.currency)}
+            {formatAmount(remaining, refund.currency, t.currencyLocale)}
           </span>
         </div>
         <Field label={t.refundAmount}>
@@ -392,7 +393,7 @@ function RefundDetailModal({
         <div>
           <p className="text-xs text-slate-400 mb-0.5">{t.refundAmount}</p>
           <p className="text-2xl font-mono font-bold text-slate-800" dir="ltr">
-            {formatAmount(refund.amount, refund.currency)}
+            {formatAmount(refund.amount, refund.currency, t.currencyLocale)}
           </p>
         </div>
 
@@ -650,11 +651,11 @@ function RefundRow({ refund, onClick, onDelete }: { refund: RefundItem; onClick:
         <div className="flex-1 min-w-0">
           <div className="flex items-baseline gap-2" dir="ltr">
             <p className="text-sm font-mono font-semibold text-slate-800">
-              {formatAmount(refund.amount - refund.usedAmount, refund.currency)}
+              {formatAmount(refund.amount - refund.usedAmount, refund.currency, t.currencyLocale)}
             </p>
             {refund.usedAmount > 0 && (
               <p className="text-xs font-mono text-slate-400 line-through">
-                {formatAmount(refund.amount, refund.currency)}
+                {formatAmount(refund.amount, refund.currency, t.currencyLocale)}
               </p>
             )}
           </div>
