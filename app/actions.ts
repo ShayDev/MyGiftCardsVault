@@ -137,7 +137,13 @@ export type TransactionItem = {
 }
 
 export async function getCardTransactions(cardId: string): Promise<TransactionItem[]> {
-  await getAuthenticatedFamilyId()
+  const { familyId } = await getAuthenticatedFamilyId()
+
+  const card = await prisma.giftCard.findFirst({
+    where: { id: cardId, familyId },
+    select: { id: true },
+  })
+  if (!card) throw new Error('Unauthorized')
 
   const transactions = await prisma.transaction.findMany({
     where: { giftCardId: cardId },
