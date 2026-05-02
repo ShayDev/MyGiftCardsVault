@@ -83,10 +83,10 @@ export async function createCard(formData: FormData) {
 }
 
 export async function deactivateCard(cardId: string) {
-  await getAuthenticatedFamilyId()
+  const { familyId } = await getAuthenticatedFamilyId()
 
   await prisma.giftCard.update({
-    where: { id: cardId },
+    where: { id: cardId, familyId },
     data: { isActive: false },
   })
   revalidatePath('/cards')

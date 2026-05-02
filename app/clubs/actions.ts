@@ -64,10 +64,10 @@ export async function createClub(formData: FormData) {
 }
 
 export async function deleteClub(clubId: string) {
-  await getAuth()
+  const { familyId } = await getAuth()
 
   await prisma.clubMember.update({
-    where: { id: clubId },
+    where: { id: clubId, familyId },
     data: { isActive: false },
   })
 

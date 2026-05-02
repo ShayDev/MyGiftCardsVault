@@ -67,10 +67,10 @@ export async function createVoucher(formData: FormData) {
 }
 
 export async function markVoucherUsed(voucherId: string, isUsed: boolean) {
-  const { userId } = await getAuth()
+  const { familyId, userId } = await getAuth()
 
   await prisma.voucher.update({
-    where: { id: voucherId },
+    where: { id: voucherId, familyId },
     data: {
       isUsed,
       usedAt: isUsed ? new Date() : null,
@@ -82,10 +82,10 @@ export async function markVoucherUsed(voucherId: string, isUsed: boolean) {
 }
 
 export async function deleteVoucher(voucherId: string) {
-  await getAuth()
+  const { familyId } = await getAuth()
 
   await prisma.voucher.update({
-    where: { id: voucherId },
+    where: { id: voucherId, familyId },
     data: { isActive: false },
   })
 

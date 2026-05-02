@@ -74,10 +74,10 @@ export async function createRefund(formData: FormData) {
 }
 
 export async function markRefundReceived(refundId: string, received: boolean) {
-  await getAuth()
+  const { familyId } = await getAuth()
 
   await prisma.refund.update({
-    where: { id: refundId },
+    where: { id: refundId, familyId },
     data: {
       status:     received ? 'received' : 'pending',
       receivedAt: received ? new Date() : null,
@@ -88,14 +88,16 @@ export async function markRefundReceived(refundId: string, received: boolean) {
 }
 
 export async function markRefundUsed(refundId: string, used: boolean) {
-  await getAuth()
+  const { familyId } = await getAuth()
 
   await prisma.refund.update({
-    where: { id: refundId },
+    where: { id: refundId, familyId },
     data: {
       isUsed:     used,
       usedAt:     used ? new Date() : null,
-      usedAmount: used ? await prisma.refund.findUnique({ where: { id: refundId }, select: { amount: true } }).then(r => r?.amount ?? 0) : 0,
+      usedAmount: used
+        ? await prisma.refund.findFirst({ where: { id: refundId, familyId }, select: { amount: true } }).then(r => r?.amount ?? 0)
+        : 0,
     },
   })
 
@@ -103,19 +105,19 @@ export async function markRefundUsed(refundId: string, used: boolean) {
 }
 
 export async function useRefundAmount(refundId: string, amount: number) {
-  await getAuth()
+  const { familyId } = await getAuth()
 
-  const refund = await prisma.refund.findUnique({
-    where: { id: refundId },
+  const refund = await prisma.refund.findFirst({
+    where: { id: refundId, familyId },
     select: { amount: true, usedAmount: true },
   })
-  if (!refund) throw new Error('Refund not found')
+  if (!refund) throw new Error('Unauthorized')
 
   const newUsed = Number(refund.usedAmount) + amount
   const fullyUsed = newUsed >= Number(refund.amount)
 
   await prisma.refund.update({
-    where: { id: refundId },
+    where: { id: refundId, familyId },
     data: {
       usedAmount: newUsed,
       isUsed:     fullyUsed,
@@ -127,10 +129,10 @@ export async function useRefundAmount(refundId: string, amount: number) {
 }
 
 export async function deleteRefund(refundId: string) {
-  await getAuth()
+  const { familyId } = await getAuth()
 
   await prisma.refund.update({
-    where: { id: refundId },
+    where: { id: refundId, familyId },
     data: { isActive: false },
   })
 
