@@ -27,7 +27,7 @@ const CreateCardSchema = z.object({
   last4: z.string().regex(/^\d{4}$/, 'Must be exactly 4 digits').optional(),
   fullNumber: z.string().min(1).optional(),
   cvv: z.string().regex(/^\d{3,4}$/, 'Must be 3 or 4 digits').optional(),
-  link: z.string().url('Must be a valid URL').optional(),
+  link: z.url().optional(),
   expiresAt: z.string().regex(/^(0[1-9]|1[0-2])\d{2}$/, 'Must be MMYY format').optional(),
   defaultBalance: z.number().positive('Default balance must be positive'),
   notes: z.string().optional(),
@@ -93,7 +93,7 @@ export async function deactivateCard(cardId: string) {
 }
 
 const CreateTransactionSchema = z.object({
-  cardId: z.string().uuid(),
+  cardId: z.uuid(),
   type: z.enum(['SPEND', 'RECHARGE']),
   amount: z.number().positive('Amount must be positive'),
   notes: z.string().optional(),
