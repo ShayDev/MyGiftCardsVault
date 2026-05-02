@@ -105,9 +105,15 @@ export async function createTransaction(input: {
   amount: number
   notes?: string
 }) {
-  const { userId } = await getAuthenticatedFamilyId()
+  const { familyId, userId } = await getAuthenticatedFamilyId()
 
   const data = CreateTransactionSchema.parse(input)
+
+  const card = await prisma.giftCard.findFirst({
+    where: { id: data.cardId, familyId },
+    select: { id: true },
+  })
+  if (!card) throw new Error('Unauthorized')
 
   await prisma.transaction.create({
     data: {
