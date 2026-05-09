@@ -467,6 +467,7 @@ export default function VouchersClient({ vouchers }: { vouchers: VoucherItem[] }
   const t = getT(useLanguageStore((s) => s.locale))
   const [showAdd, setShowAdd] = useState(false)
   const [selected, setSelected] = useState<VoucherItem | null>(null)
+  const [showUsed, setShowUsed] = useState(false)
 
   const active = vouchers.filter((v) => !v.isUsed)
   const used = vouchers.filter((v) => v.isUsed)
@@ -519,23 +520,32 @@ export default function VouchersClient({ vouchers }: { vouchers: VoucherItem[] }
 
       {/* Used vouchers */}
       <section className="vouchers-section-used">
-        <div className="flex items-center gap-2 mb-3">
+        <button
+          onClick={() => setShowUsed((v) => !v)}
+          className="flex items-center gap-2 mb-3 w-full text-left"
+        >
           <h2 className="text-sm font-semibold text-slate-500 uppercase tracking-wide">{t.usedVouchers}</h2>
           {used.length > 0 && (
             <span className="text-xs text-slate-400 bg-slate-100 px-2 py-0.5 rounded-full">{used.length}</span>
           )}
-        </div>
-        {used.length === 0 ? (
+          <svg
+            className={`ml-auto w-4 h-4 text-slate-400 transition-transform ${showUsed ? 'rotate-180' : ''}`}
+            fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}
+          >
+            <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
+          </svg>
+        </button>
+        {showUsed && used.length === 0 ? (
           <div className="bg-white rounded-2xl border border-slate-100 shadow-sm p-6 text-center">
             <p className="text-slate-400 text-sm">{t.noUsedVouchers}</p>
           </div>
-        ) : (
+        ) : showUsed ? (
           <div className="space-y-2">
             {used.map((v) => (
               <VoucherRow key={v.id} voucher={v} onClick={() => setSelected(v)} onDelete={() => deleteVoucher(v.id)} />
             ))}
           </div>
-        )}
+        ) : null}
       </section>
 
       {/* Modals */}

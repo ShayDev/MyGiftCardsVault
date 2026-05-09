@@ -728,6 +728,7 @@ type ModalState =
 export default function GiftCardsClient({ cards }: { cards: CardWithBalance[] }) {
   const t = getT(useLanguageStore((s) => s.locale))
   const [modal, setModal] = useState<ModalState>({ type: 'none' })
+  const [showUsed, setShowUsed] = useState(false)
 
   const active = cards.filter((c) => c.balance > 0 || c.isReloadable)
   const used = cards.filter((c) => c.balance <= 0 && !c.isReloadable)
@@ -983,17 +984,26 @@ export default function GiftCardsClient({ cards }: { cards: CardWithBalance[] })
         </div>
         {/* Used Cards */}
         <section className="cards-section-used">
-          <div className="flex items-center gap-2 mb-3">
+          <button
+            onClick={() => setShowUsed((v) => !v)}
+            className="flex items-center gap-2 mb-3 w-full text-left"
+          >
             <h2 className="text-sm font-semibold text-slate-500 uppercase tracking-wide">{t.usedCards}</h2>
             {used.length > 0 && (
               <span className="text-xs text-slate-400 bg-slate-100 px-2 py-0.5 rounded-full">{t.cards(used.length)}</span>
             )}
-          </div>
-          {used.length === 0 ? (
+            <svg
+              className={`ml-auto w-4 h-4 text-slate-400 transition-transform ${showUsed ? 'rotate-180' : ''}`}
+              fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}
+            >
+              <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
+            </svg>
+          </button>
+          {showUsed && used.length === 0 ? (
             <div className="bg-white rounded-2xl border border-slate-100 shadow-sm p-6 text-center">
               <p className="text-slate-400 text-sm">{t.noUsedCards}</p>
             </div>
-          ) : (
+          ) : showUsed ? (
             <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
               {/* Desktop Table */}
               <div className="cards-used-table-desktop hidden sm:block overflow-x-auto">
@@ -1092,7 +1102,7 @@ export default function GiftCardsClient({ cards }: { cards: CardWithBalance[] })
                 ))}
               </div>
             </div>
-          )}
+          ) : null}
         </section>
       </div>
 
