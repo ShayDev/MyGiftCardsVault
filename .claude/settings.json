@@ -12,7 +12,9 @@
       "Bash(PRISMA_USER_CONSENT_FOR_DANGEROUS_AI_ACTION=\"yes\" npx prisma migrate reset --force)",
       "Bash(npx tsc *)",
       "Bash(npx vercel *)",
-      "Bash(node -e \"const z = require\\('zod'\\); console.log\\(z.BRAND || require\\('./node_modules/zod/package.json'\\).version\\)\")"
+      "Bash(node -e \"const z = require\\('zod'\\); console.log\\(z.BRAND || require\\('./node_modules/zod/package.json'\\).version\\)\")",
+      "Bash(Get-ChildItem -Path \"c:\\\\Dev\\\\CloudeProjects\\\\MyGiftCardsVault\" -Depth 2 -Directory)",
+      "Bash(Select-Object FullName)"
     ]
   }
 }

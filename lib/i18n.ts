@@ -247,7 +247,7 @@ const translations = {
     cvvPlaceholder: '123',
     cvvLabel: 'CVV',
     expirationOptional: 'תאריך תפוגה (אופציונלי)',
-    defaultBalance: 'יתרה התחלתית (USD)',
+    defaultBalance: 'יתרה התחלתית (ILS)',
     notesOptional: 'הערות (אופציונלי)',
     notesPlaceholder: 'למשל: מתנת יום הולדת מאמא',
     canFundsBeAdded: 'ניתן להוסיף כספים לכרטיס זה?',
