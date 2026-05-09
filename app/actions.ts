@@ -23,7 +23,7 @@ async function getAuthenticatedFamilyId(): Promise<{ familyId: string; userId: s
 
 const CreateCardSchema = z.object({
   name: z.string().min(1, 'Name is required'),
-  provider: z.string().min(1, 'Provider is required'),
+  provider: z.string().optional(),
   last4: z.string().regex(/^\d{4}$/, 'Must be exactly 4 digits').optional(),
   fullNumber: z.string().min(1).optional(),
   cvv: z.string().regex(/^\d{3,4}$/, 'Must be 3 or 4 digits').optional(),
@@ -40,7 +40,7 @@ export async function createCard(formData: FormData) {
   const rawBalance = parseFloat(formData.get('defaultBalance') as string)
   const raw = {
     name: formData.get('name') as string,
-    provider: formData.get('provider') as string,
+    provider: (formData.get('provider') as string) || undefined,
     last4: formData.get('last4') as string,
     fullNumber: (formData.get('fullNumber') as string) || undefined,
     cvv: (formData.get('cvv') as string) || undefined,
@@ -57,7 +57,7 @@ export async function createCard(formData: FormData) {
     data: {
       familyId,
       name: data.name,
-      provider: data.provider,
+      provider: data.provider ?? '',
       last4: data.last4 ?? null,
       fullNumber: data.fullNumber ? encrypt(data.fullNumber) : null,
       cvv:        data.cvv        ? encrypt(data.cvv)        : null,

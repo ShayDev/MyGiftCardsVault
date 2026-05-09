@@ -35,6 +35,7 @@ const PROVIDER_COLORS: Record<string, string> = {
 }
 
 function providerColor(provider: string): string {
+  if (!provider) return 'bg-slate-100 text-slate-600'
   const key = provider.toLowerCase()
   if (PROVIDER_COLORS[key]) return PROVIDER_COLORS[key]
   const palette = [
@@ -144,7 +145,8 @@ function AddCardModal({ onClose }: { onClose: () => void }) {
           <input name="name" required placeholder={t.cardNamePlaceholder} className={inputClass} />
         </Field>
         <Field label={t.providerLabel}>
-          <input name="provider" required placeholder={t.providerPlaceholder} className={inputClass} />
+          {/* TODO: replace with a closed list (combobox with custom value option) */}
+          <input name="provider" placeholder={t.providerPlaceholder} className={inputClass} />
         </Field>
         <Field label={t.last4Digits}>
           <input
@@ -295,7 +297,7 @@ function CardDetailModal({
         {/* Header */}
         <div className="flex items-center gap-3 p-3 rounded-xl bg-slate-50 border border-slate-100">
           <div className={`w-11 h-11 rounded-xl flex items-center justify-center text-sm font-bold flex-shrink-0 ${providerColor(card.provider)}`}>
-            {card.provider.slice(0, 2).toUpperCase()}
+            {(card.provider || card.name).slice(0, 2).toUpperCase()}
           </div>
           <div className="flex-1 min-w-0">
             <p className="font-semibold text-slate-800 truncate">{card.name}</p>
@@ -561,7 +563,7 @@ function TransactionModal({
     <Modal title={isSpend ? t.spendFromCard : t.rechargeCard} onClose={onClose}>
       <div className="mb-4 p-3 rounded-xl bg-slate-50 border border-slate-100 flex items-center gap-3">
         <div className={`w-10 h-10 rounded-xl flex items-center justify-center text-sm font-bold flex-shrink-0 ${providerColor(card.provider)}`}>
-          {card.provider.slice(0, 2).toUpperCase()}
+          {(card.provider || card.name).slice(0, 2).toUpperCase()}
         </div>
         <div className="flex-1 min-w-0">
           <p className="font-medium text-slate-800 text-sm truncate">{card.name}</p>
@@ -850,7 +852,7 @@ export default function GiftCardsClient({ cards }: { cards: CardWithBalance[] })
                             className="flex items-center gap-3 text-left hover:opacity-75 transition-opacity"
                           >
                             <div className={`w-9 h-9 rounded-lg flex items-center justify-center text-sm font-bold flex-shrink-0 ${providerColor(card.provider)}`}>
-                              {card.provider.slice(0, 2).toUpperCase()}
+                              {(card.provider || card.name).slice(0, 2).toUpperCase()}
                             </div>
                             <span className="font-medium text-slate-800 truncate underline-offset-2 hover:underline">{card.name}</span>
                           </button>
@@ -923,7 +925,7 @@ export default function GiftCardsClient({ cards }: { cards: CardWithBalance[] })
                     <div className="flex items-center gap-3 mb-3">
                       <span className="text-xs font-mono text-slate-400 flex-shrink-0 w-7 text-right">#{card.seq}</span>
                       <div className={`w-10 h-10 rounded-xl flex items-center justify-center text-sm font-bold flex-shrink-0 ${providerColor(card.provider)}`}>
-                        {card.provider.slice(0, 2).toUpperCase()}
+                        {(card.provider || card.name).slice(0, 2).toUpperCase()}
                       </div>
                       <button
                         onClick={() => setModal({ type: 'detail', card })}
@@ -1006,7 +1008,7 @@ export default function GiftCardsClient({ cards }: { cards: CardWithBalance[] })
                             className="flex items-center gap-3 text-left hover:opacity-75 transition-opacity"
                           >
                             <div className={`w-9 h-9 rounded-lg flex items-center justify-center text-sm font-bold flex-shrink-0 ${providerColor(card.provider)}`}>
-                              {card.provider.slice(0, 2).toUpperCase()}
+                              {(card.provider || card.name).slice(0, 2).toUpperCase()}
                             </div>
                             <span className="font-medium text-slate-800 truncate underline-offset-2 hover:underline">{card.name}</span>
                           </button>
@@ -1057,7 +1059,7 @@ export default function GiftCardsClient({ cards }: { cards: CardWithBalance[] })
                     <div className="flex items-center gap-3 mb-3">
                       <span className="text-xs font-mono text-slate-400 flex-shrink-0 w-7 text-right">#{card.seq}</span>
                       <div className={`w-10 h-10 rounded-xl flex items-center justify-center text-sm font-bold flex-shrink-0 ${providerColor(card.provider)}`}>
-                        {card.provider.slice(0, 2).toUpperCase()}
+                        {(card.provider || card.name).slice(0, 2).toUpperCase()}
                       </div>
                       <button
                         onClick={() => setModal({ type: 'detail', card })}

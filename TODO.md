@@ -139,6 +139,19 @@ A dedicated section to track pending and received store refunds (credit notes, r
 
 ---
 
+### ⬜ Provider Field — Closed List with Custom Value
+
+Replace the free-text provider input across all create forms with a combobox: a curated list of known providers, plus a "custom" option for anything not in the list.
+
+**What's needed:**
+
+- ⬜ Define a shared list of common providers (Amazon, Target, Starbucks, IKEA, Zara, etc.)
+- ⬜ Build a `ProviderCombobox` component — dropdown list + free-text fallback input
+- ⬜ Wire it into the Add Card, Add Voucher, Add Club, and Add Refund forms
+- ⬜ Add translations for built-in provider names if needed
+
+---
+
 ### ⬜ Edit Support (All Tables)
 
 Allow editing existing records across all entity types — Gift Cards, Vouchers, Clubs, and Refunds.
