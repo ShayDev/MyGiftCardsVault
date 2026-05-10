@@ -274,6 +274,7 @@ function CardDetailModal({
   const [showFull, setShowFull] = useState(false)
   const [showCvv, setShowCvv] = useState(false)
   const [copiedFull, setCopiedFull] = useState(false)
+  const [copiedLink, setCopiedLink] = useState(false)
   const [formattedFull, setFormattedFull] = useState(true)
   const [transactions, setTransactions] = useState<TransactionItem[] | null>(null)
 
@@ -429,17 +430,31 @@ function CardDetailModal({
         {card.link && (
           <div className="p-3 rounded-xl border border-slate-100 bg-white">
             <p className="text-xs text-slate-400 mb-2">{t.cardLink}</p>
-            <a
-              href={card.link}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-flex items-center gap-1.5 h-9 px-3 rounded-xl bg-emerald-500 hover:bg-emerald-600 text-white text-sm font-medium transition-colors"
-            >
-              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
-              </svg>
-              {t.openLink}
-            </a>
+            <div className="flex items-center gap-2">
+              <a
+                href={card.link}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-1.5 h-9 px-3 rounded-xl bg-emerald-500 hover:bg-emerald-600 text-white text-sm font-medium transition-colors"
+              >
+                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                </svg>
+                {t.openLink}
+              </a>
+              <button
+                type="button"
+                onClick={() => { navigator.clipboard.writeText(card.link!).then(() => { setCopiedLink(true); setTimeout(() => setCopiedLink(false), 2000) }) }}
+                className="flex items-center gap-1.5 h-9 px-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-600 text-xs font-medium transition-colors"
+              >
+                {copiedLink ? (
+                  <svg className="w-4 h-4 text-emerald-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" /></svg>
+                ) : (
+                  <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><rect x="9" y="9" width="13" height="13" rx="2" ry="2" /><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" /></svg>
+                )}
+                {copiedLink ? t.copied : t.copy}
+              </button>
+            </div>
           </div>
         )}
 
