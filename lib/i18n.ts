@@ -201,6 +201,15 @@ const translations = {
     useAmount: 'Use Amount',
     refundRemaining: 'Remaining',
     amountExceedsRefund: 'Amount exceeds remaining credit',
+    // Edit
+    edit: 'Edit',
+    saveChanges: 'Save Changes',
+    editCard: 'Edit Card',
+    editVoucher: 'Edit Voucher',
+    editClub: 'Edit Club',
+    editRefund: 'Edit Refund',
+    failedToUpdateCard: 'Failed to update card',
+    failedToUpdateClub: 'Failed to update club',
     // Misc
     cards: (n: number) => `${n} card${n !== 1 ? 's' : ''}`,
   },
@@ -401,6 +410,15 @@ const translations = {
     useAmount: 'השתמש בסכום',
     refundRemaining: 'נותר',
     amountExceedsRefund: 'הסכום חורג מהזיכוי הנותר',
+    // Edit
+    edit: 'ערוך',
+    saveChanges: 'שמור שינויים',
+    editCard: 'ערוך כרטיס',
+    editVoucher: 'ערוך שובר',
+    editClub: 'ערוך מועדון',
+    editRefund: 'ערוך זיכוי',
+    failedToUpdateCard: 'עדכון הכרטיס נכשל',
+    failedToUpdateClub: 'עדכון המועדון נכשל',
     // Misc
     cards: (n: number) => n === 1 ? 'כרטיס אחד' : `${n} כרטיסים`,
   },

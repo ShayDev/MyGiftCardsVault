@@ -14,7 +14,9 @@
       "Bash(npx vercel *)",
       "Bash(node -e \"const z = require\\('zod'\\); console.log\\(z.BRAND || require\\('./node_modules/zod/package.json'\\).version\\)\")",
       "Bash(Get-ChildItem -Path \"c:\\\\Dev\\\\CloudeProjects\\\\MyGiftCardsVault\" -Depth 2 -Directory)",
-      "Bash(Select-Object FullName)"
+      "Bash(Select-Object FullName)",
+      "Bash(Get-ChildItem -Path \"c:\\\\Dev\\\\CloudeProjects\\\\MyGiftCardsVault\" -Recurse -Directory)",
+      "Bash(Select-Object -ExpandProperty FullName)"
     ]
   }
 }

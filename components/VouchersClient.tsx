@@ -1,7 +1,7 @@
 'use client'
 
 import React, { useState, useTransition } from 'react'
-import { createVoucher, markVoucherUsed, deleteVoucher, type VoucherItem } from '../app/vouchers/actions'
+import { createVoucher, updateVoucher, markVoucherUsed, deleteVoucher, type VoucherItem } from '../app/vouchers/actions'
 import { useLanguageStore } from '../hooks/useLanguageStore'
 import { getT } from '../lib/i18n'
 import { formatCode } from '../lib/formatCode'
@@ -164,10 +164,12 @@ function AddVoucherModal({ onClose }: { onClose: () => void }) {
 function VoucherDetailModal({
   voucher,
   onClose,
+  onEdit,
   onUpdated,
 }: {
   voucher: VoucherItem
   onClose: () => void
+  onEdit: () => void
   onUpdated: () => void
 }) {
   const t = getT(useLanguageStore((s) => s.locale))
@@ -379,6 +381,16 @@ function VoucherDetailModal({
           </button>
           <button
             type="button"
+            onClick={() => { onClose(); onEdit() }}
+            className="h-11 w-11 flex items-center justify-center rounded-xl border border-slate-200 text-slate-400 hover:text-emerald-600 hover:border-emerald-200 transition-colors"
+            title={t.edit}
+          >
+            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+            </svg>
+          </button>
+          <button
+            type="button"
             onClick={handleDelete}
             disabled={isPending}
             className="h-11 px-4 rounded-xl border border-rose-200 text-sm font-medium text-rose-600 hover:bg-rose-50 transition-colors disabled:opacity-60"
@@ -387,6 +399,65 @@ function VoucherDetailModal({
           </button>
         </div>
       </div>
+    </Modal>
+  )
+}
+
+// ── Edit Voucher Modal ─────────────────────────────────────────────────────────
+
+function EditVoucherModal({ voucher, onClose }: { voucher: VoucherItem; onClose: () => void }) {
+  const t = getT(useLanguageStore((s) => s.locale))
+  const [isPending, startTransition] = useTransition()
+  const [error, setError] = useState<string | null>(null)
+
+  function handleSubmit(e: React.SyntheticEvent<HTMLFormElement>) {
+    e.preventDefault()
+    const fd = new FormData(e.currentTarget)
+    setError(null)
+    startTransition(async () => {
+      try {
+        await updateVoucher(voucher.id, fd)
+        onClose()
+      } catch (err) {
+        setError(err instanceof Error ? err.message : t.failedToUpdateVoucher)
+      }
+    })
+  }
+
+  return (
+    <Modal title={t.editVoucher} onClose={onClose}>
+      <form onSubmit={handleSubmit} className="space-y-4">
+        <Field label={t.voucherName}>
+          <input name="name" required defaultValue={voucher.name} placeholder="e.g. Birthday Discount" className={inputClass} />
+        </Field>
+        <Field label={t.providerLabel}>
+          <input name="provider" required defaultValue={voucher.provider} placeholder={t.providerPlaceholder} className={inputClass} />
+        </Field>
+        <Field label={t.voucherCode}>
+          <input name="code" defaultValue={voucher.code ?? ''} placeholder={t.voucherCodePlaceholder} className={`${inputClass} font-mono`} />
+        </Field>
+        <Field label={t.voucherLink}>
+          <input name="link" type="url" defaultValue={voucher.link ?? ''} placeholder={t.voucherLinkPlaceholder} className={inputClass} />
+        </Field>
+        <Field label={t.voucherValueOptional}>
+          <input name="value" type="number" min="0.01" step="0.01" placeholder="0.00" defaultValue={voucher.value ?? ''} className={`${inputClass} font-mono`} />
+        </Field>
+        <Field label={t.expirationOptional}>
+          <input name="expiresAt" maxLength={4} pattern="(0[1-9]|1[0-2])\d{2}" placeholder="MMYY" defaultValue={voucher.expiresAt ?? ''} className={`${inputClass} font-mono`} />
+        </Field>
+        <Field label={t.notesOptional}>
+          <input name="notes" placeholder={t.notesPlaceholder} defaultValue={voucher.notes ?? ''} className={inputClass} />
+        </Field>
+        {error && <p className="text-sm text-rose-500 bg-rose-50 px-3 py-2 rounded-lg">{error}</p>}
+        <div className="flex gap-3 pt-1">
+          <button type="button" onClick={onClose} className="flex-1 h-11 rounded-xl border border-slate-200 text-sm font-medium text-slate-600 hover:bg-slate-50 transition-colors">
+            {t.cancel}
+          </button>
+          <button type="submit" disabled={isPending} className="flex-1 h-11 rounded-xl bg-emerald-500 hover:bg-emerald-600 disabled:opacity-60 text-white text-sm font-medium transition-colors">
+            {isPending ? <span className="flex items-center justify-center gap-2"><Spinner />{t.saving}</span> : t.saveChanges}
+          </button>
+        </div>
+      </form>
     </Modal>
   )
 }
@@ -467,6 +538,7 @@ export default function VouchersClient({ vouchers }: { vouchers: VoucherItem[] }
   const t = getT(useLanguageStore((s) => s.locale))
   const [showAdd, setShowAdd] = useState(false)
   const [selected, setSelected] = useState<VoucherItem | null>(null)
+  const [editTarget, setEditTarget] = useState<VoucherItem | null>(null)
   const [showUsed, setShowUsed] = useState(false)
 
   const active = vouchers.filter((v) => !v.isUsed)
@@ -554,9 +626,11 @@ export default function VouchersClient({ vouchers }: { vouchers: VoucherItem[] }
         <VoucherDetailModal
           voucher={selected}
           onClose={() => setSelected(null)}
+          onEdit={() => { setEditTarget(selected); setSelected(null) }}
           onUpdated={() => setSelected(null)}
         />
       )}
+      {editTarget && <EditVoucherModal voucher={editTarget} onClose={() => setEditTarget(null)} />}
     </div>
   )
 }

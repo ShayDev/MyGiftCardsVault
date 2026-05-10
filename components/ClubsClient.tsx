@@ -1,7 +1,7 @@
 'use client'
 
 import React, { useState, useTransition } from 'react'
-import { createClub, deleteClub, type ClubItem } from '../app/clubs/actions'
+import { createClub, updateClub, deleteClub, type ClubItem } from '../app/clubs/actions'
 import { useLanguageStore } from '../hooks/useLanguageStore'
 import { getT, localeDir } from '../lib/i18n'
 import { formatCode } from '../lib/formatCode'
@@ -159,10 +159,12 @@ function AddClubModal({ onClose }: { onClose: () => void }) {
 function ClubDetailModal({
   club,
   onClose,
+  onEdit,
   onUpdated,
 }: {
   club: ClubItem
   onClose: () => void
+  onEdit: () => void
   onUpdated: () => void
 }) {
   const t = getT(useLanguageStore((s) => s.locale))
@@ -314,15 +316,91 @@ function ClubDetailModal({
 
         {error && <p className="text-sm text-rose-500 bg-rose-50 px-3 py-2 rounded-lg">{error}</p>}
 
-        <button
-          type="button"
-          onClick={handleDelete}
-          disabled={isPending}
-          className="w-full h-11 rounded-xl border border-rose-200 text-sm font-medium text-rose-600 hover:bg-rose-50 transition-colors disabled:opacity-60"
-        >
-          {isPending ? <span className="flex items-center justify-center gap-2"><Spinner />{t.removing}</span> : t.removeCard}
-        </button>
+        <div className="flex gap-2">
+          <button
+            type="button"
+            onClick={() => { onClose(); onEdit() }}
+            className="flex-1 h-11 rounded-xl border border-slate-200 text-sm font-medium text-slate-600 hover:text-emerald-600 hover:border-emerald-200 transition-colors flex items-center justify-center gap-2"
+          >
+            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+            </svg>
+            {t.edit}
+          </button>
+          <button
+            type="button"
+            onClick={handleDelete}
+            disabled={isPending}
+            className="flex-1 h-11 rounded-xl border border-rose-200 text-sm font-medium text-rose-600 hover:bg-rose-50 transition-colors disabled:opacity-60"
+          >
+            {isPending ? <span className="flex items-center justify-center gap-2"><Spinner />{t.removing}</span> : t.removeCard}
+          </button>
+        </div>
       </div>
+    </Modal>
+  )
+}
+
+// ── Edit Club Modal ────────────────────────────────────────────────────────────
+
+function EditClubModal({ club, onClose }: { club: ClubItem; onClose: () => void }) {
+  const t = getT(useLanguageStore((s) => s.locale))
+  const [isPending, startTransition] = useTransition()
+  const [error, setError] = useState<string | null>(null)
+
+  function handleSubmit(e: React.SyntheticEvent<HTMLFormElement>) {
+    e.preventDefault()
+    const fd = new FormData(e.currentTarget)
+    setError(null)
+    startTransition(async () => {
+      try {
+        await updateClub(club.id, fd)
+        onClose()
+      } catch (err) {
+        setError(err instanceof Error ? err.message : t.failedToUpdateClub)
+      }
+    })
+  }
+
+  return (
+    <Modal title={t.editClub} onClose={onClose}>
+      <form onSubmit={handleSubmit} className="space-y-4">
+        <Field label={t.clubName}>
+          <input name="name" required defaultValue={club.name} placeholder="e.g. Shufersal Club" className={inputClass} />
+        </Field>
+        <Field label={t.providerLabel}>
+          <input name="provider" defaultValue={club.provider} placeholder={t.providerPlaceholder} className={inputClass} />
+        </Field>
+        <Field label={t.ownerNameLabel}>
+          <input name="ownerName" defaultValue={club.ownerName ?? ''} placeholder="e.g. Mom" className={inputClass} />
+        </Field>
+        <Field label={t.memberIdLabel}>
+          <input name="memberId" required defaultValue={club.memberId ?? ''} placeholder={t.memberIdPlaceholder} className={`${inputClass} font-mono`} />
+        </Field>
+        <Field label={t.idTypeLabel}>
+          <select name="idType" required defaultValue={club.idType ?? ''} className={inputClass}>
+            <option value="" disabled>{t.idTypePlaceholder}</option>
+            {(Object.entries(t.idTypes) as [keyof typeof t.idTypes, string][]).map(([value, label]) => (
+              <option key={value} value={value}>{label}</option>
+            ))}
+          </select>
+        </Field>
+        <Field label={t.expirationOptional}>
+          <input name="expiresAt" maxLength={4} pattern="(0[1-9]|1[0-2])\d{2}" placeholder="MMYY" defaultValue={club.expiresAt ?? ''} className={`${inputClass} font-mono`} />
+        </Field>
+        <Field label={t.notesOptional}>
+          <input name="notes" placeholder={t.notesPlaceholder} defaultValue={club.notes ?? ''} className={inputClass} />
+        </Field>
+        {error && <p className="text-sm text-rose-500 bg-rose-50 px-3 py-2 rounded-lg">{error}</p>}
+        <div className="flex gap-3 pt-1">
+          <button type="button" onClick={onClose} className="flex-1 h-11 rounded-xl border border-slate-200 text-sm font-medium text-slate-600 hover:bg-slate-50 transition-colors">
+            {t.cancel}
+          </button>
+          <button type="submit" disabled={isPending} className="flex-1 h-11 rounded-xl bg-emerald-500 hover:bg-emerald-600 disabled:opacity-60 text-white text-sm font-medium transition-colors">
+            {isPending ? <span className="flex items-center justify-center gap-2"><Spinner />{t.saving}</span> : t.saveChanges}
+          </button>
+        </div>
+      </form>
     </Modal>
   )
 }
@@ -378,6 +456,7 @@ export default function ClubsClient({ clubs }: { clubs: ClubItem[] }) {
   const dir = localeDir[locale]
   const [showAdd, setShowAdd] = useState(false)
   const [selected, setSelected] = useState<ClubItem | null>(null)
+  const [editTarget, setEditTarget] = useState<ClubItem | null>(null)
 
   return (
     <div className="clubs-page space-y-6" dir={dir}>
@@ -422,9 +501,11 @@ export default function ClubsClient({ clubs }: { clubs: ClubItem[] }) {
         <ClubDetailModal
           club={selected}
           onClose={() => setSelected(null)}
+          onEdit={() => { setEditTarget(selected); setSelected(null) }}
           onUpdated={() => setSelected(null)}
         />
       )}
+      {editTarget && <EditClubModal club={editTarget} onClose={() => setEditTarget(null)} />}
     </div>
   )
 }

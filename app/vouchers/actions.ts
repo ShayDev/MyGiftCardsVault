@@ -66,6 +66,40 @@ export async function createVoucher(formData: FormData) {
   revalidatePath('/vouchers')
 }
 
+export async function updateVoucher(voucherId: string, formData: FormData) {
+  const { familyId } = await getAuth()
+
+  const rawValue = formData.get('value') as string
+  const parsedValue = rawValue ? parseFloat(rawValue) : undefined
+
+  const raw = {
+    name: formData.get('name') as string,
+    provider: formData.get('provider') as string,
+    code: (formData.get('code') as string) || undefined,
+    link: (formData.get('link') as string) || undefined,
+    value: parsedValue && !isNaN(parsedValue) ? parsedValue : undefined,
+    expiresAt: (formData.get('expiresAt') as string) || undefined,
+    notes: (formData.get('notes') as string) || undefined,
+  }
+
+  const data = CreateVoucherSchema.parse(raw)
+
+  await prisma.voucher.update({
+    where: { id: voucherId, familyId },
+    data: {
+      name: data.name,
+      provider: data.provider,
+      code: data.code ? encrypt(data.code) : null,
+      link: data.link ? encrypt(data.link) : null,
+      value: data.value ?? null,
+      expiresAt: data.expiresAt ?? null,
+      notes: data.notes ?? null,
+    },
+  })
+
+  revalidatePath('/vouchers')
+}
+
 export async function markVoucherUsed(voucherId: string, isUsed: boolean) {
   const { familyId, userId } = await getAuth()
 

@@ -82,6 +82,53 @@ export async function createCard(formData: FormData) {
   revalidatePath('/cards')
 }
 
+const UpdateCardSchema = z.object({
+  name: z.string().min(1, 'Name is required'),
+  provider: z.string().optional(),
+  last4: z.string().regex(/^\d{4}$/, 'Must be exactly 4 digits').optional(),
+  fullNumber: z.string().min(1).optional(),
+  cvv: z.string().regex(/^\d{3,4}$/, 'Must be 3 or 4 digits').optional(),
+  link: z.url().optional(),
+  expiresAt: z.string().regex(/^(0[1-9]|1[0-2])\d{2}$/, 'Must be MMYY format').optional(),
+  notes: z.string().optional(),
+  isReloadable: z.boolean(),
+}).refine((d) => d.last4 || d.link, { message: 'Last 4 digits or a link is required' })
+
+export async function updateCard(cardId: string, formData: FormData) {
+  const { familyId } = await getAuthenticatedFamilyId()
+
+  const raw = {
+    name: formData.get('name') as string,
+    provider: (formData.get('provider') as string) || undefined,
+    last4: (formData.get('last4') as string) || undefined,
+    fullNumber: (formData.get('fullNumber') as string) || undefined,
+    cvv: (formData.get('cvv') as string) || undefined,
+    link: (formData.get('link') as string) || undefined,
+    expiresAt: (formData.get('expiresAt') as string) || undefined,
+    notes: (formData.get('notes') as string) || undefined,
+    isReloadable: formData.get('isReloadable') === 'true',
+  }
+
+  const data = UpdateCardSchema.parse(raw)
+
+  await prisma.giftCard.update({
+    where: { id: cardId, familyId },
+    data: {
+      name: data.name,
+      provider: data.provider ?? '',
+      last4: data.last4 ?? null,
+      fullNumber: data.fullNumber ? encrypt(data.fullNumber) : null,
+      cvv:        data.cvv        ? encrypt(data.cvv)        : null,
+      link:       data.link       ? encrypt(data.link)       : null,
+      expiresAt: data.expiresAt ?? null,
+      notes: data.notes ?? null,
+      isReloadable: data.isReloadable,
+    },
+  })
+
+  revalidatePath('/cards')
+}
+
 export async function deactivateCard(cardId: string) {
   const { familyId } = await getAuthenticatedFamilyId()
 

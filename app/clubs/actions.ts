@@ -63,6 +63,37 @@ export async function createClub(formData: FormData) {
   revalidatePath('/clubs')
 }
 
+export async function updateClub(clubId: string, formData: FormData) {
+  const { familyId } = await getAuth()
+
+  const raw = {
+    name:      formData.get('name') as string,
+    provider:  (formData.get('provider') as string) || undefined,
+    memberId:  formData.get('memberId') as string,
+    ownerName: (formData.get('ownerName') as string) || undefined,
+    idType:    formData.get('idType') as string,
+    expiresAt: (formData.get('expiresAt') as string) || undefined,
+    notes:     (formData.get('notes') as string) || undefined,
+  }
+
+  const data = CreateClubSchema.parse(raw)
+
+  await prisma.clubMember.update({
+    where: { id: clubId, familyId },
+    data: {
+      name:      data.name,
+      provider:  data.provider ?? '',
+      memberId:  data.memberId ? encrypt(data.memberId) : null,
+      ownerName: data.ownerName ?? null,
+      idType:    data.idType ?? null,
+      expiresAt: data.expiresAt ?? null,
+      notes:     data.notes ?? null,
+    },
+  })
+
+  revalidatePath('/clubs')
+}
+
 export async function deleteClub(clubId: string) {
   const { familyId } = await getAuth()
 

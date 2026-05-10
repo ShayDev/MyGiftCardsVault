@@ -1,7 +1,7 @@
 'use client'
 
 import React, { useState, useTransition } from 'react'
-import { createCard, deactivateCard, createTransaction, getCardTransactions, type TransactionItem } from '../app/actions'
+import { createCard, updateCard, deactivateCard, createTransaction, getCardTransactions, type TransactionItem } from '../app/actions'
 import { useLanguageStore } from '../hooks/useLanguageStore'
 import { getT } from '../lib/i18n'
 import { formatCode } from '../lib/formatCode'
@@ -258,12 +258,14 @@ function AddCardModal({ onClose }: { onClose: () => void }) {
 function CardDetailModal({
   card,
   onClose,
+  onEdit,
   onSpend,
   onRecharge,
   onDelete,
 }: {
   card: CardWithBalance
   onClose: () => void
+  onEdit: () => void
   onSpend: () => void
   onRecharge: () => void
   onDelete: () => void
@@ -501,6 +503,15 @@ function CardDetailModal({
             {t.spend}
           </button>
           <button
+            onClick={() => { onClose(); onEdit() }}
+            className="min-h-[44px] w-11 flex items-center justify-center rounded-xl border border-slate-200 text-slate-400 hover:text-emerald-600 hover:border-emerald-200 transition-colors"
+            title={t.edit}
+          >
+            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+            </svg>
+          </button>
+          <button
             onClick={() => { onClose(); onDelete() }}
             className="min-h-[44px] w-11 flex items-center justify-center rounded-xl border border-slate-200 text-slate-400 hover:text-rose-500 hover:border-rose-200 transition-colors"
             title={t.removeCard}
@@ -511,6 +522,121 @@ function CardDetailModal({
           </button>
         </div>
       </div>
+    </Modal>
+  )
+}
+
+// ── Edit Card Modal ────────────────────────────────────────────────────────────
+
+function EditCardModal({ card, onClose }: { card: CardWithBalance; onClose: () => void }) {
+  const t = getT(useLanguageStore((s) => s.locale))
+  const [isPending, startTransition] = useTransition()
+  const [isReloadable, setIsReloadable] = useState(card.isReloadable)
+  const [error, setError] = useState<string | null>(null)
+  const [link, setLink] = useState(card.link ?? '')
+
+  function handleSubmit(e: React.SyntheticEvent<HTMLFormElement>) {
+    e.preventDefault()
+    const form = e.currentTarget
+    const fd = new FormData(form)
+    fd.set('isReloadable', String(isReloadable))
+    setError(null)
+    startTransition(async () => {
+      try {
+        await updateCard(card.id, fd)
+        onClose()
+      } catch (err) {
+        setError(err instanceof Error ? err.message : t.failedToUpdateCard)
+      }
+    })
+  }
+
+  return (
+    <Modal title={t.editCard} onClose={onClose}>
+      <form onSubmit={handleSubmit} className="space-y-4">
+        <Field label={t.cardName}>
+          <input name="name" required defaultValue={card.name} placeholder={t.cardNamePlaceholder} className={inputClass} />
+        </Field>
+        <Field label={t.providerLabel}>
+          <input name="provider" defaultValue={card.provider} placeholder={t.providerPlaceholder} className={inputClass} />
+        </Field>
+        <Field label={t.last4Digits}>
+          <input
+            name="last4"
+            required={!link}
+            maxLength={4}
+            minLength={4}
+            pattern="[0-9]{4}"
+            placeholder="1234"
+            defaultValue={card.last4 ?? ''}
+            className={`${inputClass} font-mono`}
+          />
+        </Field>
+        <Field label={t.fullCardNumberOptional}>
+          <input
+            name="fullNumber"
+            placeholder={t.fullCardNumberPlaceholder}
+            defaultValue={card.fullNumber ?? ''}
+            className={`${inputClass} font-mono`}
+          />
+        </Field>
+        <Field label={t.cvvOptional}>
+          <input
+            name="cvv"
+            type="password"
+            maxLength={4}
+            pattern="[0-9]{3,4}"
+            placeholder={t.cvvPlaceholder}
+            defaultValue={card.cvv ?? ''}
+            className={`${inputClass} font-mono`}
+          />
+        </Field>
+        <Field label={t.cardLink}>
+          <input
+            name="link"
+            type="url"
+            placeholder="https://"
+            value={link}
+            onChange={(e) => setLink(e.target.value)}
+            className={inputClass}
+          />
+        </Field>
+        <Field label={t.expirationOptional}>
+          <input
+            name="expiresAt"
+            maxLength={4}
+            pattern="(0[1-9]|1[0-2])\d{2}"
+            placeholder="MMYY"
+            defaultValue={card.expiresAt ?? ''}
+            className={`${inputClass} font-mono`}
+          />
+        </Field>
+        <Field label={t.notesOptional}>
+          <input name="notes" placeholder={t.notesPlaceholder} defaultValue={card.notes ?? ''} className={inputClass} />
+        </Field>
+        <div className="flex items-center justify-between py-1">
+          <div>
+            <p className="text-sm font-medium text-slate-700">{t.reloadable}</p>
+            <p className="text-xs text-slate-400">{t.canFundsBeAdded}</p>
+          </div>
+          <button
+            type="button"
+            onClick={() => setIsReloadable(!isReloadable)}
+            className={`relative w-11 h-6 rounded-full transition-colors ${isReloadable ? 'bg-emerald-500' : 'bg-slate-200'}`}
+          >
+            <span className={`absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform ${isReloadable ? 'translate-x-5' : 'translate-x-0'}`} />
+          </button>
+        </div>
+        {error && <p className="text-sm text-rose-500 bg-rose-50 px-3 py-2 rounded-lg">{error}</p>}
+        <div className="flex gap-3 pt-1">
+          <button type="button" onClick={onClose} className="flex-1 h-11 rounded-xl border border-slate-200 text-sm font-medium text-slate-600 hover:bg-slate-50 transition-colors">
+            {t.cancel}
+          </button>
+          <button type="submit" disabled={isPending} className="flex-1 h-11 rounded-xl bg-emerald-500 hover:bg-emerald-600 disabled:opacity-60 text-white text-sm font-medium transition-colors">
+            {isPending ? <span className="flex items-center justify-center gap-2"><Spinner />{t.saving}</span> : t.saveChanges}
+          </button>
+        </div>
+      </form>
     </Modal>
   )
 }
@@ -722,6 +848,7 @@ type ModalState =
   | { type: 'none' }
   | { type: 'add-card' }
   | { type: 'detail'; card: CardWithBalance }
+  | { type: 'edit'; card: CardWithBalance }
   | { type: 'transaction'; card: CardWithBalance; txType: 'SPEND' | 'RECHARGE' }
   | { type: 'delete'; card: CardWithBalance }
 
@@ -1112,11 +1239,13 @@ export default function GiftCardsClient({ cards }: { cards: CardWithBalance[] })
         <CardDetailModal
           card={modal.card}
           onClose={close}
+          onEdit={() => setModal({ type: 'edit', card: modal.card })}
           onSpend={() => setModal({ type: 'transaction', card: modal.card, txType: 'SPEND' })}
           onRecharge={() => setModal({ type: 'transaction', card: modal.card, txType: 'RECHARGE' })}
           onDelete={() => setModal({ type: 'delete', card: modal.card })}
         />
       )}
+      {modal.type === 'edit' && <EditCardModal card={modal.card} onClose={close} />}
       {modal.type === 'transaction' && (
         <TransactionModal
           card={modal.card}

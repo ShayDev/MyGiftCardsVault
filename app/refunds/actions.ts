@@ -73,6 +73,54 @@ export async function createRefund(formData: FormData) {
   revalidatePath('/refunds')
 }
 
+const UpdateRefundSchema = z.object({
+  provider:    z.string().min(1, 'Provider is required'),
+  amount:      z.string().min(1).transform((v) => parseFloat(v)),
+  currency:    z.string().length(3).transform((v) => v.toUpperCase()),
+  status:      z.enum(['pending', 'received']).default('received'),
+  referenceId: z.string().optional(),
+  notes:       z.string().optional(),
+  expiresAt:   z.string().regex(/^(0[1-9]|1[0-2])\d{2}$/).optional(),
+  code:        z.string().optional(),
+  link:        z.string().optional(),
+})
+
+export async function updateRefund(refundId: string, formData: FormData) {
+  const { familyId } = await getAuth()
+
+  const raw = {
+    provider:    formData.get('provider') as string,
+    amount:      formData.get('amount') as string,
+    currency:    formData.get('currency') as string,
+    status:      (formData.get('status') as string) || 'received',
+    referenceId: (formData.get('referenceId') as string) || undefined,
+    notes:       (formData.get('notes') as string) || undefined,
+    expiresAt:   (formData.get('expiresAt') as string) || undefined,
+    code:        (formData.get('code') as string) || undefined,
+    link:        (formData.get('link') as string) || undefined,
+  }
+
+  const data = UpdateRefundSchema.parse(raw)
+
+  await prisma.refund.update({
+    where: { id: refundId, familyId },
+    data: {
+      provider:    data.provider,
+      amount:      data.amount,
+      currency:    data.currency,
+      status:      data.status,
+      receivedAt:  data.status === 'received' ? new Date() : null,
+      referenceId: data.referenceId ?? null,
+      notes:       data.notes ?? null,
+      expiresAt:   data.expiresAt ?? null,
+      code:        data.code ? encrypt(data.code) : null,
+      link:        data.link ? encrypt(data.link) : null,
+    },
+  })
+
+  revalidatePath('/refunds')
+}
+
 export async function markRefundReceived(refundId: string, received: boolean) {
   const { familyId } = await getAuth()
 

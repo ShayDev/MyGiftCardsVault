@@ -1,7 +1,7 @@
 'use client'
 
 import React, { useState, useTransition } from 'react'
-import { createRefund, markRefundReceived, markRefundUsed, useRefundAmount, deleteRefund, type RefundItem } from '../app/refunds/actions'
+import { createRefund, updateRefund, markRefundReceived, markRefundUsed, useRefundAmount, deleteRefund, type RefundItem } from '../app/refunds/actions'
 import { useLanguageStore } from '../hooks/useLanguageStore'
 import { getT } from '../lib/i18n'
 import { localeDir } from '../lib/i18n'
@@ -242,6 +242,79 @@ function AddRefundModal({ onClose }: { onClose: () => void }) {
   )
 }
 
+// ── Edit Refund Modal ──────────────────────────────────────────────────────────
+
+function EditRefundModal({ refund, onClose }: { refund: RefundItem; onClose: () => void }) {
+  const locale = useLanguageStore((s) => s.locale)
+  const t = getT(locale)
+  const [isPending, startTransition] = useTransition()
+  const [error, setError] = useState<string | null>(null)
+
+  function handleSubmit(e: React.SyntheticEvent<HTMLFormElement>) {
+    e.preventDefault()
+    const fd = new FormData(e.currentTarget)
+    setError(null)
+    startTransition(async () => {
+      try {
+        await updateRefund(refund.id, fd)
+        onClose()
+      } catch (err) {
+        setError(err instanceof Error ? err.message : t.failedToUpdateRefund)
+      }
+    })
+  }
+
+  return (
+    <Modal title={t.editRefund} onClose={onClose}>
+      <form onSubmit={handleSubmit} className="space-y-4">
+        <div className="flex gap-3">
+          {(['received', 'pending'] as const).map((s) => (
+            <label key={s} className="flex-1 flex items-center gap-2 h-11 px-3 rounded-xl border border-slate-200 cursor-pointer has-[:checked]:border-emerald-500 has-[:checked]:bg-emerald-50 transition-colors">
+              <input type="radio" name="status" value={s} defaultChecked={s === refund.status} className="accent-emerald-500" />
+              <span className="text-sm text-slate-700">{s === 'received' ? t.receivedRefunds : t.pendingRefunds}</span>
+            </label>
+          ))}
+        </div>
+        <Field label={t.refundProvider}>
+          <input name="provider" required defaultValue={refund.provider} placeholder="e.g. Zara, IKEA" className={inputClass} />
+        </Field>
+        <div className="flex gap-3">
+          <Field label={t.refundAmount}>
+            <input name="amount" type="number" required min="0.01" step="0.01" placeholder="0.00" defaultValue={refund.amount} className={`${inputClass} font-mono`} />
+          </Field>
+          <Field label={t.refundCurrency}>
+            <input name="currency" required maxLength={3} defaultValue={refund.currency} onChange={(e) => { e.target.value = e.target.value.toUpperCase() }} className={`${inputClass} font-mono uppercase w-24`} />
+          </Field>
+        </div>
+        <Field label={t.refundReference}>
+          <input name="referenceId" placeholder={t.refundReferencePlaceholder} defaultValue={refund.referenceId ?? ''} className={inputClass} />
+        </Field>
+        <Field label={t.expirationOptional}>
+          <input name="expiresAt" maxLength={4} pattern="(0[1-9]|1[0-2])\d{2}" placeholder="MMYY" defaultValue={refund.expiresAt ?? ''} className={`${inputClass} font-mono uppercase`} />
+        </Field>
+        <Field label={t.refundCode}>
+          <input name="code" placeholder={t.refundCodePlaceholder} defaultValue={refund.code ?? ''} className={`${inputClass} font-mono`} />
+        </Field>
+        <Field label={t.refundLink}>
+          <input name="link" type="url" placeholder={t.refundLinkPlaceholder} defaultValue={refund.link ?? ''} className={inputClass} />
+        </Field>
+        <Field label={t.notesOptional}>
+          <input name="notes" placeholder={t.notesPlaceholder} defaultValue={refund.notes ?? ''} className={inputClass} />
+        </Field>
+        {error && <p className="text-sm text-rose-500 bg-rose-50 px-3 py-2 rounded-lg">{error}</p>}
+        <div className="flex gap-3 pt-1">
+          <button type="button" onClick={onClose} className="flex-1 h-11 rounded-xl border border-slate-200 text-sm font-medium text-slate-600 hover:bg-slate-50 transition-colors">
+            {t.cancel}
+          </button>
+          <button type="submit" disabled={isPending} className="flex-1 h-11 rounded-xl bg-emerald-500 hover:bg-emerald-600 disabled:opacity-60 text-white text-sm font-medium transition-colors">
+            {isPending ? <span className="flex items-center justify-center gap-2"><Spinner />{t.saving}</span> : t.saveChanges}
+          </button>
+        </div>
+      </form>
+    </Modal>
+  )
+}
+
 // ── Use Amount Modal ───────────────────────────────────────────────────────────
 
 function UseAmountModal({ refund, onClose }: { refund: RefundItem; onClose: () => void }) {
@@ -320,9 +393,11 @@ function UseAmountModal({ refund, onClose }: { refund: RefundItem; onClose: () =
 function RefundDetailModal({
   refund,
   onClose,
+  onEdit,
 }: {
   refund: RefundItem
   onClose: () => void
+  onEdit: () => void
 }) {
   const locale = useLanguageStore((s) => s.locale)
   const t = getT(locale)
@@ -574,6 +649,16 @@ function RefundDetailModal({
           </button>
           <button
             type="button"
+            onClick={() => { onClose(); onEdit() }}
+            className="h-11 w-11 flex items-center justify-center rounded-xl border border-slate-200 text-slate-400 hover:text-emerald-600 hover:border-emerald-200 transition-colors"
+            title={t.edit}
+          >
+            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+            </svg>
+          </button>
+          <button
+            type="button"
             onClick={handleDelete}
             disabled={isPending}
             className="h-11 px-4 rounded-xl border border-rose-200 text-sm font-medium text-rose-600 hover:bg-rose-50 transition-colors disabled:opacity-60"
@@ -707,6 +792,7 @@ export default function RefundsClient({ refunds }: { refunds: RefundItem[] }) {
   const dir = localeDir[locale]
   const [showAdd, setShowAdd] = useState(false)
   const [selected, setSelected] = useState<RefundItem | null>(null)
+  const [editTarget, setEditTarget] = useState<RefundItem | null>(null)
   const [showUsed, setShowUsed] = useState(false)
 
   const active = refunds
@@ -795,8 +881,10 @@ export default function RefundsClient({ refunds }: { refunds: RefundItem[] }) {
         <RefundDetailModal
           refund={selected}
           onClose={() => setSelected(null)}
+          onEdit={() => { setEditTarget(selected); setSelected(null) }}
         />
       )}
+      {editTarget && <EditRefundModal refund={editTarget} onClose={() => setEditTarget(null)} />}
     </div>
   )
 }

@@ -152,7 +152,7 @@ Replace the free-text provider input across all create forms with a combobox: a 
 
 ---
 
-### ⬜ Edit Support (All Tables)
+### ✅ Edit Support (All Tables)
 
 Allow editing existing records across all entity types — Gift Cards, Vouchers, Clubs, and Refunds.
 
