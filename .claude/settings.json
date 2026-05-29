@@ -16,7 +16,10 @@
       "Bash(Get-ChildItem -Path \"c:\\\\Dev\\\\CloudeProjects\\\\MyGiftCardsVault\" -Depth 2 -Directory)",
       "Bash(Select-Object FullName)",
       "Bash(Get-ChildItem -Path \"c:\\\\Dev\\\\CloudeProjects\\\\MyGiftCardsVault\" -Recurse -Directory)",
-      "Bash(Select-Object -ExpandProperty FullName)"
+      "Bash(Select-Object -ExpandProperty FullName)",
+      "Bash(findstr -i svix)",
+      "Bash(dir \"c:\\\\Dev\\\\CloudeProjects\\\\MyGiftCardsVault\\\\node_modules\" /b)",
+      "Bash(findstr /i svix)"
     ]
   }
 }
