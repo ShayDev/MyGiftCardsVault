@@ -2,6 +2,10 @@ import prisma from '../../../../lib/prisma'
 import { headers } from 'next/headers'
 import { Webhook } from 'svix'
 
+export function GET() {
+  return new Response('webhook ok', { status: 200 })
+}
+
 export async function POST(req: Request) {
   const secret = process.env.CLERK_WEBHOOK_SECRET
   if (!secret) return new Response('Webhook secret not configured', { status: 500 })
