@@ -2,6 +2,8 @@ import prisma from '../../../../lib/prisma'
 import { headers } from 'next/headers'
 import { Webhook } from 'svix'
 
+export const dynamic = 'force-dynamic'
+
 export function GET() {
   return new Response('webhook ok', { status: 200 })
 }
