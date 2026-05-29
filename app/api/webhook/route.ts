@@ -1,4 +1,4 @@
-import prisma from '../../../../lib/prisma'
+import prisma from '../../../lib/prisma'
 import { headers } from 'next/headers'
 import { Webhook } from 'svix'
 
