@@ -109,6 +109,12 @@ model Refund {
   createdAt   DateTime  @default(now())
 }
 
+model UserLoginStat {
+  clerkId     String   @id
+  loginCount  Int      @default(1)
+  lastLoginAt DateTime @default(now())
+}
+
 model Voucher {
   id          String      @id @default(uuid())
   seq         Int         @default(autoincrement())
