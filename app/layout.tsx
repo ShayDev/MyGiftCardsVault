@@ -6,6 +6,7 @@ import LanguageProvider from "../components/LanguageProvider";
 import LanguageToggle from "../components/LanguageToggle";
 import HeaderNav from "../components/HeaderNav";
 import BottomNav from "../components/BottomNav";
+import VisitTracker from "../components/VisitTracker";
 
 export const metadata: Metadata = {
   title: "MyGiftCardsVault",
@@ -71,6 +72,7 @@ export default function RootLayout({
           </header>
           <main className="app-main max-w-6xl w-full mx-auto px-4 sm:px-6 py-6 flex-1 flex flex-col pb-20">{children}</main>
           <BottomNav />
+          <VisitTracker />
         </LanguageProvider>
       </body>
     </html>

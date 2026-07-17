@@ -64,10 +64,13 @@ function Modal({ title, onClose, children }: { title: string; onClose: () => voi
 
 // ── Field ──────────────────────────────────────────────────────────────────────
 
-function Field({ label, error, children }: { label: string; error?: string; children: React.ReactNode }) {
+function Field({ label, error, required, children }: { label: string; error?: string; required?: boolean; children: React.ReactNode }) {
   return (
     <div className="space-y-1.5">
-      <label className="text-sm font-medium text-slate-700">{label}</label>
+      <label className="text-sm font-medium text-slate-700">
+        {label}
+        {required && <span className="text-rose-500"> *</span>}
+      </label>
       {children}
       {error && <p className="text-xs text-rose-500">{error}</p>}
     </div>
@@ -100,7 +103,7 @@ function AddClubModal({ onClose }: { onClose: () => void }) {
   return (
     <Modal title={t.addNewClub} onClose={onClose}>
       <form onSubmit={handleSubmit} className="space-y-4">
-        <Field label={t.clubName}>
+        <Field label={t.clubName} required>
           <input name="name" required placeholder="e.g. Shufersal Club" className={inputClass} />
         </Field>
         <Field label={t.providerLabel}>
@@ -109,10 +112,10 @@ function AddClubModal({ onClose }: { onClose: () => void }) {
         <Field label={t.ownerNameLabel}>
           <input name="ownerName" placeholder="e.g. Mom" className={inputClass} />
         </Field>
-        <Field label={t.memberIdLabel}>
+        <Field label={t.memberIdLabel} required>
           <input name="memberId" required placeholder={t.memberIdPlaceholder} className={`${inputClass} font-mono`} />
         </Field>
-        <Field label={t.idTypeLabel}>
+        <Field label={t.idTypeLabel} required>
           <select name="idType" required defaultValue="" className={inputClass}>
             <option value="" disabled>{t.idTypePlaceholder}</option>
             {(Object.entries(t.idTypes) as [keyof typeof t.idTypes, string][]).map(([value, label]) => (
@@ -365,7 +368,7 @@ function EditClubModal({ club, onClose }: { club: ClubItem; onClose: () => void 
   return (
     <Modal title={t.editClub} onClose={onClose}>
       <form onSubmit={handleSubmit} className="space-y-4">
-        <Field label={t.clubName}>
+        <Field label={t.clubName} required>
           <input name="name" required defaultValue={club.name} placeholder="e.g. Shufersal Club" className={inputClass} />
         </Field>
         <Field label={t.providerLabel}>
@@ -374,10 +377,10 @@ function EditClubModal({ club, onClose }: { club: ClubItem; onClose: () => void 
         <Field label={t.ownerNameLabel}>
           <input name="ownerName" defaultValue={club.ownerName ?? ''} placeholder="e.g. Mom" className={inputClass} />
         </Field>
-        <Field label={t.memberIdLabel}>
+        <Field label={t.memberIdLabel} required>
           <input name="memberId" required defaultValue={club.memberId ?? ''} placeholder={t.memberIdPlaceholder} className={`${inputClass} font-mono`} />
         </Field>
-        <Field label={t.idTypeLabel}>
+        <Field label={t.idTypeLabel} required>
           <select name="idType" required defaultValue={club.idType ?? ''} className={inputClass}>
             <option value="" disabled>{t.idTypePlaceholder}</option>
             {(Object.entries(t.idTypes) as [keyof typeof t.idTypes, string][]).map(([value, label]) => (

@@ -76,10 +76,13 @@ function Modal({ title, onClose, children }: { title: string; onClose: () => voi
 
 // ── Field ──────────────────────────────────────────────────────────────────────
 
-function Field({ label, error, children }: { label: string; error?: string; children: React.ReactNode }) {
+function Field({ label, error, required, children }: { label: string; error?: string; required?: boolean; children: React.ReactNode }) {
   return (
     <div className="space-y-1.5">
-      <label className="text-sm font-medium text-slate-700">{label}</label>
+      <label className="text-sm font-medium text-slate-700">
+        {label}
+        {required && <span className="text-rose-500"> *</span>}
+      </label>
       {children}
       {error && <p className="text-xs text-rose-500">{error}</p>}
     </div>
@@ -148,11 +151,11 @@ function AddRefundModal({ onClose }: { onClose: () => void }) {
           ))}
         </div>
 
-        <Field label={t.refundProvider}>
+        <Field label={t.refundProvider} required>
           <input name="provider" required placeholder="e.g. Zara, IKEA" className={inputClass} />
         </Field>
         <div className="flex gap-3">
-          <Field label={t.refundAmount}>
+          <Field label={t.refundAmount} required>
             <input
               name="amount"
               type="number"
@@ -163,7 +166,7 @@ function AddRefundModal({ onClose }: { onClose: () => void }) {
               className={`${inputClass} font-mono`}
             />
           </Field>
-          <Field label={t.refundCurrency}>
+          <Field label={t.refundCurrency} required>
             <input
               name="currency"
               required
@@ -275,14 +278,14 @@ function EditRefundModal({ refund, onClose }: { refund: RefundItem; onClose: () 
             </label>
           ))}
         </div>
-        <Field label={t.refundProvider}>
+        <Field label={t.refundProvider} required>
           <input name="provider" required defaultValue={refund.provider} placeholder="e.g. Zara, IKEA" className={inputClass} />
         </Field>
         <div className="flex gap-3">
-          <Field label={t.refundAmount}>
+          <Field label={t.refundAmount} required>
             <input name="amount" type="number" required min="0.01" step="0.01" placeholder="0.00" defaultValue={refund.amount} className={`${inputClass} font-mono`} />
           </Field>
-          <Field label={t.refundCurrency}>
+          <Field label={t.refundCurrency} required>
             <input name="currency" required maxLength={3} defaultValue={refund.currency} onChange={(e) => { e.target.value = e.target.value.toUpperCase() }} className={`${inputClass} font-mono uppercase w-24`} />
           </Field>
         </div>

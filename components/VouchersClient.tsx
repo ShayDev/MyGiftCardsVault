@@ -65,10 +65,13 @@ function Modal({ title, onClose, children }: { title: string; onClose: () => voi
 
 // ── Field ──────────────────────────────────────────────────────────────────────
 
-function Field({ label, error, children }: { label: string; error?: string; children: React.ReactNode }) {
+function Field({ label, error, required, children }: { label: string; error?: string; required?: boolean; children: React.ReactNode }) {
   return (
     <div className="space-y-1.5">
-      <label className="text-sm font-medium text-slate-700">{label}</label>
+      <label className="text-sm font-medium text-slate-700">
+        {label}
+        {required && <span className="text-rose-500"> *</span>}
+      </label>
       {children}
       {error && <p className="text-xs text-rose-500">{error}</p>}
     </div>
@@ -103,11 +106,11 @@ function AddVoucherModal({ onClose }: { onClose: () => void }) {
   return (
     <Modal title={t.addNewVoucher} onClose={onClose}>
       <form onSubmit={handleSubmit} className="space-y-4">
-        <Field label={t.voucherName}>
+        <Field label={t.voucherName} required>
           <input name="name" required placeholder="e.g. Birthday Discount" className={inputClass} />
         </Field>
         <Field label={t.providerLabel}>
-          <input name="provider" required placeholder={t.providerPlaceholder} className={inputClass} />
+          <input name="provider" placeholder={t.providerPlaceholder} className={inputClass} />
         </Field>
         <Field label={t.voucherCode}>
           <input name="code" placeholder={t.voucherCodePlaceholder} className={`${inputClass} font-mono`} />
@@ -223,9 +226,11 @@ function VoucherDetailModal({
       <div className="space-y-4">
         {/* Header row */}
         <div className="flex items-center gap-3">
-          <span className={`px-2.5 py-1 rounded-full text-xs font-semibold ${providerColor(voucher.provider)}`}>
-            {voucher.provider}
-          </span>
+          {voucher.provider && (
+            <span className={`px-2.5 py-1 rounded-full text-xs font-semibold ${providerColor(voucher.provider)}`}>
+              {voucher.provider}
+            </span>
+          )}
           <span className="text-slate-400 text-xs font-mono">#{voucher.seq}</span>
           {voucher.isUsed ? (
             <span className="ml-auto px-2.5 py-1 rounded-full text-xs font-semibold bg-slate-100 text-slate-500">
@@ -442,11 +447,11 @@ function EditVoucherModal({ voucher, onClose }: { voucher: VoucherItem; onClose:
   return (
     <Modal title={t.editVoucher} onClose={onClose}>
       <form onSubmit={handleSubmit} className="space-y-4">
-        <Field label={t.voucherName}>
+        <Field label={t.voucherName} required>
           <input name="name" required defaultValue={voucher.name} placeholder="e.g. Birthday Discount" className={inputClass} />
         </Field>
         <Field label={t.providerLabel}>
-          <input name="provider" required defaultValue={voucher.provider} placeholder={t.providerPlaceholder} className={inputClass} />
+          <input name="provider" defaultValue={voucher.provider} placeholder={t.providerPlaceholder} className={inputClass} />
         </Field>
         <Field label={t.voucherCode}>
           <input name="code" defaultValue={voucher.code ?? ''} placeholder={t.voucherCodePlaceholder} className={`${inputClass} font-mono`} />
@@ -497,9 +502,11 @@ function VoucherRow({ voucher, onClick, onDelete }: { voucher: VoucherItem; onCl
       >
         <span className="text-xs font-mono text-slate-400 flex-shrink-0 w-8 text-right">#{voucher.seq}</span>
         <div className="flex-shrink-0">
-          <span className={`px-2.5 py-1 rounded-full text-xs font-semibold ${providerColor(voucher.provider)}`}>
-            {voucher.provider}
-          </span>
+          {voucher.provider && (
+            <span className={`px-2.5 py-1 rounded-full text-xs font-semibold ${providerColor(voucher.provider)}`}>
+              {voucher.provider}
+            </span>
+          )}
         </div>
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2">

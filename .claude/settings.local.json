@@ -4,7 +4,8 @@
       "Bash(ls c:/Dev/CloudeProjects/MyGiftCardsVault/postcss*)",
       "Bash(npm install:*)",
       "mcp__Neon__list_projects",
-      "mcp__Neon__prepare_database_migration"
+      "mcp__Neon__prepare_database_migration",
+      "Bash(npx tsc *)"
     ]
   }
 }

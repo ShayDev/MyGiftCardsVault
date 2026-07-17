@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState, useTransition } from 'react'
+import React, { useState, useRef, useTransition } from 'react'
 import { createCard, updateCard, deactivateCard, createTransaction, getCardTransactions, type TransactionItem } from '../app/actions'
 import { useLanguageStore } from '../hooks/useLanguageStore'
 import { getT } from '../lib/i18n'
@@ -99,10 +99,13 @@ function Modal({ title, onClose, children }: { title: string; onClose: () => voi
 
 // ── Field ──────────────────────────────────────────────────────────────────────
 
-function Field({ label, error, children }: { label: string; error?: string; children: React.ReactNode }) {
+function Field({ label, error, required, children }: { label: string; error?: string; required?: boolean; children: React.ReactNode }) {
   return (
     <div className="space-y-1.5">
-      <label className="text-sm font-medium text-slate-700">{label}</label>
+      <label className="text-sm font-medium text-slate-700">
+        {label}
+        {required && <span className="text-rose-500"> *</span>}
+      </label>
       {children}
       {error && <p className="text-xs text-rose-500">{error}</p>}
     </div>
@@ -112,6 +115,10 @@ function Field({ label, error, children }: { label: string; error?: string; chil
 const inputClass =
   'w-full h-11 px-3 rounded-xl border border-slate-200 text-sm text-slate-800 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition'
 
+function extractLast4(fullNumber: string): string {
+  return fullNumber.replace(/\D/g, '').slice(-4)
+}
+
 // ── Add Card Modal ─────────────────────────────────────────────────────────────
 
 function AddCardModal({ onClose }: { onClose: () => void }) {
@@ -120,6 +127,7 @@ function AddCardModal({ onClose }: { onClose: () => void }) {
   const [isReloadable, setIsReloadable] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [link, setLink] = useState('')
+  const last4Ref = useRef<HTMLInputElement>(null)
 
   function handleSubmit(e: React.SyntheticEvent<HTMLFormElement>) {
     e.preventDefault()
@@ -138,31 +146,39 @@ function AddCardModal({ onClose }: { onClose: () => void }) {
     })
   }
 
+  function handleFullNumberBlur(e: React.FocusEvent<HTMLInputElement>) {
+    if (last4Ref.current && !last4Ref.current.value) {
+      last4Ref.current.value = extractLast4(e.target.value)
+    }
+  }
+
   return (
     <Modal title={t.addNewCard} onClose={onClose}>
       <form onSubmit={handleSubmit} className="space-y-4">
-        <Field label={t.cardName}>
+        <Field label={t.cardName} required>
           <input name="name" required placeholder={t.cardNamePlaceholder} className={inputClass} />
         </Field>
         <Field label={t.providerLabel}>
           {/* TODO: replace with a closed list (combobox with custom value option) */}
           <input name="provider" placeholder={t.providerPlaceholder} className={inputClass} />
         </Field>
-        <Field label={t.last4Digits}>
+        <Field label={t.fullCardNumberOptional}>
           <input
+            name="fullNumber"
+            placeholder={t.fullCardNumberPlaceholder}
+            onBlur={handleFullNumberBlur}
+            className={`${inputClass} font-mono`}
+          />
+        </Field>
+        <Field label={t.last4Digits} required={!link}>
+          <input
+            ref={last4Ref}
             name="last4"
             required={!link}
             maxLength={4}
             minLength={4}
             pattern="[0-9]{4}"
             placeholder="1234"
-            className={`${inputClass} font-mono`}
-          />
-        </Field>
-        <Field label={t.fullCardNumberOptional}>
-          <input
-            name="fullNumber"
-            placeholder={t.fullCardNumberPlaceholder}
             className={`${inputClass} font-mono`}
           />
         </Field>
@@ -195,7 +211,7 @@ function AddCardModal({ onClose }: { onClose: () => void }) {
             className={`${inputClass} font-mono`}
           />
         </Field>
-        <Field label={t.defaultBalance}>
+        <Field label={t.defaultBalance} required>
           <div className="relative">
             <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 font-medium text-sm">{t.currencySymbol}</span>
             <input
@@ -549,6 +565,7 @@ function EditCardModal({ card, onClose }: { card: CardWithBalance; onClose: () =
   const [isReloadable, setIsReloadable] = useState(card.isReloadable)
   const [error, setError] = useState<string | null>(null)
   const [link, setLink] = useState(card.link ?? '')
+  const last4Ref = useRef<HTMLInputElement>(null)
 
   function handleSubmit(e: React.SyntheticEvent<HTMLFormElement>) {
     e.preventDefault()
@@ -566,17 +583,33 @@ function EditCardModal({ card, onClose }: { card: CardWithBalance; onClose: () =
     })
   }
 
+  function handleFullNumberBlur(e: React.FocusEvent<HTMLInputElement>) {
+    if (last4Ref.current && !last4Ref.current.value) {
+      last4Ref.current.value = extractLast4(e.target.value)
+    }
+  }
+
   return (
     <Modal title={t.editCard} onClose={onClose}>
       <form onSubmit={handleSubmit} className="space-y-4">
-        <Field label={t.cardName}>
+        <Field label={t.cardName} required>
           <input name="name" required defaultValue={card.name} placeholder={t.cardNamePlaceholder} className={inputClass} />
         </Field>
         <Field label={t.providerLabel}>
           <input name="provider" defaultValue={card.provider} placeholder={t.providerPlaceholder} className={inputClass} />
         </Field>
-        <Field label={t.last4Digits}>
+        <Field label={t.fullCardNumberOptional}>
           <input
+            name="fullNumber"
+            placeholder={t.fullCardNumberPlaceholder}
+            defaultValue={card.fullNumber ?? ''}
+            onBlur={handleFullNumberBlur}
+            className={`${inputClass} font-mono`}
+          />
+        </Field>
+        <Field label={t.last4Digits} required={!link}>
+          <input
+            ref={last4Ref}
             name="last4"
             required={!link}
             maxLength={4}
@@ -584,14 +617,6 @@ function EditCardModal({ card, onClose }: { card: CardWithBalance; onClose: () =
             pattern="[0-9]{4}"
             placeholder="1234"
             defaultValue={card.last4 ?? ''}
-            className={`${inputClass} font-mono`}
-          />
-        </Field>
-        <Field label={t.fullCardNumberOptional}>
-          <input
-            name="fullNumber"
-            placeholder={t.fullCardNumberPlaceholder}
-            defaultValue={card.fullNumber ?? ''}
             className={`${inputClass} font-mono`}
           />
         </Field>
@@ -719,7 +744,7 @@ function TransactionModal({
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-4">
-        <Field label={t.amount}>
+        <Field label={t.amount} required>
           <div className="relative">
             <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 font-medium text-sm">{t.currencySymbol}</span>
             <input

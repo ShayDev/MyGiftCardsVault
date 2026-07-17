@@ -112,7 +112,9 @@ model Refund {
 model UserLoginStat {
   clerkId     String   @id
   loginCount  Int      @default(1)
+  visitCount  Int      @default(0)
   lastLoginAt DateTime @default(now())
+  lastVisitAt DateTime @default(now())
 }
 
 model Voucher {
