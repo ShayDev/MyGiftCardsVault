@@ -5,7 +5,9 @@ import { createCard, updateCard, deactivateCard, createTransaction, getCardTrans
 import { useLanguageStore } from '../hooks/useLanguageStore'
 import { getT } from '../lib/i18n'
 import { formatCode } from '../lib/formatCode'
+import type { ProviderOption } from '../lib/providerTypes'
 import Spinner from './Spinner'
+import ProviderCombobox from './ProviderCombobox'
 
 export type CardWithBalance = {
   id: string
@@ -121,7 +123,13 @@ function extractLast4(fullNumber: string): string {
 
 // ── Add Card Modal ─────────────────────────────────────────────────────────────
 
-function AddCardModal({ onClose }: { onClose: () => void }) {
+function AddCardModal({
+  onClose,
+  providerOptions,
+}: {
+  onClose: () => void
+  providerOptions: ProviderOption[]
+}) {
   const t = getT(useLanguageStore((s) => s.locale))
   const [isPending, startTransition] = useTransition()
   const [isReloadable, setIsReloadable] = useState(false)
@@ -159,8 +167,7 @@ function AddCardModal({ onClose }: { onClose: () => void }) {
           <input name="name" required placeholder={t.cardNamePlaceholder} className={inputClass} />
         </Field>
         <Field label={t.providerLabel}>
-          {/* TODO: replace with a closed list (combobox with custom value option) */}
-          <input name="provider" placeholder={t.providerPlaceholder} className={inputClass} />
+          <ProviderCombobox name="provider" options={providerOptions} placeholder={t.providerPlaceholder} />
         </Field>
         <Field label={t.fullCardNumberOptional}>
           <input
@@ -559,7 +566,15 @@ function CardDetailModal({
 
 // ── Edit Card Modal ────────────────────────────────────────────────────────────
 
-function EditCardModal({ card, onClose }: { card: CardWithBalance; onClose: () => void }) {
+function EditCardModal({
+  card,
+  onClose,
+  providerOptions,
+}: {
+  card: CardWithBalance
+  onClose: () => void
+  providerOptions: ProviderOption[]
+}) {
   const t = getT(useLanguageStore((s) => s.locale))
   const [isPending, startTransition] = useTransition()
   const [isReloadable, setIsReloadable] = useState(card.isReloadable)
@@ -596,7 +611,12 @@ function EditCardModal({ card, onClose }: { card: CardWithBalance; onClose: () =
           <input name="name" required defaultValue={card.name} placeholder={t.cardNamePlaceholder} className={inputClass} />
         </Field>
         <Field label={t.providerLabel}>
-          <input name="provider" defaultValue={card.provider} placeholder={t.providerPlaceholder} className={inputClass} />
+          <ProviderCombobox
+            name="provider"
+            defaultValue={card.provider}
+            options={providerOptions}
+            placeholder={t.providerPlaceholder}
+          />
         </Field>
         <Field label={t.fullCardNumberOptional}>
           <input
@@ -892,7 +912,13 @@ type ModalState =
   | { type: 'transaction'; card: CardWithBalance; txType: 'SPEND' | 'RECHARGE' }
   | { type: 'delete'; card: CardWithBalance }
 
-export default function GiftCardsClient({ cards }: { cards: CardWithBalance[] }) {
+export default function GiftCardsClient({
+  cards,
+  providerOptions,
+}: {
+  cards: CardWithBalance[]
+  providerOptions: ProviderOption[]
+}) {
   const t = getT(useLanguageStore((s) => s.locale))
   const [modal, setModal] = useState<ModalState>({ type: 'none' })
   const [showUsed, setShowUsed] = useState(false)
@@ -1274,7 +1300,7 @@ export default function GiftCardsClient({ cards }: { cards: CardWithBalance[] })
       </div>
 
       {/* Modals */}
-      {modal.type === 'add-card' && <AddCardModal onClose={close} />}
+      {modal.type === 'add-card' && <AddCardModal onClose={close} providerOptions={providerOptions} />}
       {modal.type === 'detail' && (
         <CardDetailModal
           card={modal.card}
@@ -1285,7 +1311,9 @@ export default function GiftCardsClient({ cards }: { cards: CardWithBalance[] })
           onDelete={() => setModal({ type: 'delete', card: modal.card })}
         />
       )}
-      {modal.type === 'edit' && <EditCardModal card={modal.card} onClose={close} />}
+      {modal.type === 'edit' && (
+        <EditCardModal card={modal.card} onClose={close} providerOptions={providerOptions} />
+      )}
       {modal.type === 'transaction' && (
         <TransactionModal
           card={modal.card}

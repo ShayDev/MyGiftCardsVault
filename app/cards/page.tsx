@@ -4,6 +4,7 @@ import prisma from '../../lib/prisma'
 import { getBalancesForCards } from '../../lib/balance'
 import GiftCardsClient, { type CardWithBalance } from '../../components/GiftCardsClient'
 import { decrypt, isEncrypted } from '../../lib/encrypt'
+import { getProviderOptions } from '../providers/actions'
 
 export default async function Page() {
   const { userId } = await auth()
@@ -24,6 +25,7 @@ export default async function Page() {
   })
 
   const balances = await getBalancesForCards(cards.map((c) => c.id))
+  const providerOptions = await getProviderOptions('CARD')
 
   function dec(v: string | null): string | undefined {
     if (!v) return undefined
@@ -46,5 +48,5 @@ export default async function Page() {
     balance: parseFloat(balances.get(c.id)?.toString() ?? '0'),
   }))
 
-  return <GiftCardsClient cards={payload} />
+  return <GiftCardsClient cards={payload} providerOptions={providerOptions} />
 }

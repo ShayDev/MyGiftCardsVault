@@ -6,6 +6,7 @@ import { redirect } from 'next/navigation'
 import { z } from 'zod'
 import prisma from '../lib/prisma'
 import { encrypt } from '../lib/encrypt'
+import { ensureProviderExists } from './providers/actions'
 
 async function getAuthenticatedFamilyId(): Promise<{ familyId: string; userId: string }> {
   const { userId } = await auth()
@@ -79,6 +80,8 @@ export async function createCard(formData: FormData) {
     },
   })
 
+  await ensureProviderExists('CARD', data.provider ?? '', familyId, userId).catch(() => {})
+
   revalidatePath('/cards')
 }
 
@@ -95,7 +98,7 @@ const UpdateCardSchema = z.object({
 }).refine((d) => d.last4 || d.link, { message: 'Last 4 digits or a link is required' })
 
 export async function updateCard(cardId: string, formData: FormData) {
-  const { familyId } = await getAuthenticatedFamilyId()
+  const { familyId, userId } = await getAuthenticatedFamilyId()
 
   const raw = {
     name: formData.get('name') as string,
@@ -125,6 +128,8 @@ export async function updateCard(cardId: string, formData: FormData) {
       isReloadable: data.isReloadable,
     },
   })
+
+  await ensureProviderExists('CARD', data.provider ?? '', familyId, userId).catch(() => {})
 
   revalidatePath('/cards')
 }

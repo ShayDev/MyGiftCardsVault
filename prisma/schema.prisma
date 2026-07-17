@@ -136,3 +136,19 @@ model Voucher {
   createdBy   String?
   createdAt   DateTime    @default(now())
 }
+
+// familyId here is intentionally NOT a FK — '0' is a sentinel for "shared
+// across all families" and has no matching FamilyGroup row. See
+// plans/provider-field-hld.md for the full design rationale.
+model Provider {
+  id            String   @id @default(uuid())
+  type          String
+  name          String?
+  nameByCountry String?
+  country       String   @default("IL")
+  familyId      String   @default("0")
+  createdBy     String?
+  createdAt     DateTime @default(now())
+
+  @@index([type, country, familyId])
+}
