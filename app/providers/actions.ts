@@ -31,6 +31,12 @@ function isEnglishText(value: string): boolean {
   return [...value].every((ch) => (ch.codePointAt(0) ?? 0) <= 0x7f)
 }
 
+// Keeps custom English entries visually consistent with the seeded list
+// (Amazon, Target, …) rather than however the user happened to type it.
+function capitalizeFirst(value: string): string {
+  return value.charAt(0).toUpperCase() + value.slice(1)
+}
+
 export async function getProviderOptions(type: ProviderType): Promise<ProviderOption[]> {
   const { familyId } = await getAuthenticatedFamilyId()
   const rows = await prisma.provider.findMany({
@@ -75,7 +81,7 @@ export async function ensureProviderExists(
   await prisma.provider.create({
     data: {
       type,
-      name: isEnglish ? trimmed : null,
+      name: isEnglish ? capitalizeFirst(trimmed) : null,
       nameByCountry: isEnglish ? null : trimmed,
       country: DEFAULT_COUNTRY,
       familyId,

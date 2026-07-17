@@ -127,6 +127,12 @@ function isEnglishText(value: string): boolean {
   return [...value].every((ch) => (ch.codePointAt(0) ?? 0) <= 0x7f)
 }
 
+// Keeps custom English entries visually consistent with the seeded list
+// (Amazon, Target, …) rather than however the user happened to type it.
+function capitalizeFirst(value: string): string {
+  return value.charAt(0).toUpperCase() + value.slice(1)
+}
+
 export async function getProviderOptions(type: ProviderType): Promise<ProviderOption[]> {
   const { familyId } = await getAuthenticatedFamilyId()
   const rows = await prisma.provider.findMany({
@@ -140,9 +146,9 @@ export async function getProviderOptions(type: ProviderType): Promise<ProviderOp
     .sort((a, b) => a.display.localeCompare(b.display))
 }
 
-// Not exported — called from within card/voucher/club/refund actions after a
-// successful create/update, never directly from the client.
-async function ensureProviderExists(
+// Called from within card/voucher/club/refund server actions after a
+// successful create/update — never directly from the client.
+export async function ensureProviderExists(
   type: ProviderType,
   displayName: string,
   familyId: string,
@@ -166,12 +172,13 @@ async function ensureProviderExists(
   if (existing) return
 
   // No translation available for a custom entry — store the typed value in
-  // whichever column matches its script, leave the other null.
+  // whichever column matches its script, leave the other null. English text
+  // is capitalized to match the seeded list's styling.
   const isEnglish = isEnglishText(trimmed)
   await prisma.provider.create({
     data: {
       type,
-      name: isEnglish ? trimmed : null,
+      name: isEnglish ? capitalizeFirst(trimmed) : null,
       nameByCountry: isEnglish ? null : trimmed,
       country: DEFAULT_COUNTRY,
       familyId,
