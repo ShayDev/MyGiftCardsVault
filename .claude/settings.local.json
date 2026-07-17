@@ -5,7 +5,8 @@
       "Bash(npm install:*)",
       "mcp__Neon__list_projects",
       "mcp__Neon__prepare_database_migration",
-      "Bash(npx tsc *)"
+      "Bash(npx tsc *)",
+      "Bash(vercel whoami *)"
     ]
   }
 }

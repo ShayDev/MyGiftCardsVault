@@ -141,14 +141,21 @@ A dedicated section to track pending and received store refunds (credit notes, r
 
 ### ⬜ Provider Field — Closed List with Custom Value
 
-Replace the free-text provider input across all create forms with a combobox: a curated list of known providers, plus a "custom" option for anything not in the list.
+Replace the free-text provider input with a searchable combobox: a closed list of known providers stored in the DB (keyed by entity type), plus the ability to type a custom value that gets saved to the list for next time.
+
+**Scope for now:** Gift Cards only (Add Card + Edit Card forms). Build the component and data model generic enough to wire into Vouchers, Clubs, and Refunds later without rework.
 
 **What's needed:**
 
-- ⬜ Define a shared list of common providers (Amazon, Target, Starbucks, IKEA, Zara, etc.)
-- ⬜ Build a `ProviderCombobox` component — dropdown list + free-text fallback input
-- ⬜ Wire it into the Add Card, Add Voucher, Add Club, and Add Refund forms
-- ⬜ Add translations for built-in provider names if needed
+- ⬜ Add a `Provider` table to Prisma schema + migration: `id`, `type` (`CARD` for now, `VOUCHER`/`CLUB`/`REFUND` later), `name` (canonical/English, nullable), `nameByCountry` (localized display, nullable — at least one of the two set, enforced via DB `CHECK`), `country` (ISO 3166-1 alpha-2, default `IL`), `familyId` (default `'0'` sentinel = shared/global, not a real FK; a real family id = custom option added by that family), `createdBy` (loose reference to `User.id`), `createdAt`
+- ⬜ Seed script to populate built-in `CARD` providers (Amazon, Target, Starbucks, IKEA, Zara, Shufersal, etc., with Hebrew `nameByCountry`) as global rows (`familyId = '0'`)
+- ⬜ Query/action to fetch provider options for a given `type`: global rows + the current family's own custom rows, deduped by displayed name
+- ⬜ When the combobox is submitted with a name not already in the list, insert it into `Provider` (`type='CARD'`, `familyId` = current family) — routed into `name` if the typed text is plain English, otherwise `nameByCountry`, so it appears as an option next time
+- ⬜ Build a `ProviderCombobox` component supporting: browse the list, type-ahead search/filter (matching across both the English and localized name, not just what's displayed), and free-text entry for anything not found (all three interaction modes, not just one)
+- ⬜ Wire into Add Card and Edit Card forms only; leave Voucher/Club/Refund provider inputs as plain text for now
+- ⬜ Keep `ProviderCombobox` decoupled from Gift Card specifics (accept `type` + options as props) so it can be reused for other entity types later
+
+**See:** `plans/provider-field-hld.md` for full design.
 
 ---
 
