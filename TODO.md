@@ -139,21 +139,23 @@ A dedicated section to track pending and received store refunds (credit notes, r
 
 ---
 
-### ⬜ Provider Field — Closed List with Custom Value
+### ✅ Provider Field — Closed List with Custom Value
 
 Replace the free-text provider input with a searchable combobox: a closed list of known providers stored in the DB (keyed by entity type), plus the ability to type a custom value that gets saved to the list for next time.
 
-**Scope for now:** Gift Cards only (Add Card + Edit Card forms). Build the component and data model generic enough to wire into Vouchers, Clubs, and Refunds later without rework.
+**Scope for now:** Gift Cards only (Add Card + Edit Card forms). Data model and component are generic enough to wire into Vouchers, Clubs, and Refunds later without rework.
 
 **What's needed:**
 
-- ⬜ Add a `Provider` table to Prisma schema + migration: `id`, `type` (`CARD` for now, `VOUCHER`/`CLUB`/`REFUND` later), `name` (canonical/English, nullable), `nameByCountry` (localized display, nullable — at least one of the two set, enforced via DB `CHECK`), `country` (ISO 3166-1 alpha-2, default `IL`), `familyId` (default `'0'` sentinel = shared/global, not a real FK; a real family id = custom option added by that family), `createdBy` (loose reference to `User.id`), `createdAt`
-- ⬜ Seed script to populate built-in `CARD` providers (Amazon, Target, Starbucks, IKEA, Zara, Shufersal, etc., with Hebrew `nameByCountry`) as global rows (`familyId = '0'`)
-- ⬜ Query/action to fetch provider options for a given `type`: global rows + the current family's own custom rows, deduped by displayed name
-- ⬜ When the combobox is submitted with a name not already in the list, insert it into `Provider` (`type='CARD'`, `familyId` = current family) — routed into `name` if the typed text is plain English, otherwise `nameByCountry`, so it appears as an option next time
-- ⬜ Build a `ProviderCombobox` component supporting: browse the list, type-ahead search/filter (matching across both the English and localized name, not just what's displayed), and free-text entry for anything not found (all three interaction modes, not just one)
-- ⬜ Wire into Add Card and Edit Card forms only; leave Voucher/Club/Refund provider inputs as plain text for now
-- ⬜ Keep `ProviderCombobox` decoupled from Gift Card specifics (accept `type` + options as props) so it can be reused for other entity types later
+- ✅ Add a `Provider` table to Prisma schema + migration: `id`, `type` (`CARD` for now, `VOUCHER`/`CLUB`/`REFUND` later), `name` (canonical/English, nullable), `nameByCountry` (localized display, nullable — at least one of the two set, enforced via DB `CHECK`), `country` (ISO 3166-1 alpha-2, default `IL`), `familyId` (default `'0'` sentinel = shared/global, not a real FK; a real family id = custom option added by that family), `balanceCheckUrl` (nullable, reserved — unused for now), `createdBy` (loose reference to `User.id`), `createdAt`
+- ✅ Seed script to populate built-in `CARD` providers (Amazon, Target, Starbucks, IKEA, Zara, Shufersal, etc., with Hebrew `nameByCountry`) as global rows (`familyId = '0'`) — run against dev and prod
+- ✅ Query/action to fetch provider options for a given `type`: global rows + the current family's own custom rows, deduped by displayed name
+- ✅ When the combobox is submitted with a name not already in the list, insert it into `Provider` (`type='CARD'`, `familyId` = current family) — routed into `name` if the typed text is plain English, otherwise `nameByCountry`; English entries capitalized to match the seeded list's styling
+- ✅ Build a `ProviderCombobox` component supporting: browse the list, type-ahead search/filter (matching across both the English and localized name, not just what's displayed), and free-text entry for anything not found (all three interaction modes, not just one)
+- ✅ Wire into Add Card and Edit Card forms only; leave Voucher/Club/Refund provider inputs as plain text for now
+- ✅ Keep `ProviderCombobox` decoupled from Gift Card specifics (accept `type` + options as props) so it can be reused for other entity types later
+- ⬜ **Future:** cache `getProviderOptions` (e.g. Next's `unstable_cache`/`"use cache"`, keyed by `type`+`familyId`, invalidated via `revalidateTag` from `ensureProviderExists`) if `/cards` load latency ever actually shows it's worth it — skipped for now since it's one small indexed query, not a measured bottleneck
+- ⬜ **Future:** surface `balanceCheckUrl` in the UI (e.g. a "Check balance" link/button on the card detail modal) — column exists and is populated nowhere yet, purely reserved for this
 
 **See:** `plans/provider-field-hld.md` for full design.
 

@@ -25,19 +25,21 @@ The combobox supports three interaction modes in one control: browsing the full 
 | `nameByCountry` | `String?`  | Localized display variant for `country`, e.g. "גוגל פליי". Set for seeded rows; set for a custom entry only if it was typed in the country's language (Hebrew, for now) |
 | `country`       | `String`   | ISO 3166-1 alpha-2 code, default `'IL'`. Scopes which providers apply where; ready for other countries later |
 | `familyId`      | `String`   | Default `'0'` — the sentinel meaning "shared/global", not a real `FamilyGroup.id`. Set to a real family id = custom option, visible only to that family |
+| `balanceCheckUrl` | `String?` | Provider's balance-check page. Reserved for a future feature — not read or written by anything yet |
 | `createdBy`     | `String?`  | FK-by-convention to `User.id` (loose reference, same pattern as `GiftCard.createdBy` etc.) — `null` for seeded rows |
 | `createdAt`     | `DateTime` | Default `now()`                                                         |
 
 ```prisma
 model Provider {
-  id            String   @id @default(uuid())
-  type          String
-  name          String?
-  nameByCountry String?
-  country       String   @default("IL")
-  familyId      String   @default("0")
-  createdBy     String?
-  createdAt     DateTime @default(now())
+  id              String   @id @default(uuid())
+  type            String
+  name            String?
+  nameByCountry   String?
+  country         String   @default("IL")
+  familyId        String   @default("0")
+  balanceCheckUrl String?
+  createdBy       String?
+  createdAt       DateTime @default(now())
 
   @@index([type, country, familyId])
 }
@@ -53,14 +55,15 @@ model Provider {
 
 ```sql
 CREATE TABLE IF NOT EXISTS "Provider" (
-  "id"            TEXT        NOT NULL DEFAULT gen_random_uuid(),
-  "type"          TEXT        NOT NULL,
-  "name"          TEXT,
-  "nameByCountry" TEXT,
-  "country"       TEXT        NOT NULL DEFAULT 'IL',
-  "familyId"      TEXT        NOT NULL DEFAULT '0',
-  "createdBy"     TEXT,
-  "createdAt"     TIMESTAMPTZ NOT NULL DEFAULT now(),
+  "id"              TEXT        NOT NULL DEFAULT gen_random_uuid(),
+  "type"            TEXT        NOT NULL,
+  "name"            TEXT,
+  "nameByCountry"   TEXT,
+  "country"         TEXT        NOT NULL DEFAULT 'IL',
+  "familyId"        TEXT        NOT NULL DEFAULT '0',
+  "balanceCheckUrl" TEXT,
+  "createdBy"       TEXT,
+  "createdAt"       TIMESTAMPTZ NOT NULL DEFAULT now(),
   CONSTRAINT "Provider_pkey" PRIMARY KEY ("id"),
   CONSTRAINT "Provider_name_check" CHECK ("name" IS NOT NULL OR "nameByCountry" IS NOT NULL)
 );
@@ -74,6 +77,8 @@ CREATE INDEX IF NOT EXISTS "Provider_type_country_familyId_idx" ON "Provider" ("
 CREATE UNIQUE INDEX IF NOT EXISTS "Provider_scope_name_unique"
   ON "Provider" ("type", "country", "familyId", lower(COALESCE("nameByCountry", "name")));
 ```
+
+`balanceCheckUrl` was actually added via a follow-up `ALTER TABLE "Provider" ADD COLUMN IF NOT EXISTS "balanceCheckUrl" TEXT` (`scripts/migrate-provider-balance-url.ts`) since the table already existed in dev/prod by the time this column was requested — shown merged into the `CREATE TABLE` above for anyone reading this as the current canonical schema.
 
 ### Seed data (global, `type = 'CARD'`, `country = 'IL'`)
 
@@ -313,3 +318,4 @@ No new keys strictly required — reuses existing `providerLabel` / `providerPla
 - Provider logos/icons
 - Renaming or merging duplicate custom providers across families
 - Cross-scope duplicate prevention beyond the insert-time check (e.g. a global "IKEA" and a pre-existing family-custom "ikea" added before this feature shipped won't retroactively merge)
+- Actually using `balanceCheckUrl` — column exists (nullable, unpopulated) for a future "check your balance" link/button, but nothing reads or writes it yet
