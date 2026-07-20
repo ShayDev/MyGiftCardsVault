@@ -5,7 +5,9 @@ import { createClub, updateClub, deleteClub, type ClubItem } from '../app/clubs/
 import { useLanguageStore } from '../hooks/useLanguageStore'
 import { getT, localeDir } from '../lib/i18n'
 import { formatCode } from '../lib/formatCode'
+import type { ProviderOption } from '../lib/providerTypes'
 import Spinner from './Spinner'
+import ProviderCombobox from './ProviderCombobox'
 
 // ── Helpers ────────────────────────────────────────────────────────────────────
 
@@ -82,7 +84,13 @@ const inputClass =
 
 // ── Add Club Modal ─────────────────────────────────────────────────────────────
 
-function AddClubModal({ onClose }: { onClose: () => void }) {
+function AddClubModal({
+  onClose,
+  providerOptions,
+}: {
+  onClose: () => void
+  providerOptions: ProviderOption[]
+}) {
   const t = getT(useLanguageStore((s) => s.locale))
   const [isPending, startTransition] = useTransition()
   const [error, setError] = useState<string | null>(null)
@@ -107,7 +115,7 @@ function AddClubModal({ onClose }: { onClose: () => void }) {
           <input name="name" required placeholder="e.g. Shufersal Club" className={inputClass} />
         </Field>
         <Field label={t.providerLabel}>
-          <input name="provider" placeholder={t.providerPlaceholder} className={inputClass} />
+          <ProviderCombobox name="provider" options={providerOptions} placeholder={t.providerPlaceholder} />
         </Field>
         <Field label={t.ownerNameLabel}>
           <input name="ownerName" placeholder="e.g. Mom" className={inputClass} />
@@ -346,7 +354,15 @@ function ClubDetailModal({
 
 // ── Edit Club Modal ────────────────────────────────────────────────────────────
 
-function EditClubModal({ club, onClose }: { club: ClubItem; onClose: () => void }) {
+function EditClubModal({
+  club,
+  onClose,
+  providerOptions,
+}: {
+  club: ClubItem
+  onClose: () => void
+  providerOptions: ProviderOption[]
+}) {
   const t = getT(useLanguageStore((s) => s.locale))
   const [isPending, startTransition] = useTransition()
   const [error, setError] = useState<string | null>(null)
@@ -372,7 +388,12 @@ function EditClubModal({ club, onClose }: { club: ClubItem; onClose: () => void 
           <input name="name" required defaultValue={club.name} placeholder="e.g. Shufersal Club" className={inputClass} />
         </Field>
         <Field label={t.providerLabel}>
-          <input name="provider" defaultValue={club.provider} placeholder={t.providerPlaceholder} className={inputClass} />
+          <ProviderCombobox
+            name="provider"
+            defaultValue={club.provider}
+            options={providerOptions}
+            placeholder={t.providerPlaceholder}
+          />
         </Field>
         <Field label={t.ownerNameLabel}>
           <input name="ownerName" defaultValue={club.ownerName ?? ''} placeholder="e.g. Mom" className={inputClass} />
@@ -453,7 +474,13 @@ function ClubRow({ club, onClick }: { club: ClubItem; onClick: () => void }) {
 
 // ── Main Component ─────────────────────────────────────────────────────────────
 
-export default function ClubsClient({ clubs }: { clubs: ClubItem[] }) {
+export default function ClubsClient({
+  clubs,
+  providerOptions,
+}: {
+  clubs: ClubItem[]
+  providerOptions: ProviderOption[]
+}) {
   const locale = useLanguageStore((s) => s.locale)
   const t = getT(locale)
   const dir = localeDir[locale]
@@ -499,7 +526,9 @@ export default function ClubsClient({ clubs }: { clubs: ClubItem[] }) {
         </section>
       )}
 
-      {showAdd && <AddClubModal onClose={() => setShowAdd(false)} />}
+      {showAdd && (
+        <AddClubModal onClose={() => setShowAdd(false)} providerOptions={providerOptions} />
+      )}
       {selected && (
         <ClubDetailModal
           club={selected}
@@ -508,7 +537,13 @@ export default function ClubsClient({ clubs }: { clubs: ClubItem[] }) {
           onUpdated={() => setSelected(null)}
         />
       )}
-      {editTarget && <EditClubModal club={editTarget} onClose={() => setEditTarget(null)} />}
+      {editTarget && (
+        <EditClubModal
+          club={editTarget}
+          onClose={() => setEditTarget(null)}
+          providerOptions={providerOptions}
+        />
+      )}
     </div>
   )
 }

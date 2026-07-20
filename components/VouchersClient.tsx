@@ -5,7 +5,9 @@ import { createVoucher, updateVoucher, markVoucherUsed, deleteVoucher, type Vouc
 import { useLanguageStore } from '../hooks/useLanguageStore'
 import { getT } from '../lib/i18n'
 import { formatCode } from '../lib/formatCode'
+import type { ProviderOption } from '../lib/providerTypes'
 import Spinner from './Spinner'
+import ProviderCombobox from './ProviderCombobox'
 
 // ── Helpers ────────────────────────────────────────────────────────────────────
 
@@ -83,7 +85,13 @@ const inputClass =
 
 // ── Add Voucher Modal ──────────────────────────────────────────────────────────
 
-function AddVoucherModal({ onClose }: { onClose: () => void }) {
+function AddVoucherModal({
+  onClose,
+  providerOptions,
+}: {
+  onClose: () => void
+  providerOptions: ProviderOption[]
+}) {
   const t = getT(useLanguageStore((s) => s.locale))
   const [isPending, startTransition] = useTransition()
   const [error, setError] = useState<string | null>(null)
@@ -110,7 +118,7 @@ function AddVoucherModal({ onClose }: { onClose: () => void }) {
           <input name="name" required placeholder="e.g. Birthday Discount" className={inputClass} />
         </Field>
         <Field label={t.providerLabel}>
-          <input name="provider" placeholder={t.providerPlaceholder} className={inputClass} />
+          <ProviderCombobox name="provider" options={providerOptions} placeholder={t.providerPlaceholder} />
         </Field>
         <Field label={t.voucherCode}>
           <input name="code" placeholder={t.voucherCodePlaceholder} className={`${inputClass} font-mono`} />
@@ -425,7 +433,15 @@ function VoucherDetailModal({
 
 // ── Edit Voucher Modal ─────────────────────────────────────────────────────────
 
-function EditVoucherModal({ voucher, onClose }: { voucher: VoucherItem; onClose: () => void }) {
+function EditVoucherModal({
+  voucher,
+  onClose,
+  providerOptions,
+}: {
+  voucher: VoucherItem
+  onClose: () => void
+  providerOptions: ProviderOption[]
+}) {
   const t = getT(useLanguageStore((s) => s.locale))
   const [isPending, startTransition] = useTransition()
   const [error, setError] = useState<string | null>(null)
@@ -451,7 +467,12 @@ function EditVoucherModal({ voucher, onClose }: { voucher: VoucherItem; onClose:
           <input name="name" required defaultValue={voucher.name} placeholder="e.g. Birthday Discount" className={inputClass} />
         </Field>
         <Field label={t.providerLabel}>
-          <input name="provider" defaultValue={voucher.provider} placeholder={t.providerPlaceholder} className={inputClass} />
+          <ProviderCombobox
+            name="provider"
+            defaultValue={voucher.provider}
+            options={providerOptions}
+            placeholder={t.providerPlaceholder}
+          />
         </Field>
         <Field label={t.voucherCode}>
           <input name="code" defaultValue={voucher.code ?? ''} placeholder={t.voucherCodePlaceholder} className={`${inputClass} font-mono`} />
@@ -556,7 +577,13 @@ function VoucherRow({ voucher, onClick, onDelete }: { voucher: VoucherItem; onCl
 
 // ── Main Component ─────────────────────────────────────────────────────────────
 
-export default function VouchersClient({ vouchers }: { vouchers: VoucherItem[] }) {
+export default function VouchersClient({
+  vouchers,
+  providerOptions,
+}: {
+  vouchers: VoucherItem[]
+  providerOptions: ProviderOption[]
+}) {
   const t = getT(useLanguageStore((s) => s.locale))
   const [showAdd, setShowAdd] = useState(false)
   const [selected, setSelected] = useState<VoucherItem | null>(null)
@@ -643,7 +670,9 @@ export default function VouchersClient({ vouchers }: { vouchers: VoucherItem[] }
       </section>
 
       {/* Modals */}
-      {showAdd && <AddVoucherModal onClose={() => setShowAdd(false)} />}
+      {showAdd && (
+        <AddVoucherModal onClose={() => setShowAdd(false)} providerOptions={providerOptions} />
+      )}
       {selected && (
         <VoucherDetailModal
           voucher={selected}
@@ -652,7 +681,13 @@ export default function VouchersClient({ vouchers }: { vouchers: VoucherItem[] }
           onUpdated={() => setSelected(null)}
         />
       )}
-      {editTarget && <EditVoucherModal voucher={editTarget} onClose={() => setEditTarget(null)} />}
+      {editTarget && (
+        <EditVoucherModal
+          voucher={editTarget}
+          onClose={() => setEditTarget(null)}
+          providerOptions={providerOptions}
+        />
+      )}
     </div>
   )
 }

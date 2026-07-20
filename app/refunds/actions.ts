@@ -6,6 +6,7 @@ import { redirect } from 'next/navigation'
 import { z } from 'zod'
 import prisma from '../../lib/prisma'
 import { encrypt } from '../../lib/encrypt'
+import { ensureProviderExists } from '../providers/actions'
 
 async function getAuth(): Promise<{ familyId: string; userId: string }> {
   const { userId } = await auth()
@@ -70,6 +71,8 @@ export async function createRefund(formData: FormData) {
     },
   })
 
+  await ensureProviderExists('REFUND', data.provider, familyId, userId).catch(() => {})
+
   revalidatePath('/refunds')
 }
 
@@ -86,7 +89,7 @@ const UpdateRefundSchema = z.object({
 })
 
 export async function updateRefund(refundId: string, formData: FormData) {
-  const { familyId } = await getAuth()
+  const { familyId, userId } = await getAuth()
 
   const raw = {
     provider:    formData.get('provider') as string,
@@ -117,6 +120,8 @@ export async function updateRefund(refundId: string, formData: FormData) {
       link:        data.link ? encrypt(data.link) : null,
     },
   })
+
+  await ensureProviderExists('REFUND', data.provider, familyId, userId).catch(() => {})
 
   revalidatePath('/refunds')
 }

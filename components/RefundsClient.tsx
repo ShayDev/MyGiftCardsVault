@@ -6,7 +6,9 @@ import { useLanguageStore } from '../hooks/useLanguageStore'
 import { getT } from '../lib/i18n'
 import { localeDir } from '../lib/i18n'
 import { formatCode } from '../lib/formatCode'
+import type { ProviderOption } from '../lib/providerTypes'
 import Spinner from './Spinner'
+import ProviderCombobox from './ProviderCombobox'
 
 // ── Helpers ────────────────────────────────────────────────────────────────────
 
@@ -94,7 +96,13 @@ const inputClass =
 
 // ── Add Refund Modal ───────────────────────────────────────────────────────────
 
-function AddRefundModal({ onClose }: { onClose: () => void }) {
+function AddRefundModal({
+  onClose,
+  providerOptions,
+}: {
+  onClose: () => void
+  providerOptions: ProviderOption[]
+}) {
   const locale = useLanguageStore((s) => s.locale)
   const t = getT(locale)
   const defaultCurrency = locale === 'he' ? 'ILS' : 'USD'
@@ -152,7 +160,12 @@ function AddRefundModal({ onClose }: { onClose: () => void }) {
         </div>
 
         <Field label={t.refundProvider} required>
-          <input name="provider" required placeholder="e.g. Zara, IKEA" className={inputClass} />
+          <ProviderCombobox
+            name="provider"
+            required
+            options={providerOptions}
+            placeholder="e.g. Zara, IKEA"
+          />
         </Field>
         <div className="flex gap-3">
           <Field label={t.refundAmount} required>
@@ -247,7 +260,15 @@ function AddRefundModal({ onClose }: { onClose: () => void }) {
 
 // ── Edit Refund Modal ──────────────────────────────────────────────────────────
 
-function EditRefundModal({ refund, onClose }: { refund: RefundItem; onClose: () => void }) {
+function EditRefundModal({
+  refund,
+  onClose,
+  providerOptions,
+}: {
+  refund: RefundItem
+  onClose: () => void
+  providerOptions: ProviderOption[]
+}) {
   const locale = useLanguageStore((s) => s.locale)
   const t = getT(locale)
   const [isPending, startTransition] = useTransition()
@@ -279,7 +300,13 @@ function EditRefundModal({ refund, onClose }: { refund: RefundItem; onClose: () 
           ))}
         </div>
         <Field label={t.refundProvider} required>
-          <input name="provider" required defaultValue={refund.provider} placeholder="e.g. Zara, IKEA" className={inputClass} />
+          <ProviderCombobox
+            name="provider"
+            required
+            defaultValue={refund.provider}
+            options={providerOptions}
+            placeholder="e.g. Zara, IKEA"
+          />
         </Field>
         <div className="flex gap-3">
           <Field label={t.refundAmount} required>
@@ -804,7 +831,13 @@ function RefundRow({ refund, onClick, onDelete }: { refund: RefundItem; onClick:
 
 // ── Main Component ─────────────────────────────────────────────────────────────
 
-export default function RefundsClient({ refunds }: { refunds: RefundItem[] }) {
+export default function RefundsClient({
+  refunds,
+  providerOptions,
+}: {
+  refunds: RefundItem[]
+  providerOptions: ProviderOption[]
+}) {
   const locale = useLanguageStore((s) => s.locale)
   const t = getT(locale)
   const dir = localeDir[locale]
@@ -894,7 +927,9 @@ export default function RefundsClient({ refunds }: { refunds: RefundItem[] }) {
       </section>
 
       {/* Modals */}
-      {showAdd && <AddRefundModal onClose={() => setShowAdd(false)} />}
+      {showAdd && (
+        <AddRefundModal onClose={() => setShowAdd(false)} providerOptions={providerOptions} />
+      )}
       {selected && (
         <RefundDetailModal
           refund={selected}
@@ -902,7 +937,13 @@ export default function RefundsClient({ refunds }: { refunds: RefundItem[] }) {
           onEdit={() => { setEditTarget(selected); setSelected(null) }}
         />
       )}
-      {editTarget && <EditRefundModal refund={editTarget} onClose={() => setEditTarget(null)} />}
+      {editTarget && (
+        <EditRefundModal
+          refund={editTarget}
+          onClose={() => setEditTarget(null)}
+          providerOptions={providerOptions}
+        />
+      )}
     </div>
   )
 }

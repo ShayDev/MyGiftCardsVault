@@ -6,6 +6,7 @@ import { redirect } from 'next/navigation'
 import { z } from 'zod'
 import prisma from '../../lib/prisma'
 import { encrypt } from '../../lib/encrypt'
+import { ensureProviderExists } from '../providers/actions'
 
 async function getAuth(): Promise<{ familyId: string; userId: string }> {
   const { userId } = await auth()
@@ -63,11 +64,13 @@ export async function createVoucher(formData: FormData) {
     },
   })
 
+  await ensureProviderExists('VOUCHER', data.provider ?? '', familyId, userId).catch(() => {})
+
   revalidatePath('/vouchers')
 }
 
 export async function updateVoucher(voucherId: string, formData: FormData) {
-  const { familyId } = await getAuth()
+  const { familyId, userId } = await getAuth()
 
   const rawValue = formData.get('value') as string
   const parsedValue = rawValue ? parseFloat(rawValue) : undefined
@@ -96,6 +99,8 @@ export async function updateVoucher(voucherId: string, formData: FormData) {
       notes: data.notes ?? null,
     },
   })
+
+  await ensureProviderExists('VOUCHER', data.provider ?? '', familyId, userId).catch(() => {})
 
   revalidatePath('/vouchers')
 }

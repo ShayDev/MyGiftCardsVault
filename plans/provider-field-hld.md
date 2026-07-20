@@ -9,7 +9,7 @@ Replace the free-text `provider` input with a combobox backed by a DB-stored lis
 
 The combobox supports three interaction modes in one control: browsing the full list, type-ahead filtering, and free-text entry for anything not found.
 
-**Scope for now:** Gift Cards only (Add Card + Edit Card). The data model and component are generic over `type` so Vouchers, Clubs, and Refunds can be wired in later with no schema or component changes — only a new call site.
+**Status:** Shipped for all four entity types — Gift Cards (`CARD`), Vouchers (`VOUCHER`), Refunds (`REFUND`), and Clubs (`CLUB`). The data model and component turned out generic over `type` exactly as planned: each rollout beyond Gift Cards was a new call site (`ensureProviderExists`/`getProviderOptions` wired into that entity's actions/page, `ProviderCombobox` dropped into its Add/Edit forms) with zero schema or component changes.
 
 ---
 
@@ -80,20 +80,18 @@ CREATE UNIQUE INDEX IF NOT EXISTS "Provider_scope_name_unique"
 
 `balanceCheckUrl` was actually added via a follow-up `ALTER TABLE "Provider" ADD COLUMN IF NOT EXISTS "balanceCheckUrl" TEXT` (`scripts/migrate-provider-balance-url.ts`) since the table already existed in dev/prod by the time this column was requested — shown merged into the `CREATE TABLE` above for anyone reading this as the current canonical schema.
 
-### Seed data (global, `type = 'CARD'`, `country = 'IL'`)
+### Seed data (global, `country = 'IL'`, per `type`)
 
-One-off insert, editable later without a code change:
+The initial seed (generic international brands — Amazon, Target, Starbucks, …) was a placeholder for the `CARD` type only. It was replaced via `scripts/reseed-providers.ts` with a curated Israeli list covering all four types — the script deletes existing global rows (`familyId = '0'`, leaving family-added custom rows untouched) and re-inserts:
 
-```sql
-INSERT INTO "Provider" ("type", "name", "nameByCountry") VALUES
-  ('CARD', 'Amazon', 'אמזון'), ('CARD', 'Target', 'טארגט'), ('CARD', 'Starbucks', 'סטארבקס'),
-  ('CARD', 'Apple', 'אפל'), ('CARD', 'Google Play', 'גוגל פליי'), ('CARD', 'Steam', 'סטים'),
-  ('CARD', 'Netflix', 'נטפליקס'), ('CARD', 'IKEA', 'איקאה'), ('CARD', 'Zara', 'זארה'),
-  ('CARD', 'Shufersal', 'שופרסל'), ('CARD', 'Rami Levy', 'רמי לוי'), ('CARD', 'Fox', 'פוקס'),
-  ('CARD', 'Castro', 'קסטרו')
-ON CONFLICT DO NOTHING;
-```
-(`country` and `familyId` omitted — default to `'IL'` and `'0'` (shared) respectively. List is a starting point — easy to extend via SQL, no migration needed since it's just data.)
+| `type`    | Providers (English / Hebrew)                                                                                                                                                   |
+|-----------|----------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `CARD`    | BuyMe / ביי מי, HitechZone / הייטק זון, Max / מקס, Isracard / ישראכרט, Cal / כאל, Dream Card / דרים כארד, Pais / פיס, Hever / חבר, Xtra / אקסטרה, Raayonit / רעיונית, Shufersal / שופרסל |
+| `VOUCHER` | HitechZone / הייטק זון, Pais / פיס, Hever / חבר                                                                                                                                |
+| `REFUND`  | Zara / זארה, IKEA / איקאה, Fox / פוקס, Castro / קסטרו                                                                                                                          |
+| `CLUB`    | Fox / פוקס, Castro / קסטרו, Zara / זארה, Tzomet Sfarim / צומת ספרים, Steimatzky / סטימצקי                                                                                     |
+
+Editable later without a schema change — just re-run (or extend) the reseed script. Lists deliberately overlap across types where it makes sense (Fox/Castro/Zara appear as both `REFUND` and `CLUB` providers) since the unique index is scoped per `type`, so cross-type repeats are not conflicts.
 
 ---
 
@@ -259,15 +257,23 @@ type ProviderComboboxProps = {
 
 ---
 
-## Wiring into Gift Card Forms
+## Wiring into Forms
 
-`components/GiftCardsClient.tsx`:
+Same pattern repeated for all four entity types — a page-level fetch, a server-action-level `ensureProviderExists` call, and swapping the plain `<input name="provider">` for `<ProviderCombobox>` in both the Add and Edit modal:
 
-- `AddCardModal` and `EditCardModal` both receive/derive `providerOptions: ProviderOption[]` (passed down from the page → `GiftCardsClient` → each modal).
-- Replace the current plain input:
+| Entity  | `type`    | Page                     | Actions                  | Client component      | Required? |
+|---------|-----------|--------------------------|---------------------------|------------------------|-----------|
+| Cards   | `CARD`    | `app/cards/page.tsx`     | `app/actions.ts`          | `GiftCardsClient.tsx`  | No        |
+| Vouchers| `VOUCHER` | `app/vouchers/page.tsx`  | `app/vouchers/actions.ts` | `VouchersClient.tsx`   | No        |
+| Refunds | `REFUND`  | `app/refunds/page.tsx`   | `app/refunds/actions.ts`  | `RefundsClient.tsx`    | Yes       |
+| Clubs   | `CLUB`    | `app/clubs/page.tsx`     | `app/clubs/actions.ts`    | `ClubsClient.tsx`      | No        |
+
+Example (`components/GiftCardsClient.tsx`, `AddCardModal`/`EditCardModal`):
+
+- Both receive/derive `providerOptions: ProviderOption[]` (passed down from the page → `*Client` → each modal).
+- Replace the plain input:
   ```tsx
   <Field label={t.providerLabel}>
-    {/* TODO: replace with a closed list (combobox with custom value option) */}
     <input name="provider" placeholder={t.providerPlaceholder} className={inputClass} />
   </Field>
   ```
@@ -276,13 +282,16 @@ type ProviderComboboxProps = {
   <Field label={t.providerLabel}>
     <ProviderCombobox
       name="provider"
-      defaultValue={card?.provider}   // EditCardModal only
+      defaultValue={card?.provider}   // Edit modal only
       options={providerOptions}
       placeholder={t.providerPlaceholder}
     />
   </Field>
   ```
-- Removes the `TODO` comment that's been sitting in `AddCardModal` since the initial build.
+
+Refunds' provider field is mandatory (`z.string().min(1, 'Provider is required')`), so `ProviderCombobox` gained a `required?: boolean` prop that forwards straight to the underlying `<input required>` — used only on the Refunds Add/Edit forms, matching the same `Field ... required` asterisk pattern already in place there.
+
+Each entity's server actions (`create*`/`update*`) call `ensureProviderExists(TYPE, data.provider ?? '', familyId, userId).catch(() => {})` right after the successful DB write — `.catch(() => {})` at the call site keeps it best-effort, per the design above. Any action that only destructured `familyId` from its `getAuth()` helper (e.g. `updateVoucher`, `updateRefund`, `updateClub`) needed `userId` added too, for `createdBy`.
 
 ---
 
@@ -307,12 +316,14 @@ No new keys strictly required — reuses existing `providerLabel` / `providerPla
 6. Fetch and pass `providerOptions` in `app/cards/page.tsx`
 7. Build `components/ProviderCombobox.tsx`
 8. Swap the provider `<input>` for `<ProviderCombobox>` in `AddCardModal` and `EditCardModal`
+9. Add `Provider.balanceCheckUrl` (follow-up `ALTER TABLE`, dev + prod)
+10. Reseed with the curated Israeli list across all four types (`scripts/reseed-providers.ts`, dev + prod)
+11. Repeat steps 5–8 for Vouchers, Refunds, and Clubs — same `ensureProviderExists`/`getProviderOptions` calls, same `ProviderCombobox`, new call sites only; add the `required` prop to `ProviderCombobox` for Refunds' mandatory field
 
 ---
 
 ## Out of Scope
 
-- Wiring into Voucher / Club / Refund forms (data model and component are ready for it, but call sites are a separate follow-up)
 - Real per-family `country` (no `FamilyGroup.country` field exists yet — `getProviderOptions`/`ensureProviderExists` hardcode `'IL'` until multi-country support is actually needed)
 - Admin UI for managing the global provider list (seeded/edited via SQL only, for now)
 - Provider logos/icons

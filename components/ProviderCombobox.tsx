@@ -31,11 +31,13 @@ export default function ProviderCombobox({
   defaultValue,
   options,
   placeholder,
+  required,
 }: {
   name: string
   defaultValue?: string
   options: ProviderOption[]
   placeholder?: string
+  required?: boolean
 }) {
   const t = getT(useLanguageStore((s) => s.locale))
   const [query, setQuery] = useState(defaultValue ?? '')
@@ -98,6 +100,7 @@ export default function ProviderCombobox({
         name={name}
         value={query}
         placeholder={placeholder}
+        required={required}
         autoComplete="off"
         className={inputClass}
         onFocus={() => setOpen(true)}

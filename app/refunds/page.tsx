@@ -4,6 +4,7 @@ import prisma from '../../lib/prisma'
 import RefundsClient from '../../components/RefundsClient'
 import type { RefundItem } from './actions'
 import { decrypt, isEncrypted } from '../../lib/encrypt'
+import { getProviderOptions } from '../providers/actions'
 
 export default async function Page() {
   const { userId } = await auth()
@@ -46,5 +47,7 @@ export default async function Page() {
     createdAt:   r.createdAt.toISOString(),
   }))
 
-  return <RefundsClient refunds={payload} />
+  const providerOptions = await getProviderOptions('REFUND')
+
+  return <RefundsClient refunds={payload} providerOptions={providerOptions} />
 }
