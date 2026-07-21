@@ -19,7 +19,8 @@
       "Bash(Select-Object -ExpandProperty FullName)",
       "Bash(findstr -i svix)",
       "Bash(dir \"c:\\\\Dev\\\\CloudeProjects\\\\MyGiftCardsVault\\\\node_modules\" /b)",
-      "Bash(findstr /i svix)"
+      "Bash(findstr /i svix)",
+      "Bash(xargs grep -liE \"family\")"
     ]
   }
 }

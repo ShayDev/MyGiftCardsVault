@@ -105,6 +105,10 @@ const translations = {
     settingsInviteHint: 'Share your family name + code with family members so they can join.',
     settingsAccount: 'Account',
     settingsLink: 'Settings',
+    settingsSwitchFamilyButton: 'Switch to another family',
+    settingsSwitchFamilyHint: "You'll leave your current family and see this family's data instead.",
+    settingsSwitchButton: 'Switch',
+    settingsSwitching: 'Switching…',
     // Onboarding
     onboardingWelcome: 'Welcome!',
     onboardingSubtitle: 'Set up your family vault to get started.',
@@ -315,6 +319,10 @@ const translations = {
     settingsInviteHint: 'שתף את שם המשפחה והקוד עם בני המשפחה כדי שיוכלו להצטרף.',
     settingsAccount: 'חשבון',
     settingsLink: 'הגדרות',
+    settingsSwitchFamilyButton: 'עבור למשפחה אחרת',
+    settingsSwitchFamilyHint: 'תעזוב את המשפחה הנוכחית שלך ותראה במקום זאת את הנתונים של המשפחה הזו.',
+    settingsSwitchButton: 'החלף',
+    settingsSwitching: 'מחליף...',
     // Onboarding
     onboardingWelcome: '!ברוכים הבאים',
     onboardingSubtitle: 'הגדר את כספת המשפחה שלך כדי להתחיל.',
