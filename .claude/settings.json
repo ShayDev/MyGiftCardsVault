@@ -22,7 +22,14 @@
       "Bash(findstr /i svix)",
       "Bash(xargs grep -liE \"family\")",
       "Skill(artifact-design)",
-      "Skill(artifact-design:*)"
+      "Skill(artifact-design:*)",
+      "Bash(cat)",
+      "Bash(npx dotenv-cli *)",
+      "Bash(cp /tmp/check_migrations.sql ./scripts/_check.sql)",
+      "Bash(rm -f ./scripts/_check.sql /tmp/check_migrations.sql /tmp/preflight.sql)"
+    ],
+    "additionalDirectories": [
+      "\\tmp"
     ]
   }
 }

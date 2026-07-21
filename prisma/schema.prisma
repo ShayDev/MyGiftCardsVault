@@ -16,7 +16,9 @@ model FamilyGroup {
   id          String        @id @default(uuid())
   name        String        // stored uppercase e.g. "THE SMITHS"
   inviteCode  String        @unique
-  users       User[]
+  ownerId     String        @unique // creator of this family; a user can own at most one family
+  owner       User          @relation("FamilyOwner", fields: [ownerId], references: [id])
+  users       User[]        @relation("FamilyMembers")
   giftCards   GiftCard[]
   vouchers    Voucher[]
   clubMembers ClubMember[]
@@ -25,14 +27,15 @@ model FamilyGroup {
 }
 
 model User {
-  id         String      @id @default(uuid())
-  clerkId    String      @unique
-  email      String      @unique
-  name       String?
-  role       String      @default("member")
-  familyId   String?
-  family     FamilyGroup? @relation(fields: [familyId], references: [id])
-  createdAt  DateTime    @default(now())
+  id          String       @id @default(uuid())
+  clerkId     String       @unique
+  email       String       @unique
+  name        String?
+  role        String       @default("member")
+  familyId    String?
+  family      FamilyGroup? @relation("FamilyMembers", fields: [familyId], references: [id])
+  ownedFamily FamilyGroup? @relation("FamilyOwner")
+  createdAt   DateTime     @default(now())
 }
 
 model GiftCard {
