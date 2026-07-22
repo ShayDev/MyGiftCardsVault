@@ -2,9 +2,9 @@
 
 import { auth } from '@clerk/nextjs/server'
 import { redirect } from 'next/navigation'
-import { nanoid } from 'nanoid'
 import { z } from 'zod'
 import prisma from '../../lib/prisma'
+import { generateInviteCode } from '../../lib/inviteCode'
 
 const switchSchema = z.object({
   familyName: z.string().min(1),
@@ -60,7 +60,7 @@ export async function createNewFamily(formData: FormData) {
     const family = await tx.familyGroup.create({
       data: {
         name: parsed.data.familyName.toUpperCase(),
-        inviteCode: nanoid(12),
+        inviteCode: generateInviteCode(),
         ownerId: dbUser.id,
       },
     })
