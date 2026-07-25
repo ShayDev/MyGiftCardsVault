@@ -30,7 +30,9 @@
       "mcp__Neon__list_projects",
       "mcp__Neon__get_connection_string",
       "Bash(npm run *)",
-      "mcp__Neon__list_branch_computes"
+      "mcp__Neon__list_branch_computes",
+      "Bash(git check-ignore *)",
+      "Bash(awk -F'=' '{print \"key=DATABASE_URL, value_length=\" length\\($0\\)-length\\($1\\)-1}')"
     ],
     "additionalDirectories": [
       "\\tmp"
