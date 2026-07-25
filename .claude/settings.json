@@ -28,7 +28,9 @@
       "Bash(cp /tmp/check_migrations.sql ./scripts/_check.sql)",
       "Bash(rm -f ./scripts/_check.sql /tmp/check_migrations.sql /tmp/preflight.sql)",
       "mcp__Neon__list_projects",
-      "mcp__Neon__get_connection_string"
+      "mcp__Neon__get_connection_string",
+      "Bash(npm run *)",
+      "mcp__Neon__list_branch_computes"
     ],
     "additionalDirectories": [
       "\\tmp"

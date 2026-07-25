@@ -29,7 +29,7 @@ const CreateRefundSchema = z.object({
   status:      z.enum(['pending', 'received']).default('received'),
   referenceId: z.string().optional(),
   notes:       z.string().optional(),
-  expiresAt:   z.string().regex(/^(0[1-9]|1[0-2])\d{2}$/).optional(),
+  expiresAt:   z.coerce.date().optional(),
   code:        z.string().optional(),
   link:        z.string().optional(),
   imageUrl:    z.string().optional(),
@@ -83,7 +83,7 @@ const UpdateRefundSchema = z.object({
   status:      z.enum(['pending', 'received']).default('received'),
   referenceId: z.string().optional(),
   notes:       z.string().optional(),
-  expiresAt:   z.string().regex(/^(0[1-9]|1[0-2])\d{2}$/).optional(),
+  expiresAt:   z.coerce.date().optional(),
   code:        z.string().optional(),
   link:        z.string().optional(),
 })

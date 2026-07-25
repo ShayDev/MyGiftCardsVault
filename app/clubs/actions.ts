@@ -28,7 +28,7 @@ const CreateClubSchema = z.object({
   memberId:  z.string().min(1, 'Member ID is required'),
   ownerName: z.string().optional(),
   idType:    z.enum(['id_number', 'phone', 'member_number', 'email', 'barcode']),
-  expiresAt: z.string().regex(/^(0[1-9]|1[0-2])\d{2}$/, 'Must be MMYY format').optional(),
+  expiresAt: z.coerce.date().optional(),
   notes:     z.string().optional(),
 })
 

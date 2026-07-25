@@ -28,7 +28,7 @@ const CreateVoucherSchema = z.object({
   code: z.string().optional(),
   link: z.url().optional(),
   value: z.number().positive().optional(),
-  expiresAt: z.string().regex(/^(0[1-9]|1[0-2])\d{2}$/, 'Must be MMYY format').optional(),
+  expiresAt: z.coerce.date().optional(),
   notes: z.string().optional(),
 }).refine((d) => d.code || d.link, { message: 'A code or link is required' })
 

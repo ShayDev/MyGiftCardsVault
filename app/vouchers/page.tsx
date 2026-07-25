@@ -35,7 +35,7 @@ export default async function Page() {
     code: dec(v.code ?? null),
     link: dec(v.link ?? null),
     value: v.value ? parseFloat(v.value.toString()) : undefined,
-    expiresAt: v.expiresAt ?? undefined,
+    expiresAt: v.expiresAt?.toISOString() ?? undefined,
     notes: v.notes ?? undefined,
     isUsed: v.isUsed,
     usedAt: v.usedAt?.toISOString(),

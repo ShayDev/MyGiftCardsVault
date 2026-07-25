@@ -29,7 +29,7 @@ const CreateCardSchema = z.object({
   fullNumber: z.string().min(1).optional(),
   cvv: z.string().regex(/^\d{3,4}$/, 'Must be 3 or 4 digits').optional(),
   link: z.url().optional(),
-  expiresAt: z.string().regex(/^(0[1-9]|1[0-2])\d{2}$/, 'Must be MMYY format').optional(),
+  expiresAt: z.coerce.date().optional(),
   defaultBalance: z.number().positive('Default balance must be positive'),
   notes: z.string().optional(),
   isReloadable: z.boolean(),
@@ -92,7 +92,7 @@ const UpdateCardSchema = z.object({
   fullNumber: z.string().min(1).optional(),
   cvv: z.string().regex(/^\d{3,4}$/, 'Must be 3 or 4 digits').optional(),
   link: z.url().optional(),
-  expiresAt: z.string().regex(/^(0[1-9]|1[0-2])\d{2}$/, 'Must be MMYY format').optional(),
+  expiresAt: z.coerce.date().optional(),
   notes: z.string().optional(),
   isReloadable: z.boolean(),
 }).refine((d) => d.last4 || d.link, { message: 'Last 4 digits or a link is required' })

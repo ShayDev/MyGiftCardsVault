@@ -5,6 +5,7 @@ import { createCard, updateCard, deactivateCard, createTransaction, getCardTrans
 import { useLanguageStore } from '../hooks/useLanguageStore'
 import { getT } from '../lib/i18n'
 import { formatCode } from '../lib/formatCode'
+import { formatExpiresAt } from '../lib/date'
 import type { ProviderOption } from '../lib/providerTypes'
 import Spinner from './Spinner'
 import ProviderCombobox from './ProviderCombobox'
@@ -212,10 +213,8 @@ function AddCardModal({
         <Field label={t.expirationOptional}>
           <input
             name="expiresAt"
-            maxLength={4}
-            pattern="(0[1-9]|1[0-2])\d{2}"
-            placeholder="MMYY"
-            className={`${inputClass} font-mono`}
+            type="date"
+            className={inputClass}
           />
         </Field>
         <Field label={t.defaultBalance} required>
@@ -363,7 +362,7 @@ function CardDetailModal({
           <div className="p-3 rounded-xl border border-slate-100 bg-white">
             <p className="text-xs text-slate-400 mb-1">{t.expires}</p>
             <p className="font-mono text-slate-700 font-medium">
-              {card.expiresAt ? `${card.expiresAt.slice(0, 2)}/${card.expiresAt.slice(2)}` : '—'}
+              {card.expiresAt ? formatExpiresAt(card.expiresAt) : '—'}
             </p>
           </div>
           <div className="p-3 rounded-xl border border-slate-100 bg-white">
@@ -664,11 +663,9 @@ function EditCardModal({
         <Field label={t.expirationOptional}>
           <input
             name="expiresAt"
-            maxLength={4}
-            pattern="(0[1-9]|1[0-2])\d{2}"
-            placeholder="MMYY"
-            defaultValue={card.expiresAt ?? ''}
-            className={`${inputClass} font-mono`}
+            type="date"
+            defaultValue={card.expiresAt ? card.expiresAt.slice(0, 10) : ''}
+            className={inputClass}
           />
         </Field>
         <Field label={t.notesOptional}>

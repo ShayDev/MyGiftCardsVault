@@ -35,7 +35,7 @@ export default async function Page() {
     memberId:  dec(c.memberId ?? null),
     ownerName: c.ownerName ?? undefined,
     idType:    (c.idType ?? undefined) as ClubItem['idType'],
-    expiresAt: c.expiresAt ?? undefined,
+    expiresAt: c.expiresAt?.toISOString() ?? undefined,
     notes:     c.notes ?? undefined,
     createdAt: c.createdAt.toISOString(),
   }))

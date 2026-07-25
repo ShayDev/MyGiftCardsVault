@@ -5,6 +5,7 @@ import { createVoucher, updateVoucher, markVoucherUsed, deleteVoucher, type Vouc
 import { useLanguageStore } from '../hooks/useLanguageStore'
 import { getT } from '../lib/i18n'
 import { formatCode } from '../lib/formatCode'
+import { formatExpiresAt } from '../lib/date'
 import type { ProviderOption } from '../lib/providerTypes'
 import Spinner from './Spinner'
 import ProviderCombobox from './ProviderCombobox'
@@ -139,10 +140,8 @@ function AddVoucherModal({
         <Field label={t.expirationOptional}>
           <input
             name="expiresAt"
-            maxLength={4}
-            pattern="(0[1-9]|1[0-2])\d{2}"
-            placeholder="MMYY"
-            className={`${inputClass} font-mono`}
+            type="date"
+            className={inputClass}
           />
         </Field>
         <Field label={t.notesOptional}>
@@ -359,7 +358,7 @@ function VoucherDetailModal({
         {voucher.expiresAt && (
           <div>
             <p className="text-xs text-slate-400 mb-0.5">{t.expires}</p>
-            <p className="text-sm font-mono text-slate-800">{`${voucher.expiresAt!.slice(0, 2)}/${voucher.expiresAt!.slice(2)}`}</p>
+            <p className="text-sm font-mono text-slate-800">{formatExpiresAt(voucher.expiresAt!)}</p>
           </div>
         )}
 
@@ -484,7 +483,7 @@ function EditVoucherModal({
           <input name="value" type="number" min="0.01" step="0.01" placeholder="0.00" defaultValue={voucher.value ?? ''} className={`${inputClass} font-mono`} />
         </Field>
         <Field label={t.expirationOptional}>
-          <input name="expiresAt" maxLength={4} pattern="(0[1-9]|1[0-2])\d{2}" placeholder="MMYY" defaultValue={voucher.expiresAt ?? ''} className={`${inputClass} font-mono`} />
+          <input name="expiresAt" type="date" defaultValue={voucher.expiresAt ? voucher.expiresAt.slice(0, 10) : ''} className={inputClass} />
         </Field>
         <Field label={t.notesOptional}>
           <input name="notes" placeholder={t.notesPlaceholder} defaultValue={voucher.notes ?? ''} className={inputClass} />
@@ -538,7 +537,7 @@ function VoucherRow({ voucher, onClick, onDelete }: { voucher: VoucherItem; onCl
               <span className="text-xs font-mono text-slate-500">{voucher.value.toFixed(2)}</span>
             )}
             {voucher.expiresAt && (
-              <span className="text-xs font-mono text-slate-400">{`${voucher.expiresAt!.slice(0, 2)}/${voucher.expiresAt!.slice(2)}`}</span>
+              <span className="text-xs font-mono text-slate-400">{formatExpiresAt(voucher.expiresAt!)}</span>
             )}
           </div>
         </div>

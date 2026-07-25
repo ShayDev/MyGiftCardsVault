@@ -49,7 +49,7 @@ model GiftCard {
   fullNumber   String?       // full card number, optional
   cvv          String?       // CVV/CVC, optional
   link         String?       // one-time URL (dynamic code via link)
-  expiresAt    String?       // expiration as MMYY, e.g. "1228"
+  expiresAt    DateTime?
   notes        String?       // card notes, optional
   isReloadable Boolean       @default(true)
   isActive     Boolean       @default(true)
@@ -81,7 +81,7 @@ model ClubMember {
   memberId    String?
   ownerName   String?
   idType      String?
-  expiresAt   String?
+  expiresAt   DateTime?
   notes       String?
   isActive    Boolean     @default(true)
   createdBy   String?
@@ -99,7 +99,7 @@ model Refund {
   status      String    @default("pending")
   referenceId String?
   notes       String?
-  expiresAt   String?
+  expiresAt   DateTime?
   receivedAt  DateTime?
   code        String?
   link        String?
@@ -130,7 +130,7 @@ model Voucher {
   code        String?
   link        String?
   value       Decimal?    @db.Decimal(65, 30)
-  expiresAt   String?
+  expiresAt   DateTime?
   notes       String?
   isUsed      Boolean     @default(false)
   usedAt      DateTime?

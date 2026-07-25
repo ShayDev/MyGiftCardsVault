@@ -5,6 +5,7 @@ import { createClub, updateClub, deleteClub, type ClubItem } from '../app/clubs/
 import { useLanguageStore } from '../hooks/useLanguageStore'
 import { getT, localeDir } from '../lib/i18n'
 import { formatCode } from '../lib/formatCode'
+import { formatExpiresAt } from '../lib/date'
 import type { ProviderOption } from '../lib/providerTypes'
 import Spinner from './Spinner'
 import ProviderCombobox from './ProviderCombobox'
@@ -134,10 +135,8 @@ function AddClubModal({
         <Field label={t.expirationOptional}>
           <input
             name="expiresAt"
-            maxLength={4}
-            pattern="(0[1-9]|1[0-2])\d{2}"
-            placeholder="MMYY"
-            className={`${inputClass} font-mono`}
+            type="date"
+            className={inputClass}
           />
         </Field>
         <Field label={t.notesOptional}>
@@ -307,7 +306,7 @@ function ClubDetailModal({
         {club.expiresAt && (
           <div>
             <p className="text-xs text-slate-400 mb-0.5">{t.expires}</p>
-            <p className="text-sm font-mono text-slate-800">{`${club.expiresAt!.slice(0, 2)}/${club.expiresAt!.slice(2)}`}</p>
+            <p className="text-sm font-mono text-slate-800">{formatExpiresAt(club.expiresAt!)}</p>
           </div>
         )}
 
@@ -410,7 +409,7 @@ function EditClubModal({
           </select>
         </Field>
         <Field label={t.expirationOptional}>
-          <input name="expiresAt" maxLength={4} pattern="(0[1-9]|1[0-2])\d{2}" placeholder="MMYY" defaultValue={club.expiresAt ?? ''} className={`${inputClass} font-mono`} />
+          <input name="expiresAt" type="date" defaultValue={club.expiresAt ? club.expiresAt.slice(0, 10) : ''} className={inputClass} />
         </Field>
         <Field label={t.notesOptional}>
           <input name="notes" placeholder={t.notesPlaceholder} defaultValue={club.notes ?? ''} className={inputClass} />
@@ -466,7 +465,7 @@ function ClubRow({ club, onClick }: { club: ClubItem; onClick: () => void }) {
         </div>
       </div>
       {club.expiresAt && (
-        <span className="flex-shrink-0 text-xs font-mono text-slate-400">{`${club.expiresAt!.slice(0, 2)}/${club.expiresAt!.slice(2)}`}</span>
+        <span className="flex-shrink-0 text-xs font-mono text-slate-400">{formatExpiresAt(club.expiresAt!)}</span>
       )}
     </button>
   )

@@ -41,7 +41,7 @@ export default async function Page() {
     fullNumber: dec(c.fullNumber ?? null),
     cvv:        dec(c.cvv ?? null),
     link:       dec(c.link ?? null),
-    expiresAt: c.expiresAt ?? undefined,
+    expiresAt: c.expiresAt?.toISOString() ?? undefined,
     notes: c.notes ?? undefined,
     isReloadable: c.isReloadable,
     createdAt: c.createdAt.toISOString(),

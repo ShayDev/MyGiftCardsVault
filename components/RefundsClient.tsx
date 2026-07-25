@@ -6,6 +6,7 @@ import { useLanguageStore } from '../hooks/useLanguageStore'
 import { getT } from '../lib/i18n'
 import { localeDir } from '../lib/i18n'
 import { formatCode } from '../lib/formatCode'
+import { formatExpiresAt } from '../lib/date'
 import type { ProviderOption } from '../lib/providerTypes'
 import Spinner from './Spinner'
 import ProviderCombobox from './ProviderCombobox'
@@ -196,10 +197,8 @@ function AddRefundModal({
         <Field label={t.expirationOptional}>
           <input
             name="expiresAt"
-            maxLength={4}
-            pattern="(0[1-9]|1[0-2])\d{2}"
-            placeholder="MMYY"
-            className={`${inputClass} font-mono uppercase`}
+            type="date"
+            className={inputClass}
           />
         </Field>
         <Field label={t.refundCode}>
@@ -320,7 +319,7 @@ function EditRefundModal({
           <input name="referenceId" placeholder={t.refundReferencePlaceholder} defaultValue={refund.referenceId ?? ''} className={inputClass} />
         </Field>
         <Field label={t.expirationOptional}>
-          <input name="expiresAt" maxLength={4} pattern="(0[1-9]|1[0-2])\d{2}" placeholder="MMYY" defaultValue={refund.expiresAt ?? ''} className={`${inputClass} font-mono uppercase`} />
+          <input name="expiresAt" type="date" defaultValue={refund.expiresAt ? refund.expiresAt.slice(0, 10) : ''} className={inputClass} />
         </Field>
         <Field label={t.refundCode}>
           <input name="code" placeholder={t.refundCodePlaceholder} defaultValue={refund.code ?? ''} className={`${inputClass} font-mono`} />
@@ -516,7 +515,7 @@ function RefundDetailModal({
           <div>
             <p className="text-xs text-slate-400 mb-0.5">{t.expires}</p>
             <p className="text-sm font-mono text-slate-800">
-              {`${refund.expiresAt.slice(0, 2)}/${refund.expiresAt.slice(2)}`}
+              {formatExpiresAt(refund.expiresAt)}
             </p>
           </div>
         )}
@@ -796,7 +795,7 @@ function RefundRow({ refund, onClick, onDelete }: { refund: RefundItem; onClick:
               )}
               {refund.expiresAt && (
                 <span className="text-xs font-mono text-slate-400">
-                  {`${refund.expiresAt.slice(0, 2)}/${refund.expiresAt.slice(2)}`}
+                  {formatExpiresAt(refund.expiresAt)}
                 </span>
               )}
             </div>
