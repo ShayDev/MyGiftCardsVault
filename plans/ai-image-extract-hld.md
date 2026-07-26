@@ -38,8 +38,8 @@ All three entity types, one shared extraction pipeline (same upload UI, same API
 
 | Entity | Source image | Fields to extract |
 |---|---|---|
-| Gift Card | Photo of the physical card (front, and back if it has a code) | `provider` (name printed on card, matched against `ProviderCombobox` list where possible), `last4`, `expiresAt` (MMYY) |
-| Voucher | Screenshot or photo of a voucher/promo code | `provider`, `code`, `value` (amount, if printed), `expiresAt` |
+| Gift Card | Photo of the physical card (front, and back if it has a code) | `provider` (name printed on card, matched against `ProviderCombobox` list where possible), `last4`, `expiresAt` (full date) |
+| Voucher | Screenshot or photo of a voucher/promo code | `provider`, `code`, `value` (amount, if printed), `expiresAt` (full date) |
 | Refund | Photo/screenshot of a receipt or refund confirmation | `provider`, `amount`, `currency`, `referenceId`, `expiresAt` (if a store-credit expiry is shown) |
 
 **Deliberately excluded from extraction: `fullNumber` and `cvv`.** See the security section below — this is the one place where "AI can read it" and "AI should read it" diverge.
