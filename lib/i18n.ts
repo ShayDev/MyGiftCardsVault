@@ -91,6 +91,8 @@ const translations = {
     scanModeText: 'Paste text',
     scanTextPlaceholder: 'Paste an email, SMS, or confirmation text…',
     scanTextButton: 'Extract',
+    scanTakePhoto: 'Take Photo',
+    scanChooseImage: 'Choose Image',
     usedCards: 'Used',
     noUsedCards: 'No used cards',
     // Transactions
@@ -319,6 +321,8 @@ const translations = {
     scanModeText: 'הדבק טקסט',
     scanTextPlaceholder: 'הדבק אימייל, הודעת טקסט, או אישור...',
     scanTextButton: 'חלץ',
+    scanTakePhoto: 'צלם תמונה',
+    scanChooseImage: 'בחר תמונה',
     usedCards: 'נוצלו',
     noUsedCards: 'אין כרטיסים שנוצלו',
     // Transactions

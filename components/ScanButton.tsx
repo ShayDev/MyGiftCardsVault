@@ -126,29 +126,41 @@ export default function ScanButton({
       </div>
       {mode === 'photo' ? (
         <>
-          <label className="scan-button flex items-center justify-center gap-2 h-11 px-4 rounded-xl border-2 border-dashed border-slate-200 hover:border-emerald-400 cursor-pointer transition-colors bg-slate-50 hover:bg-emerald-50 text-sm font-medium text-slate-600">
-            {isScanning ? (
-              <>
-                <Spinner />
-                <span>{t.scanning}</span>
-              </>
-            ) : (
-              <>
+          {isScanning ? (
+            <div className="scan-button flex items-center justify-center gap-2 h-11 px-4 rounded-xl border-2 border-dashed border-slate-200 bg-slate-50 text-sm font-medium text-slate-600">
+              <Spinner />
+              <span>{t.scanning}</span>
+            </div>
+          ) : (
+            <div className="scan-photo-triggers flex gap-2">
+              <label className="scan-button-camera flex-1 flex items-center justify-center gap-2 h-11 px-3 rounded-xl border-2 border-dashed border-slate-200 hover:border-emerald-400 cursor-pointer transition-colors bg-slate-50 hover:bg-emerald-50 text-sm font-medium text-slate-600">
                 <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
                   <path strokeLinecap="round" strokeLinejoin="round" d="M6.827 6.175A2.31 2.31 0 015.186 7.23c-.38.054-.757.112-1.134.174C3.163 7.54 2.5 8.36 2.5 9.315V18a2.25 2.25 0 002.25 2.25h14.5A2.25 2.25 0 0021.5 18V9.315c0-.955-.663-1.775-1.552-1.912a48.11 48.11 0 00-1.134-.174 2.31 2.31 0 01-1.64-1.055l-.822-1.316a2.192 2.192 0 00-1.736-1.039 48.774 48.774 0 00-4.552 0 2.192 2.192 0 00-1.736 1.039l-.822 1.316z" />
                   <path strokeLinecap="round" strokeLinejoin="round" d="M16.5 12.75a4.5 4.5 0 11-9 0 4.5 4.5 0 019 0z" />
                 </svg>
-                <span>{t.scanButton}</span>
-              </>
-            )}
-            <input
-              type="file"
-              accept="image/*"
-              className="hidden"
-              disabled={isScanning}
-              onChange={handleFileChange}
-            />
-          </label>
+                <span>{t.scanTakePhoto}</span>
+                <input
+                  type="file"
+                  accept="image/*"
+                  capture="environment"
+                  className="hidden"
+                  onChange={handleFileChange}
+                />
+              </label>
+              <label className="scan-button-gallery flex-1 flex items-center justify-center gap-2 h-11 px-3 rounded-xl border-2 border-dashed border-slate-200 hover:border-emerald-400 cursor-pointer transition-colors bg-slate-50 hover:bg-emerald-50 text-sm font-medium text-slate-600">
+                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 15.75l5.159-5.159a2.25 2.25 0 013.182 0l5.159 5.159m-1.5-1.5l1.409-1.409a2.25 2.25 0 013.182 0l2.909 2.909M3 4.5h18a1.5 1.5 0 011.5 1.5v12a1.5 1.5 0 01-1.5 1.5H3A1.5 1.5 0 011.5 18V6A1.5 1.5 0 013 4.5z" />
+                </svg>
+                <span>{t.scanChooseImage}</span>
+                <input
+                  type="file"
+                  accept="image/*"
+                  className="hidden"
+                  onChange={handleFileChange}
+                />
+              </label>
+            </div>
+          )}
           {error && <p className="scan-button-error text-xs text-rose-500 mt-1">{error}</p>}
         </>
       ) : (

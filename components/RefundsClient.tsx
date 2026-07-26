@@ -268,19 +268,30 @@ function AddRefundModal({
           </div>
           {scanMode === 'photo' ? (
             <>
-              <label className="refund-image-upload flex flex-col items-center justify-center w-full h-28 rounded-xl border-2 border-dashed border-slate-200 hover:border-emerald-400 cursor-pointer transition-colors bg-slate-50 hover:bg-emerald-50 overflow-hidden">
-                {imagePreview ? (
+              {imagePreview ? (
+                <label className="refund-image-upload flex flex-col items-center justify-center w-full h-28 rounded-xl border-2 border-dashed border-slate-200 hover:border-emerald-400 cursor-pointer transition-colors bg-slate-50 hover:bg-emerald-50 overflow-hidden">
                   <img src={imagePreview} alt="preview" className="w-full h-full object-cover" />
-                ) : (
-                  <div className="flex flex-col items-center gap-1 text-slate-400">
-                    <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5" />
+                  <input type="file" accept="image/*" className="hidden" onChange={handleFileChange} />
+                </label>
+              ) : (
+                <div className="refund-image-triggers flex gap-2">
+                  <label className="refund-image-camera flex-1 flex flex-col items-center justify-center h-20 rounded-xl border-2 border-dashed border-slate-200 hover:border-emerald-400 cursor-pointer transition-colors bg-slate-50 hover:bg-emerald-50 text-slate-400">
+                    <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M6.827 6.175A2.31 2.31 0 015.186 7.23c-.38.054-.757.112-1.134.174C3.163 7.54 2.5 8.36 2.5 9.315V18a2.25 2.25 0 002.25 2.25h14.5A2.25 2.25 0 0021.5 18V9.315c0-.955-.663-1.775-1.552-1.912a48.11 48.11 0 00-1.134-.174 2.31 2.31 0 01-1.64-1.055l-.822-1.316a2.192 2.192 0 00-1.736-1.039 48.774 48.774 0 00-4.552 0 2.192 2.192 0 00-1.736 1.039l-.822 1.316z" />
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M16.5 12.75a4.5 4.5 0 11-9 0 4.5 4.5 0 019 0z" />
                     </svg>
-                    <span className="text-xs">{t.refundImageHint}</span>
-                  </div>
-                )}
-                <input type="file" accept="image/*" className="hidden" onChange={handleFileChange} />
-              </label>
+                    <span className="text-xs mt-1">{t.scanTakePhoto}</span>
+                    <input type="file" accept="image/*" capture="environment" className="hidden" onChange={handleFileChange} />
+                  </label>
+                  <label className="refund-image-gallery flex-1 flex flex-col items-center justify-center h-20 rounded-xl border-2 border-dashed border-slate-200 hover:border-emerald-400 cursor-pointer transition-colors bg-slate-50 hover:bg-emerald-50 text-slate-400">
+                    <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 15.75l5.159-5.159a2.25 2.25 0 013.182 0l5.159 5.159m-1.5-1.5l1.409-1.409a2.25 2.25 0 013.182 0l2.909 2.909M3 4.5h18a1.5 1.5 0 011.5 1.5v12a1.5 1.5 0 01-1.5 1.5H3A1.5 1.5 0 011.5 18V6A1.5 1.5 0 013 4.5z" />
+                    </svg>
+                    <span className="text-xs mt-1">{t.scanChooseImage}</span>
+                    <input type="file" accept="image/*" className="hidden" onChange={handleFileChange} />
+                  </label>
+                </div>
+              )}
               {isScanning && (
                 <p className="refund-image-scanning flex items-center gap-1.5 text-xs text-slate-400 mt-1"><Spinner className="w-3 h-3" />{t.scanning}</p>
               )}
