@@ -9,10 +9,11 @@ const SCHEMAS: Record<EntityType, object> = {
     properties: {
       provider:   { type: 'STRING' },
       name:       { type: 'STRING', description: 'a distinct product name/title for this card, if different from the provider/brand name — omit if there is none' },
-      fullNumber: { type: 'STRING', description: 'digits only, no spaces or dashes' },
+      fullNumber: { type: 'STRING', description: 'digits only, no spaces or dashes — omit if there is none (e.g. a link-redeemed card)' },
       cvv:        { type: 'STRING', description: '3 or 4 digits, usually printed on the back' },
       expiresAt:  { type: 'STRING', description: 'YYYY-MM-DD if visible, otherwise omit this field' },
       value:      { type: 'NUMBER', description: 'the balance/denomination printed on the card, if shown, e.g. 50' },
+      link:       { type: 'STRING', description: 'a redemption URL, if the card is redeemed via a link instead of (or in addition to) a card number — omit if there is none' },
       notes:      { type: 'STRING', description: 'who this is from, the occasion, or any other context mentioned (e.g. "Birthday gift from Mom") — omit if none is mentioned' },
     },
   },
@@ -21,9 +22,10 @@ const SCHEMAS: Record<EntityType, object> = {
     properties: {
       provider:  { type: 'STRING' },
       name:      { type: 'STRING', description: 'a distinct title/name for this voucher, if different from the provider/brand name — omit if there is none' },
-      code:      { type: 'STRING' },
+      code:      { type: 'STRING', description: 'the redemption code, if there is one — omit if the voucher is redeemed via a link instead' },
       value:     { type: 'NUMBER' },
       expiresAt: { type: 'STRING', description: 'YYYY-MM-DD if visible, otherwise omit this field' },
+      link:      { type: 'STRING', description: 'a redemption URL, if the voucher is redeemed via a link instead of (or in addition to) a code — omit if there is none' },
       notes:     { type: 'STRING', description: 'who this is from, the occasion, or any other context mentioned (e.g. "Birthday gift from Mom") — omit if none is mentioned' },
     },
   },
@@ -35,21 +37,22 @@ const SCHEMAS: Record<EntityType, object> = {
       currency:    { type: 'STRING', description: '3-letter ISO currency code' },
       referenceId: { type: 'STRING' },
       expiresAt:   { type: 'STRING', description: 'YYYY-MM-DD if visible, otherwise omit this field' },
+      link:        { type: 'STRING', description: 'a redemption/view URL for the credit, if there is one — omit if there is none' },
       notes:       { type: 'STRING', description: 'any relevant context about the refund/order mentioned in the text (e.g. what was returned/why) — omit if none is mentioned' },
     },
   },
 }
 
 const IMAGE_PROMPTS: Record<EntityType, string> = {
-  CARD: 'Read this gift card photo (front and back if both are shown). Return the provider/brand name as printed, a distinct product name/title if there is one separate from the brand, the full card number, the CVV if visible on the back, the expiration date if visible, the balance/denomination amount if printed on the card, and any note about who it is from or the occasion if visible.',
-  VOUCHER: 'Read this voucher or promo code image. Return the provider/brand name, a distinct title/name if there is one separate from the brand, the code, the value/amount if printed, the expiration date if visible, and any note about who it is from or the occasion if visible.',
-  REFUND: 'Read this receipt or refund confirmation. Return the store/provider name, the amount, the 3-letter currency code, any order/reference number, a store-credit expiration date if shown, and any other relevant context about the order/return.',
+  CARD: 'Read this gift card photo (front and back if both are shown). Return the provider/brand name as printed, a distinct product name/title if there is one separate from the brand, the full card number, the CVV if visible on the back, the expiration date if visible, the balance/denomination amount if printed on the card, a redemption URL if the card is redeemed via a link instead of a number, and any note about who it is from or the occasion if visible.',
+  VOUCHER: 'Read this voucher or promo code image. Return the provider/brand name, a distinct title/name if there is one separate from the brand, the code, a redemption URL if it is redeemed via a link instead of a code, the value/amount if printed, the expiration date if visible, and any note about who it is from or the occasion if visible.',
+  REFUND: 'Read this receipt or refund confirmation. Return the store/provider name, the amount, the 3-letter currency code, any order/reference number, a redemption/view URL if present, a store-credit expiration date if shown, and any other relevant context about the order/return.',
 }
 
 const TEXT_PROMPTS: Record<EntityType, string> = {
-  CARD: 'Extract gift card details from this pasted text (e.g. a digital gift card email). Return the provider/brand name, a distinct product name/title if there is one separate from the brand, the full card number, the CVV if mentioned, the expiration date if mentioned, the balance/denomination amount if mentioned, and any note about who it is from or the occasion if mentioned.',
-  VOUCHER: 'Extract voucher/promo details from this pasted text (e.g. an email or SMS). Return the provider/brand name, a distinct title/name if there is one separate from the brand, the code, the value/amount if mentioned, the expiration date if mentioned, and any note about who it is from or the occasion if mentioned.',
-  REFUND: 'Extract refund/store-credit details from this pasted text (e.g. a confirmation email). Return the store/provider name, the amount, the 3-letter currency code, any order/reference number, a store-credit expiration date if mentioned, and any other relevant context about the order/return.',
+  CARD: 'Extract gift card details from this pasted text (e.g. a digital gift card email). Return the provider/brand name, a distinct product name/title if there is one separate from the brand, the full card number, the CVV if mentioned, the expiration date if mentioned, the balance/denomination amount if mentioned, a redemption URL if the card is redeemed via a link instead of a number, and any note about who it is from or the occasion if mentioned.',
+  VOUCHER: 'Extract voucher/promo details from this pasted text (e.g. an email or SMS). Return the provider/brand name, a distinct title/name if there is one separate from the brand, the code, a redemption URL if it is redeemed via a link instead of a code, the value/amount if mentioned, the expiration date if mentioned, and any note about who it is from or the occasion if mentioned.',
+  REFUND: 'Extract refund/store-credit details from this pasted text (e.g. a confirmation email). Return the store/provider name, the amount, the 3-letter currency code, any order/reference number, a redemption/view URL if present, a store-credit expiration date if mentioned, and any other relevant context about the order/return.',
 }
 
 function isEntityType(value: unknown): value is EntityType {

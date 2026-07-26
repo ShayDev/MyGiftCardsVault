@@ -179,6 +179,7 @@ function AddCardModal({
       const name = typeof fields.name === 'string' ? fields.name : fields.provider
       if (typeof name === 'string') nameRef.current.value = name
     }
+    if (typeof fields.link === 'string') setLink(fields.link)
     if (fullNumberRef.current && typeof fields.fullNumber === 'string') {
       fullNumberRef.current.value = fields.fullNumber
       if (last4Ref.current) last4Ref.current.value = extractLast4(fields.fullNumber)

@@ -101,6 +101,7 @@ function AddVoucherModal({
   const [providerKey, setProviderKey] = useState(0)
   const nameRef = useRef<HTMLInputElement>(null)
   const codeRef = useRef<HTMLInputElement>(null)
+  const linkRef = useRef<HTMLInputElement>(null)
   const valueRef = useRef<HTMLInputElement>(null)
   const expiresAtRef = useRef<HTMLInputElement>(null)
   const notesRef = useRef<HTMLInputElement>(null)
@@ -115,6 +116,7 @@ function AddVoucherModal({
       if (typeof name === 'string') nameRef.current.value = name
     }
     if (codeRef.current && typeof fields.code === 'string') codeRef.current.value = fields.code
+    if (linkRef.current && typeof fields.link === 'string') linkRef.current.value = fields.link
     if (valueRef.current && typeof fields.value === 'number') valueRef.current.value = String(fields.value)
     if (expiresAtRef.current && typeof fields.expiresAt === 'string') expiresAtRef.current.value = fields.expiresAt
     if (notesRef.current && !notesRef.current.value && typeof fields.notes === 'string') notesRef.current.value = fields.notes
@@ -149,7 +151,7 @@ function AddVoucherModal({
           <input ref={codeRef} name="code" placeholder={t.voucherCodePlaceholder} className={`${inputClass} font-mono`} />
         </Field>
         <Field label={t.voucherLink}>
-          <input name="link" type="url" placeholder={t.voucherLinkPlaceholder} className={inputClass} />
+          <input ref={linkRef} name="link" type="url" placeholder={t.voucherLinkPlaceholder} className={inputClass} />
         </Field>
         <Field label={t.voucherValueOptional}>
           <input

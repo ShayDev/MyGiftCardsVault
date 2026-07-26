@@ -122,6 +122,7 @@ function AddRefundModal({
   const referenceIdRef = useRef<HTMLInputElement>(null)
   const expiresAtRef = useRef<HTMLInputElement>(null)
   const notesRef = useRef<HTMLInputElement>(null)
+  const linkRef = useRef<HTMLInputElement>(null)
 
   function applyExtractedFields(fields: ExtractedFields) {
     if (typeof fields.provider === 'string') {
@@ -132,6 +133,7 @@ function AddRefundModal({
     if (currencyRef.current && typeof fields.currency === 'string') currencyRef.current.value = fields.currency.toUpperCase()
     if (referenceIdRef.current && typeof fields.referenceId === 'string') referenceIdRef.current.value = fields.referenceId
     if (expiresAtRef.current && typeof fields.expiresAt === 'string') expiresAtRef.current.value = fields.expiresAt
+    if (linkRef.current && typeof fields.link === 'string') linkRef.current.value = fields.link
     if (notesRef.current && !notesRef.current.value && typeof fields.notes === 'string') notesRef.current.value = fields.notes
   }
 
@@ -242,7 +244,7 @@ function AddRefundModal({
           <input name="code" placeholder={t.refundCodePlaceholder} className={`${inputClass} font-mono`} />
         </Field>
         <Field label={t.refundLink}>
-          <input name="link" type="url" placeholder={t.refundLinkPlaceholder} className={inputClass} />
+          <input ref={linkRef} name="link" type="url" placeholder={t.refundLinkPlaceholder} className={inputClass} />
         </Field>
         <Field label={t.notesOptional}>
           <input ref={notesRef} name="notes" placeholder={t.notesPlaceholder} className={inputClass} />
