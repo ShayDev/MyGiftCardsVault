@@ -86,7 +86,7 @@ export default function ScanButton({
   onExtracted: (fields: ExtractedFields) => void
 }) {
   const t = getT(useLanguageStore((s) => s.locale))
-  const [mode, setMode] = useState<'photo' | 'text'>('photo')
+  const [mode, setMode] = useState<'photo' | 'text'>('text')
   const [isScanning, setIsScanning] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
@@ -111,17 +111,17 @@ export default function ScanButton({
       <div className="scan-mode-toggle flex gap-1.5 mb-1.5">
         <button
           type="button"
-          onClick={() => setMode('photo')}
-          className={`text-xs px-2.5 py-1 rounded-full transition-colors ${mode === 'photo' ? 'bg-emerald-100 text-emerald-700' : 'text-slate-400 hover:bg-slate-100'}`}
-        >
-          {t.scanModePhoto}
-        </button>
-        <button
-          type="button"
           onClick={() => setMode('text')}
           className={`text-xs px-2.5 py-1 rounded-full transition-colors ${mode === 'text' ? 'bg-emerald-100 text-emerald-700' : 'text-slate-400 hover:bg-slate-100'}`}
         >
           {t.scanModeText}
+        </button>
+        <button
+          type="button"
+          onClick={() => setMode('photo')}
+          className={`text-xs px-2.5 py-1 rounded-full transition-colors ${mode === 'photo' ? 'bg-emerald-100 text-emerald-700' : 'text-slate-400 hover:bg-slate-100'}`}
+        >
+          {t.scanModePhoto}
         </button>
       </div>
       {mode === 'photo' ? (

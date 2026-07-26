@@ -114,7 +114,7 @@ function AddRefundModal({
   const [imageFile, setImageFile] = useState<File | null>(null)
   const [isScanning, setIsScanning] = useState(false)
   const [scanError, setScanError] = useState<string | null>(null)
-  const [scanMode, setScanMode] = useState<'photo' | 'text'>('photo')
+  const [scanMode, setScanMode] = useState<'photo' | 'text'>('text')
   const [providerPrefill, setProviderPrefill] = useState('')
   const [providerKey, setProviderKey] = useState(0)
   const amountRef = useRef<HTMLInputElement>(null)
@@ -249,17 +249,17 @@ function AddRefundModal({
           <div className="refund-scan-mode-toggle flex gap-1.5 mb-1.5">
             <button
               type="button"
-              onClick={() => setScanMode('photo')}
-              className={`text-xs px-2.5 py-1 rounded-full transition-colors ${scanMode === 'photo' ? 'bg-emerald-100 text-emerald-700' : 'text-slate-400 hover:bg-slate-100'}`}
-            >
-              {t.scanModePhoto}
-            </button>
-            <button
-              type="button"
               onClick={() => setScanMode('text')}
               className={`text-xs px-2.5 py-1 rounded-full transition-colors ${scanMode === 'text' ? 'bg-emerald-100 text-emerald-700' : 'text-slate-400 hover:bg-slate-100'}`}
             >
               {t.scanModeText}
+            </button>
+            <button
+              type="button"
+              onClick={() => setScanMode('photo')}
+              className={`text-xs px-2.5 py-1 rounded-full transition-colors ${scanMode === 'photo' ? 'bg-emerald-100 text-emerald-700' : 'text-slate-400 hover:bg-slate-100'}`}
+            >
+              {t.scanModePhoto}
             </button>
           </div>
           {scanMode === 'photo' ? (

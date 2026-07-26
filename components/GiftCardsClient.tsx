@@ -139,10 +139,12 @@ function AddCardModal({
   const [link, setLink] = useState('')
   const [providerPrefill, setProviderPrefill] = useState('')
   const [providerKey, setProviderKey] = useState(0)
+  const nameRef = useRef<HTMLInputElement>(null)
   const last4Ref = useRef<HTMLInputElement>(null)
   const fullNumberRef = useRef<HTMLInputElement>(null)
   const cvvRef = useRef<HTMLInputElement>(null)
   const expiresAtRef = useRef<HTMLInputElement>(null)
+  const defaultBalanceRef = useRef<HTMLInputElement>(null)
 
   function handleSubmit(e: React.SyntheticEvent<HTMLFormElement>) {
     e.preventDefault()
@@ -172,12 +174,17 @@ function AddCardModal({
       setProviderPrefill(fields.provider)
       setProviderKey((k) => k + 1)
     }
+    if (nameRef.current && !nameRef.current.value) {
+      const name = typeof fields.name === 'string' ? fields.name : fields.provider
+      if (typeof name === 'string') nameRef.current.value = name
+    }
     if (fullNumberRef.current && typeof fields.fullNumber === 'string') {
       fullNumberRef.current.value = fields.fullNumber
       if (last4Ref.current) last4Ref.current.value = extractLast4(fields.fullNumber)
     }
     if (cvvRef.current && typeof fields.cvv === 'string') cvvRef.current.value = fields.cvv
     if (expiresAtRef.current && typeof fields.expiresAt === 'string') expiresAtRef.current.value = fields.expiresAt
+    if (defaultBalanceRef.current && typeof fields.value === 'number') defaultBalanceRef.current.value = String(fields.value)
   }
 
   return (
@@ -185,7 +192,7 @@ function AddCardModal({
       <form onSubmit={handleSubmit} className="space-y-4">
         <ScanButton entityType="CARD" onExtracted={handleExtracted} />
         <Field label={t.cardName} required>
-          <input name="name" required placeholder={t.cardNamePlaceholder} className={inputClass} />
+          <input ref={nameRef} name="name" required placeholder={t.cardNamePlaceholder} className={inputClass} />
         </Field>
         <Field label={t.providerLabel}>
           <ProviderCombobox key={providerKey} name="provider" defaultValue={providerPrefill} options={providerOptions} placeholder={t.providerPlaceholder} />
@@ -244,6 +251,7 @@ function AddCardModal({
           <div className="relative">
             <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 font-medium text-sm">{t.currencySymbol}</span>
             <input
+              ref={defaultBalanceRef}
               name="defaultBalance"
               type="number"
               required

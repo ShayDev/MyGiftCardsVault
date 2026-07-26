@@ -99,6 +99,7 @@ function AddVoucherModal({
   const [error, setError] = useState<string | null>(null)
   const [providerPrefill, setProviderPrefill] = useState('')
   const [providerKey, setProviderKey] = useState(0)
+  const nameRef = useRef<HTMLInputElement>(null)
   const codeRef = useRef<HTMLInputElement>(null)
   const valueRef = useRef<HTMLInputElement>(null)
   const expiresAtRef = useRef<HTMLInputElement>(null)
@@ -107,6 +108,10 @@ function AddVoucherModal({
     if (typeof fields.provider === 'string') {
       setProviderPrefill(fields.provider)
       setProviderKey((k) => k + 1)
+    }
+    if (nameRef.current && !nameRef.current.value) {
+      const name = typeof fields.name === 'string' ? fields.name : fields.provider
+      if (typeof name === 'string') nameRef.current.value = name
     }
     if (codeRef.current && typeof fields.code === 'string') codeRef.current.value = fields.code
     if (valueRef.current && typeof fields.value === 'number') valueRef.current.value = String(fields.value)
@@ -133,7 +138,7 @@ function AddVoucherModal({
       <form onSubmit={handleSubmit} className="space-y-4">
         <ScanButton entityType="VOUCHER" onExtracted={handleExtracted} />
         <Field label={t.voucherName} required>
-          <input name="name" required placeholder="e.g. Birthday Discount" className={inputClass} />
+          <input ref={nameRef} name="name" required placeholder="e.g. Birthday Discount" className={inputClass} />
         </Field>
         <Field label={t.providerLabel}>
           <ProviderCombobox key={providerKey} name="provider" defaultValue={providerPrefill} options={providerOptions} placeholder={t.providerPlaceholder} />
