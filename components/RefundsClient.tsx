@@ -279,7 +279,7 @@ function AddRefundModal({
                     <span className="text-xs">{t.refundImageHint}</span>
                   </div>
                 )}
-                <input type="file" accept="image/*" capture="environment" className="hidden" onChange={handleFileChange} />
+                <input type="file" accept="image/*" className="hidden" onChange={handleFileChange} />
               </label>
               {isScanning && (
                 <p className="refund-image-scanning flex items-center gap-1.5 text-xs text-slate-400 mt-1"><Spinner className="w-3 h-3" />{t.scanning}</p>

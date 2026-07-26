@@ -144,7 +144,6 @@ export default function ScanButton({
             <input
               type="file"
               accept="image/*"
-              capture="environment"
               className="hidden"
               disabled={isScanning}
               onChange={handleFileChange}

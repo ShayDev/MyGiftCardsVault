@@ -42,7 +42,8 @@
       "Bash(python3 -c \"import PIL; print\\(PIL.__version__\\)\")",
       "Bash(tail -c 4000 /tmp/nextdev.log 2>&1)",
       "Read(//tmp/**)",
-      "Bash(node -e ' *)"
+      "Bash(node -e ' *)",
+      "Bash(awk -F'=' '{print \"GEMINI_API_KEY value_length=\" length\\($0\\)-length\\($1\\)-1}')"
     ],
     "additionalDirectories": [
       "\\tmp"
