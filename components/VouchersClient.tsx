@@ -103,6 +103,7 @@ function AddVoucherModal({
   const codeRef = useRef<HTMLInputElement>(null)
   const valueRef = useRef<HTMLInputElement>(null)
   const expiresAtRef = useRef<HTMLInputElement>(null)
+  const notesRef = useRef<HTMLInputElement>(null)
 
   function handleExtracted(fields: ExtractedFields) {
     if (typeof fields.provider === 'string') {
@@ -116,6 +117,7 @@ function AddVoucherModal({
     if (codeRef.current && typeof fields.code === 'string') codeRef.current.value = fields.code
     if (valueRef.current && typeof fields.value === 'number') valueRef.current.value = String(fields.value)
     if (expiresAtRef.current && typeof fields.expiresAt === 'string') expiresAtRef.current.value = fields.expiresAt
+    if (notesRef.current && !notesRef.current.value && typeof fields.notes === 'string') notesRef.current.value = fields.notes
   }
 
   function handleSubmit(e: React.SyntheticEvent<HTMLFormElement>) {
@@ -169,7 +171,7 @@ function AddVoucherModal({
           />
         </Field>
         <Field label={t.notesOptional}>
-          <input name="notes" placeholder={t.notesPlaceholder} className={inputClass} />
+          <input ref={notesRef} name="notes" placeholder={t.notesPlaceholder} className={inputClass} />
         </Field>
         {error && <p className="text-sm text-rose-500 bg-rose-50 px-3 py-2 rounded-lg">{error}</p>}
         <div className="flex gap-3 pt-1">

@@ -145,6 +145,7 @@ function AddCardModal({
   const cvvRef = useRef<HTMLInputElement>(null)
   const expiresAtRef = useRef<HTMLInputElement>(null)
   const defaultBalanceRef = useRef<HTMLInputElement>(null)
+  const notesRef = useRef<HTMLInputElement>(null)
 
   function handleSubmit(e: React.SyntheticEvent<HTMLFormElement>) {
     e.preventDefault()
@@ -185,6 +186,7 @@ function AddCardModal({
     if (cvvRef.current && typeof fields.cvv === 'string') cvvRef.current.value = fields.cvv
     if (expiresAtRef.current && typeof fields.expiresAt === 'string') expiresAtRef.current.value = fields.expiresAt
     if (defaultBalanceRef.current && typeof fields.value === 'number') defaultBalanceRef.current.value = String(fields.value)
+    if (notesRef.current && !notesRef.current.value && typeof fields.notes === 'string') notesRef.current.value = fields.notes
   }
 
   return (
@@ -264,6 +266,7 @@ function AddCardModal({
         </Field>
         <Field label={t.notesOptional}>
           <input
+            ref={notesRef}
             name="notes"
             placeholder={t.notesPlaceholder}
             className={inputClass}

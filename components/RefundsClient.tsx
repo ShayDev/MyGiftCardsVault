@@ -121,6 +121,7 @@ function AddRefundModal({
   const currencyRef = useRef<HTMLInputElement>(null)
   const referenceIdRef = useRef<HTMLInputElement>(null)
   const expiresAtRef = useRef<HTMLInputElement>(null)
+  const notesRef = useRef<HTMLInputElement>(null)
 
   function applyExtractedFields(fields: ExtractedFields) {
     if (typeof fields.provider === 'string') {
@@ -131,6 +132,7 @@ function AddRefundModal({
     if (currencyRef.current && typeof fields.currency === 'string') currencyRef.current.value = fields.currency.toUpperCase()
     if (referenceIdRef.current && typeof fields.referenceId === 'string') referenceIdRef.current.value = fields.referenceId
     if (expiresAtRef.current && typeof fields.expiresAt === 'string') expiresAtRef.current.value = fields.expiresAt
+    if (notesRef.current && !notesRef.current.value && typeof fields.notes === 'string') notesRef.current.value = fields.notes
   }
 
   async function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
@@ -243,7 +245,7 @@ function AddRefundModal({
           <input name="link" type="url" placeholder={t.refundLinkPlaceholder} className={inputClass} />
         </Field>
         <Field label={t.notesOptional}>
-          <input name="notes" placeholder={t.notesPlaceholder} className={inputClass} />
+          <input ref={notesRef} name="notes" placeholder={t.notesPlaceholder} className={inputClass} />
         </Field>
         <Field label={t.refundImageOptional}>
           <div className="refund-scan-mode-toggle flex gap-1.5 mb-1.5">
