@@ -53,7 +53,7 @@ This app already treats `fullNumber`/`cvv`/`code`/`link` as sensitive enough to 
 Two sub-decisions:
 
 1. **Do we extract `last4` only, or the full card number, from the image?**
-   Recommendation: **`last4` only.** The form still lets the user type the full number and CVV manually afterward if they want it stored (existing optional fields) — the LLM call just doesn't need to see or return them. This avoids ever sending a CVV in an API payload.
+   ~~Recommendation: `last4` only.~~ **Superseded in the DD:** both `fullNumber` and `cvv` are extracted and pre-filled. Rationale for the reversal: the photo already shows both to the LLM regardless of what fields are requested back, so `last4`-only reduced what the *app* auto-fills, not what the *image* exposes — and the image-retention decision below (never persisted) remains the actual mitigation.
 
 2. **What happens to the uploaded image after extraction?**
    Unlike Refunds (which already deliberately keeps `imageUrl` as a permanent, visible receipt attached to the record), a gift-card photo showing a full number is not something this app should retain — there's no `GiftCard.imageUrl` field today and this design shouldn't add one for cards. Recommendation: the image is uploaded to a short-lived location (or held in memory in the API route and never written to Blob storage at all), passed to the LLM, and discarded immediately after the extraction response comes back. Refunds can keep its existing "attach the receipt permanently" behavior unchanged, since that's a lower-sensitivity image and users already rely on being able to view it later.

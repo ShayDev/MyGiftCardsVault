@@ -7,9 +7,11 @@
 | Question | Decision |
 |---|---|
 | LLM provider | **Google Gemini Flash** (`gemini-2.5-flash` at implementation time — re-verify current free-tier model name), called via a plain `fetch()` to the REST `generateContent` endpoint. No new SDK dependency. |
-| Card image handling | **`last4` only, never persisted.** No `GiftCard.imageUrl` column. |
+| Card image handling | **`fullNumber` and `cvv` are extracted** (revised — see note below); the photo itself is still **never persisted**. No `GiftCard.imageUrl` column. |
 | Voucher/Refund image handling | **Reuse the existing `imageUrl` flow** (same as Refund today). Voucher gains an `imageUrl` column, encrypted at rest, exactly like Refund's. |
 | Scan entry point | **A "Scan" button inside the existing Add modal** for each of Cards/Vouchers/Refunds — not a separate flow. |
+
+**Revision note on card extraction:** the HLD recommended `last4`-only specifically to avoid the app's own code path returning/auto-filling the full number + CVV together. That recommendation has been overridden — `fullNumber` and `cvv` are both extracted and pre-filled now. Worth stating plainly: the photo sent to Gemini already shows whatever the card physically displays, so this change doesn't alter what leaves the app in the image — it only changes whether the app *also* auto-fills those two fields from the response instead of requiring the user to type them. The mitigation that remains: the image itself is still never persisted (see below), so there's no permanent stored artifact of the full number+CVV pair beyond the encrypted text fields the user already reviews and saves today.
 
 ---
 
@@ -75,9 +77,10 @@ const SCHEMAS = {
   CARD: {
     type: 'object',
     properties: {
-      provider: { type: 'string' },
-      last4:    { type: 'string' },
-      expiresAt: { type: 'string', description: 'YYYY-MM-DD, or omit if not visible' },
+      provider:   { type: 'string' },
+      fullNumber: { type: 'string', description: 'digits only, no spaces/dashes' },
+      cvv:        { type: 'string', description: '3 or 4 digits, from the back of the card if shown' },
+      expiresAt:  { type: 'string', description: 'YYYY-MM-DD, or omit if not visible' },
     },
   },
   VOUCHER: {
@@ -123,7 +126,9 @@ export async function POST(req: Request) {
 }
 ```
 
-`callGemini` posts to `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=...` with `inlineData` (base64 image + mime type) and `generationConfig.responseSchema` set to the matching schema above, `responseMimeType: 'application/json'`. Prompt text is a single instruction per entity type, e.g. for CARD: *"Read this gift card photo. Return the provider/brand name as printed, the last 4 digits only (never the full number), and the expiration date if visible."* Set a request timeout (e.g. `AbortSignal.timeout(15_000)`) so a hung call can't leave the Add modal stuck — surfaces as the same generic `{ error }` response.
+`callGemini` posts to `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=...` with `inlineData` (base64 image + mime type) and `generationConfig.responseSchema` set to the matching schema above, `responseMimeType: 'application/json'`. Prompt text is a single instruction per entity type, e.g. for CARD: *"Read this gift card photo (front and back if both are shown). Return the provider/brand name as printed, the full card number, the CVV if visible on the back, and the expiration date if visible."* Set a request timeout (e.g. `AbortSignal.timeout(15_000)`) so a hung call can't leave the Add modal stuck — surfaces as the same generic `{ error }` response.
+
+**Deriving `last4`:** the `GiftCard` create schema requires `last4 || link` (see `CreateCardSchema`'s `.refine` in `app/actions.ts`). Rather than asking Gemini for a redundant `last4` field, the client derives it once `fullNumber` comes back: `fullNumber.slice(-4)`, and pre-fills the `last4` input from that — satisfying the existing validation without a schema change or a second extracted field.
 
 **Why `expiresAt` as `YYYY-MM-DD`:** that's exactly the value format `<input type="date">` expects, so the client can drop it straight into the field with zero parsing — consistent with how `expiresAt` already flows through the rest of the app (see the recent MMYY→DateTime migration).
 
@@ -204,7 +209,7 @@ One consequence worth accepting: if the user had already typed into other fields
 
 Add a `ScanButton` as the first field in each Add modal, wired to that entity's `prefill`/`formKey` state:
 
-- **`AddCardModal`** (`components/GiftCardsClient.tsx`): `entityType="CARD"`, prefills `provider`, `last4`, `expiresAt`. Note `fullNumber`/`cvv` are never touched by extraction (per the HLD's security decision) — those inputs are untouched by `prefill`.
+- **`AddCardModal`** (`components/GiftCardsClient.tsx`): `entityType="CARD"`, prefills `provider`, `fullNumber`, `cvv`, `expiresAt`, and a client-derived `last4` (see §3). The photo itself is still discarded after the `/api/extract` call returns — no Blob upload happens for cards, ever.
 - **`AddVoucherModal`** (`components/VouchersClient.tsx`): `entityType="VOUCHER"`, prefills `provider`, `code`, `value`, `expiresAt`. The image used for extraction is the *same* `imageFile` already selected for the (new) permanent upload — see below.
 - **`AddRefundModal`** (`components/RefundsClient.tsx`): `entityType="REFUND"`, prefills `provider`, `amount`, `currency`, `referenceId`, `expiresAt`. Same image-reuse point applies.
 
