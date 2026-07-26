@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState, useTransition } from 'react'
+import React, { useRef, useState, useTransition } from 'react'
 import { createRefund, updateRefund, markRefundReceived, markRefundUsed, useRefundAmount, deleteRefund, type RefundItem } from '../app/refunds/actions'
 import { useLanguageStore } from '../hooks/useLanguageStore'
 import { getT } from '../lib/i18n'
@@ -10,6 +10,7 @@ import { formatExpiresAt } from '../lib/date'
 import type { ProviderOption } from '../lib/providerTypes'
 import Spinner from './Spinner'
 import ProviderCombobox from './ProviderCombobox'
+import { extractImage, TextExtractArea, type ExtractedFields } from './ScanButton'
 
 // ── Helpers ────────────────────────────────────────────────────────────────────
 
@@ -111,15 +112,44 @@ function AddRefundModal({
   const [error, setError] = useState<string | null>(null)
   const [imagePreview, setImagePreview] = useState<string | null>(null)
   const [imageFile, setImageFile] = useState<File | null>(null)
+  const [isScanning, setIsScanning] = useState(false)
+  const [scanError, setScanError] = useState<string | null>(null)
+  const [scanMode, setScanMode] = useState<'photo' | 'text'>('photo')
+  const [providerPrefill, setProviderPrefill] = useState('')
+  const [providerKey, setProviderKey] = useState(0)
+  const amountRef = useRef<HTMLInputElement>(null)
+  const currencyRef = useRef<HTMLInputElement>(null)
+  const referenceIdRef = useRef<HTMLInputElement>(null)
+  const expiresAtRef = useRef<HTMLInputElement>(null)
 
-  function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
+  function applyExtractedFields(fields: ExtractedFields) {
+    if (typeof fields.provider === 'string') {
+      setProviderPrefill(fields.provider)
+      setProviderKey((k) => k + 1)
+    }
+    if (amountRef.current && typeof fields.amount === 'number') amountRef.current.value = String(fields.amount)
+    if (currencyRef.current && typeof fields.currency === 'string') currencyRef.current.value = fields.currency.toUpperCase()
+    if (referenceIdRef.current && typeof fields.referenceId === 'string') referenceIdRef.current.value = fields.referenceId
+    if (expiresAtRef.current && typeof fields.expiresAt === 'string') expiresAtRef.current.value = fields.expiresAt
+  }
+
+  async function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0] ?? null
     setImageFile(file)
-    if (file) {
-      const url = URL.createObjectURL(file)
-      setImagePreview(url)
-    } else {
+    if (!file) {
       setImagePreview(null)
+      return
+    }
+    setImagePreview(URL.createObjectURL(file))
+
+    setIsScanning(true)
+    setScanError(null)
+    try {
+      applyExtractedFields(await extractImage(file, 'REFUND'))
+    } catch {
+      setScanError(t.scanFailed)
+    } finally {
+      setIsScanning(false)
     }
   }
 
@@ -162,8 +192,10 @@ function AddRefundModal({
 
         <Field label={t.refundProvider} required>
           <ProviderCombobox
+            key={providerKey}
             name="provider"
             required
+            defaultValue={providerPrefill}
             options={providerOptions}
             placeholder="e.g. Zara, IKEA"
           />
@@ -171,6 +203,7 @@ function AddRefundModal({
         <div className="flex gap-3">
           <Field label={t.refundAmount} required>
             <input
+              ref={amountRef}
               name="amount"
               type="number"
               required
@@ -182,6 +215,7 @@ function AddRefundModal({
           </Field>
           <Field label={t.refundCurrency} required>
             <input
+              ref={currencyRef}
               name="currency"
               required
               maxLength={3}
@@ -192,10 +226,11 @@ function AddRefundModal({
           </Field>
         </div>
         <Field label={t.refundReference}>
-          <input name="referenceId" placeholder={t.refundReferencePlaceholder} className={inputClass} />
+          <input ref={referenceIdRef} name="referenceId" placeholder={t.refundReferencePlaceholder} className={inputClass} />
         </Field>
         <Field label={t.expirationOptional}>
           <input
+            ref={expiresAtRef}
             name="expiresAt"
             type="date"
             className={inputClass}
@@ -211,27 +246,53 @@ function AddRefundModal({
           <input name="notes" placeholder={t.notesPlaceholder} className={inputClass} />
         </Field>
         <Field label={t.refundImageOptional}>
-          <label className="refund-image-upload flex flex-col items-center justify-center w-full h-28 rounded-xl border-2 border-dashed border-slate-200 hover:border-emerald-400 cursor-pointer transition-colors bg-slate-50 hover:bg-emerald-50 overflow-hidden">
-            {imagePreview ? (
-              <img src={imagePreview} alt="preview" className="w-full h-full object-cover" />
-            ) : (
-              <div className="flex flex-col items-center gap-1 text-slate-400">
-                <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5" />
-                </svg>
-                <span className="text-xs">{t.refundImageHint}</span>
-              </div>
-            )}
-            <input type="file" accept="image/*" className="hidden" onChange={handleFileChange} />
-          </label>
-          {imagePreview && (
+          <div className="refund-scan-mode-toggle flex gap-1.5 mb-1.5">
             <button
               type="button"
-              onClick={() => { setImagePreview(null); setImageFile(null) }}
-              className="text-xs text-rose-500 hover:text-rose-600 mt-1"
+              onClick={() => setScanMode('photo')}
+              className={`text-xs px-2.5 py-1 rounded-full transition-colors ${scanMode === 'photo' ? 'bg-emerald-100 text-emerald-700' : 'text-slate-400 hover:bg-slate-100'}`}
             >
-              {t.removeCard}
+              {t.scanModePhoto}
             </button>
+            <button
+              type="button"
+              onClick={() => setScanMode('text')}
+              className={`text-xs px-2.5 py-1 rounded-full transition-colors ${scanMode === 'text' ? 'bg-emerald-100 text-emerald-700' : 'text-slate-400 hover:bg-slate-100'}`}
+            >
+              {t.scanModeText}
+            </button>
+          </div>
+          {scanMode === 'photo' ? (
+            <>
+              <label className="refund-image-upload flex flex-col items-center justify-center w-full h-28 rounded-xl border-2 border-dashed border-slate-200 hover:border-emerald-400 cursor-pointer transition-colors bg-slate-50 hover:bg-emerald-50 overflow-hidden">
+                {imagePreview ? (
+                  <img src={imagePreview} alt="preview" className="w-full h-full object-cover" />
+                ) : (
+                  <div className="flex flex-col items-center gap-1 text-slate-400">
+                    <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5" />
+                    </svg>
+                    <span className="text-xs">{t.refundImageHint}</span>
+                  </div>
+                )}
+                <input type="file" accept="image/*" capture="environment" className="hidden" onChange={handleFileChange} />
+              </label>
+              {isScanning && (
+                <p className="refund-image-scanning flex items-center gap-1.5 text-xs text-slate-400 mt-1"><Spinner className="w-3 h-3" />{t.scanning}</p>
+              )}
+              {scanError && <p className="refund-image-scan-error text-xs text-rose-500 mt-1">{scanError}</p>}
+              {imagePreview && !isScanning && (
+                <button
+                  type="button"
+                  onClick={() => { setImagePreview(null); setImageFile(null) }}
+                  className="text-xs text-rose-500 hover:text-rose-600 mt-1"
+                >
+                  {t.removeCard}
+                </button>
+              )}
+            </>
+          ) : (
+            <TextExtractArea entityType="REFUND" onExtracted={applyExtractedFields} t={t} />
           )}
         </Field>
 

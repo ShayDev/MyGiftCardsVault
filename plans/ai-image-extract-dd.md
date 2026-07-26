@@ -6,10 +6,11 @@
 
 | Question | Decision |
 |---|---|
-| LLM provider | **Google Gemini Flash** (`gemini-2.5-flash` at implementation time — re-verify current free-tier model name), called via a plain `fetch()` to the REST `generateContent` endpoint. No new SDK dependency. |
+| LLM provider | **Google Gemini Flash**, called via a plain `fetch()` to the REST `generateContent` endpoint. No new SDK dependency. Uses the `gemini-flash-latest` model alias (not a dated model name like `gemini-2.5-flash`, which was found deprecated for new API keys during testing) — Google keeps this alias pointed at their current recommended flash model, avoiding the "re-verify model name" maintenance burden the original HLD flagged. |
 | Card image handling | **`fullNumber` and `cvv` are extracted** (revised — see note below); the photo itself is still **never persisted**. No `GiftCard.imageUrl` column. |
-| Voucher/Refund image handling | **Reuse the existing `imageUrl` flow** (same as Refund today). Voucher gains an `imageUrl` column, encrypted at rest, exactly like Refund's. |
+| Voucher/Refund image handling | **Revised — Refund only.** Refund keeps its existing `imageUrl` flow unchanged. Voucher does **not** get an `imageUrl` column — a scanned voucher photo is discarded after extraction, same as Cards. |
 | Scan entry point | **A "Scan" button inside the existing Add modal** for each of Cards/Vouchers/Refunds — not a separate flow. |
+| Text-paste extraction (added post-implementation) | **All three entities** get a "Paste text" mode alongside "Photo", via a toggle in the same Scan control — not a separate always-visible field. |
 
 **Revision note on card extraction:** the HLD recommended `last4`-only specifically to avoid the app's own code path returning/auto-filling the full number + CVV together. That recommendation has been overridden — `fullNumber` and `cvv` are both extracted and pre-filled now. Worth stating plainly: the photo sent to Gemini already shows whatever the card physically displays, so this change doesn't alter what leaves the app in the image — it only changes whether the app *also* auto-fills those two fields from the response instead of requiring the user to type them. The mitigation that remains: the image itself is still never persisted (see below), so there's no permanent stored artifact of the full number+CVV pair beyond the encrypted text fields the user already reviews and saves today.
 
@@ -17,28 +18,7 @@
 
 ## 1. Data model change
 
-Only one schema change: `Voucher` gains the `imageUrl` column Refund already has.
-
-```prisma
-model Voucher {
-  ...
-  imageUrl    String?     // encrypted at rest, same pattern as Refund.imageUrl
-  ...
-}
-```
-
-Migration (hand-written, matching this repo's convention):
-```sql
-ALTER TABLE "Voucher" ADD COLUMN "imageUrl" TEXT;
-```
-
-Follow-on changes mirroring how `Refund.imageUrl`/`code`/`link` are already handled:
-- `app/vouchers/actions.ts`: add `imageUrl: z.string().optional()` to `CreateVoucherSchema` (shared by create+update); encrypt on write (`data.imageUrl ? encrypt(data.imageUrl) : null`).
-- `app/vouchers/page.tsx`: add `imageUrl: dec(v.imageUrl ?? null)` to the payload mapping (the `dec()` helper already exists there for `code`/`link`).
-- `VoucherItem` type (`app/vouchers/actions.ts`): add `imageUrl?: string`.
-- `components/VouchersClient.tsx`: add the same image-upload `<Field>` block (preview, hidden file input, remove button) and detail-view `<img>` block that `RefundsClient.tsx` already has (lines ~213-236 for the form, ~630-638 for the detail view) — copy verbatim, swap `refund`→`voucher` and the i18n key (reuse `t.refundImageOptional`/`t.refundImageHint`, or add `voucherImageOptional`/`voucherImageHint` if distinct copy is wanted).
-
-No change to `GiftCard`, `ClubMember`, or `Refund` schemas.
+**None.** `GiftCard`, `ClubMember`, `Voucher`, and `Refund` schemas are all unchanged. Refund already has `imageUrl`; Voucher does not gain one — a scanned voucher photo is used only to prefill the form, then discarded, same as Cards.
 
 ---
 
@@ -61,8 +41,8 @@ You'll need to add it to `.env.local` for local dev, and separately to Vercel's 
 New file: `app/api/extract/route.ts`, modeled directly on the existing `app/api/upload/route.ts` (same auth check, same `req.formData()` pattern) but it **never touches Blob storage** — the image bytes live only in the function's memory for the duration of the request.
 
 **Request:** `multipart/form-data`
-- `file`: the image
 - `entityType`: `"CARD" | "VOUCHER" | "REFUND"`
+- either `file` (the image) **or** `text` (pasted text) — exactly one is required; the route 400s if neither/both are meaningfully present
 
 **Response (success):** `{ fields: Record<string, string | number> }` — shape depends on `entityType`, see schemas below.
 
@@ -209,23 +189,35 @@ One consequence worth accepting: if the user had already typed into other fields
 
 Add a `ScanButton` as the first field in each Add modal, wired to that entity's `prefill`/`formKey` state:
 
-- **`AddCardModal`** (`components/GiftCardsClient.tsx`): `entityType="CARD"`, prefills `provider`, `fullNumber`, `cvv`, `expiresAt`, and a client-derived `last4` (see §3). The photo itself is still discarded after the `/api/extract` call returns — no Blob upload happens for cards, ever.
-- **`AddVoucherModal`** (`components/VouchersClient.tsx`): `entityType="VOUCHER"`, prefills `provider`, `code`, `value`, `expiresAt`. The image used for extraction is the *same* `imageFile` already selected for the (new) permanent upload — see below.
-- **`AddRefundModal`** (`components/RefundsClient.tsx`): `entityType="REFUND"`, prefills `provider`, `amount`, `currency`, `referenceId`, `expiresAt`. Same image-reuse point applies.
-
-**Image reuse for Voucher/Refund:** picking a file for Scan can be the *same* file already wired to the existing `imageFile`/`imagePreview` state (the upload dropzone already in `AddRefundModal`, and the new one being added to `AddVoucherModal`). Practically: the Scan button and the image dropzone can share one `<input type="file">` — selecting a photo both shows the preview (as today) *and* immediately fires the `/api/extract` call. The image is only ever persisted to Blob storage at Save time via the existing `/api/upload` call in `handleSubmit` — extraction itself never uploads or stores anything, matching the HLD's "extraction never auto-submits, never persists by itself" principle.
+- **`AddCardModal`** (`components/GiftCardsClient.tsx`): `entityType="CARD"`, uses the standalone `<ScanButton>` component, prefills `provider`, `fullNumber`, `cvv`, `expiresAt`, and a client-derived `last4` (see §3). The photo itself is discarded after the `/api/extract` call returns — no Blob upload happens for cards, ever.
+- **`AddVoucherModal`** (`components/VouchersClient.tsx`): same as Cards — standalone `<ScanButton entityType="VOUCHER">`, prefills `provider`, `code`, `value`, `expiresAt`. No image field exists on this modal at all; the photo is never persisted.
+- **`AddRefundModal`** (`components/RefundsClient.tsx`): `entityType="REFUND"`, prefills `provider`, `amount`, `currency`, `referenceId`, `expiresAt`. This is the one modal where the Scan trigger and the existing permanent-image dropzone share one `<input type="file">` — selecting a photo both shows the preview (as today) *and* immediately fires the `/api/extract` call, using the exported `extractImage()` helper from `ScanButton.tsx` directly rather than the `<ScanButton>` component (which owns its own file input). The image is only ever persisted to Blob storage at Save time via the existing `/api/upload` call in `handleSubmit` — extraction itself never uploads or stores anything, matching the HLD's "extraction never auto-submits, never persists by itself" principle.
 
 Edit modals are **not** touched — scanning is an add-time convenience only, consistent with the HLD scope.
 
 ---
 
-## 6. i18n additions
+## 6. Text-paste extraction
 
-New keys in `lib/i18n.ts` (both `en`/`he`): `scanButton` ("Scan" / "סרוק"), `scanning` ("Scanning…" / "סורק..."), `scanFailed` ("Couldn't read image — enter manually" / "לא ניתן לקרוא את התמונה - הזן ידנית").
+Added after initial implementation: alongside "Photo", each Scan control gets a "Paste text" mode for pasting an email/SMS/confirmation instead of photographing something. Same `/api/extract` route, same per-entity `SCHEMAS` — only the prompt and the request payload differ (a `text` string instead of `file` + `inlineData`). Server-side, `TEXT_PROMPTS` (parallel to `IMAGE_PROMPTS`) gives Gemini instructions appropriate to reading pasted text rather than a photo.
+
+Client-side, `components/ScanButton.tsx` exports two additional pieces reused across all three modals:
+- `extractText(text, entityType)` — the text-mode counterpart to `extractImage()`.
+- `TextExtractArea` — a standalone textarea + extract button + its own loading/error state, used two ways:
+  - Inside the default `<ScanButton>` export (Cards, Vouchers) as the `mode === 'text'` branch of a photo/text toggle built into that component.
+  - Directly by `AddRefundModal`, which doesn't use `<ScanButton>` at all (its photo path is tied to the existing permanent-upload dropzone) — it renders its own matching photo/text toggle and swaps between the existing dropzone and `<TextExtractArea entityType="REFUND" .../>`, sharing the same `applyExtractedFields()` field-assignment function for both paths.
+
+No persistence implications: pasted text is never stored anywhere (there was never an "image" to discard or keep — it just doesn't exist as an artifact after the extraction response comes back), so this doesn't reopen the Card/Voucher "never persisted" or Refund `imageUrl` decisions above.
 
 ---
 
-## 7. Explicitly out of scope for this DD
+## 7. i18n additions
+
+New keys in `lib/i18n.ts` (both `en`/`he`): `scanButton` ("Scan" / "סרוק"), `scanning` ("Scanning…" / "סורק..."), `scanFailed` ("Couldn't read image — enter manually" / "לא ניתן לקרוא את התמונה - הזן ידנית"), `scanModePhoto` ("Photo" / "תמונה"), `scanModeText` ("Paste text" / "הדבק טקסט"), `scanTextPlaceholder`, `scanTextButton` ("Extract" / "חלץ").
+
+---
+
+## 8. Explicitly out of scope for this DD
 
 - Retry/backoff queueing for rate-limited Gemini calls — a failure just shows `scanFailed` and the user re-taps Scan or types manually.
 - Any provider fallback (Groq/OpenRouter/Tesseract) — single-provider for v1, per the locked decision.
@@ -236,7 +228,7 @@ New keys in `lib/i18n.ts` (both `en`/`he`): `scanButton` ("Scan" / "סרוק"), 
 
 ## Verification
 
-1. `npx prisma migrate dev`/hand-written migration + `npx prisma generate` for the new `Voucher.imageUrl` column; confirm `tsc --noEmit` passes.
-2. Manually test each entity's Scan button with a real photo: confirm fields pre-fill correctly, `fullNumber`/`cvv` stay empty for cards, and Save persists correctly (including the Voucher/Refund image landing in Blob storage only after Save, not before).
+1. `tsc --noEmit` / `npm run build` pass with no schema changes needed.
+2. Manually test each entity's Scan button in both Photo and Paste-text modes: confirm fields pre-fill correctly (including `fullNumber`/`cvv` for cards, now extracted rather than left empty), and Save persists correctly — including the Refund image landing in Blob storage only after Save, not before, and confirming no Voucher photo is ever uploaded anywhere.
 3. Test the failure path by temporarily using an invalid `GEMINI_API_KEY` — confirm the modal shows `scanFailed` and remains fully usable for manual entry.
-4. Confirm a mid-scan modal close/cancel never leaves an orphaned Blob upload (it can't, per the design — upload only happens in `handleSubmit`).
+4. Confirm a mid-scan modal close/cancel never leaves an orphaned Blob upload for Refund (it can't, per the design — upload only happens in `handleSubmit`).

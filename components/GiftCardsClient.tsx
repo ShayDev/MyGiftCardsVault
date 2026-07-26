@@ -9,6 +9,7 @@ import { formatExpiresAt } from '../lib/date'
 import type { ProviderOption } from '../lib/providerTypes'
 import Spinner from './Spinner'
 import ProviderCombobox from './ProviderCombobox'
+import ScanButton, { type ExtractedFields } from './ScanButton'
 
 export type CardWithBalance = {
   id: string
@@ -136,7 +137,12 @@ function AddCardModal({
   const [isReloadable, setIsReloadable] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [link, setLink] = useState('')
+  const [providerPrefill, setProviderPrefill] = useState('')
+  const [providerKey, setProviderKey] = useState(0)
   const last4Ref = useRef<HTMLInputElement>(null)
+  const fullNumberRef = useRef<HTMLInputElement>(null)
+  const cvvRef = useRef<HTMLInputElement>(null)
+  const expiresAtRef = useRef<HTMLInputElement>(null)
 
   function handleSubmit(e: React.SyntheticEvent<HTMLFormElement>) {
     e.preventDefault()
@@ -161,17 +167,32 @@ function AddCardModal({
     }
   }
 
+  function handleExtracted(fields: ExtractedFields) {
+    if (typeof fields.provider === 'string') {
+      setProviderPrefill(fields.provider)
+      setProviderKey((k) => k + 1)
+    }
+    if (fullNumberRef.current && typeof fields.fullNumber === 'string') {
+      fullNumberRef.current.value = fields.fullNumber
+      if (last4Ref.current) last4Ref.current.value = extractLast4(fields.fullNumber)
+    }
+    if (cvvRef.current && typeof fields.cvv === 'string') cvvRef.current.value = fields.cvv
+    if (expiresAtRef.current && typeof fields.expiresAt === 'string') expiresAtRef.current.value = fields.expiresAt
+  }
+
   return (
     <Modal title={t.addNewCard} onClose={onClose}>
       <form onSubmit={handleSubmit} className="space-y-4">
+        <ScanButton entityType="CARD" onExtracted={handleExtracted} />
         <Field label={t.cardName} required>
           <input name="name" required placeholder={t.cardNamePlaceholder} className={inputClass} />
         </Field>
         <Field label={t.providerLabel}>
-          <ProviderCombobox name="provider" options={providerOptions} placeholder={t.providerPlaceholder} />
+          <ProviderCombobox key={providerKey} name="provider" defaultValue={providerPrefill} options={providerOptions} placeholder={t.providerPlaceholder} />
         </Field>
         <Field label={t.fullCardNumberOptional}>
           <input
+            ref={fullNumberRef}
             name="fullNumber"
             placeholder={t.fullCardNumberPlaceholder}
             onBlur={handleFullNumberBlur}
@@ -192,6 +213,7 @@ function AddCardModal({
         </Field>
         <Field label={t.cvvOptional}>
           <input
+            ref={cvvRef}
             name="cvv"
             type="password"
             maxLength={4}
@@ -212,6 +234,7 @@ function AddCardModal({
         </Field>
         <Field label={t.expirationOptional}>
           <input
+            ref={expiresAtRef}
             name="expiresAt"
             type="date"
             className={inputClass}

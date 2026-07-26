@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState, useTransition } from 'react'
+import React, { useRef, useState, useTransition } from 'react'
 import { createVoucher, updateVoucher, markVoucherUsed, deleteVoucher, type VoucherItem } from '../app/vouchers/actions'
 import { useLanguageStore } from '../hooks/useLanguageStore'
 import { getT } from '../lib/i18n'
@@ -9,6 +9,7 @@ import { formatExpiresAt } from '../lib/date'
 import type { ProviderOption } from '../lib/providerTypes'
 import Spinner from './Spinner'
 import ProviderCombobox from './ProviderCombobox'
+import ScanButton, { type ExtractedFields } from './ScanButton'
 
 // ── Helpers ────────────────────────────────────────────────────────────────────
 
@@ -96,6 +97,21 @@ function AddVoucherModal({
   const t = getT(useLanguageStore((s) => s.locale))
   const [isPending, startTransition] = useTransition()
   const [error, setError] = useState<string | null>(null)
+  const [providerPrefill, setProviderPrefill] = useState('')
+  const [providerKey, setProviderKey] = useState(0)
+  const codeRef = useRef<HTMLInputElement>(null)
+  const valueRef = useRef<HTMLInputElement>(null)
+  const expiresAtRef = useRef<HTMLInputElement>(null)
+
+  function handleExtracted(fields: ExtractedFields) {
+    if (typeof fields.provider === 'string') {
+      setProviderPrefill(fields.provider)
+      setProviderKey((k) => k + 1)
+    }
+    if (codeRef.current && typeof fields.code === 'string') codeRef.current.value = fields.code
+    if (valueRef.current && typeof fields.value === 'number') valueRef.current.value = String(fields.value)
+    if (expiresAtRef.current && typeof fields.expiresAt === 'string') expiresAtRef.current.value = fields.expiresAt
+  }
 
   function handleSubmit(e: React.SyntheticEvent<HTMLFormElement>) {
     e.preventDefault()
@@ -115,20 +131,22 @@ function AddVoucherModal({
   return (
     <Modal title={t.addNewVoucher} onClose={onClose}>
       <form onSubmit={handleSubmit} className="space-y-4">
+        <ScanButton entityType="VOUCHER" onExtracted={handleExtracted} />
         <Field label={t.voucherName} required>
           <input name="name" required placeholder="e.g. Birthday Discount" className={inputClass} />
         </Field>
         <Field label={t.providerLabel}>
-          <ProviderCombobox name="provider" options={providerOptions} placeholder={t.providerPlaceholder} />
+          <ProviderCombobox key={providerKey} name="provider" defaultValue={providerPrefill} options={providerOptions} placeholder={t.providerPlaceholder} />
         </Field>
         <Field label={t.voucherCode}>
-          <input name="code" placeholder={t.voucherCodePlaceholder} className={`${inputClass} font-mono`} />
+          <input ref={codeRef} name="code" placeholder={t.voucherCodePlaceholder} className={`${inputClass} font-mono`} />
         </Field>
         <Field label={t.voucherLink}>
           <input name="link" type="url" placeholder={t.voucherLinkPlaceholder} className={inputClass} />
         </Field>
         <Field label={t.voucherValueOptional}>
           <input
+            ref={valueRef}
             name="value"
             type="number"
             min="0.01"
@@ -139,6 +157,7 @@ function AddVoucherModal({
         </Field>
         <Field label={t.expirationOptional}>
           <input
+            ref={expiresAtRef}
             name="expiresAt"
             type="date"
             className={inputClass}

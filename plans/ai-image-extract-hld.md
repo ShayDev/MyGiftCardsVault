@@ -97,5 +97,5 @@ Failure handling is not an edge case here — free-tier rate limits mean "the ex
 
 1. ~~Which LLM provider to commit to~~ → Google Gemini Flash.
 2. ~~Confirm the `last4`-only / no-persisted-image approach for cards~~ → confirmed.
-3. ~~Voucher/Refund images — permanent `imageUrl` or discard-after-extraction~~ → reuse the existing `imageUrl` flow (Voucher gains the column Refund already has).
+3. ~~Voucher/Refund images — permanent `imageUrl` or discard-after-extraction~~ → Refund only keeps its existing `imageUrl` flow; Voucher discards the photo after extraction, same as Cards.
 4. ~~Where's the "Scan" entry point~~ → a button inside the existing Add modal.

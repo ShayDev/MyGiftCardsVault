@@ -32,7 +32,17 @@
       "Bash(npm run *)",
       "mcp__Neon__list_branch_computes",
       "Bash(git check-ignore *)",
-      "Bash(awk -F'=' '{print \"key=DATABASE_URL, value_length=\" length\\($0\\)-length\\($1\\)-1}')"
+      "Bash(awk -F'=' '{print \"key=DATABASE_URL, value_length=\" length\\($0\\)-length\\($1\\)-1}')",
+      "Skill(run)",
+      "Skill(run:*)",
+      "Bash(awk -F'=' '{print \"GEMINI_API_KEY length=\" length\\($0\\)-length\\($1\\)-1}')",
+      "Bash(npx --no-install playwright --version)",
+      "Bash(npm ls *)",
+      "Bash(node -e \"console.log\\(require\\('canvas'\\)\\)\")",
+      "Bash(python3 -c \"import PIL; print\\(PIL.__version__\\)\")",
+      "Bash(tail -c 4000 /tmp/nextdev.log 2>&1)",
+      "Read(//tmp/**)",
+      "Bash(node -e ' *)"
     ],
     "additionalDirectories": [
       "\\tmp"
