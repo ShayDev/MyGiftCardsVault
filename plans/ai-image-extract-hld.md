@@ -1,6 +1,6 @@
 # AI Image Extraction (Gift Cards, Vouchers, Refunds) — HLD
 
-**Status:** High-level design only. Options are laid out below for a decision before writing the detailed design (data model, exact prompts/schemas, component structure).
+**Status:** Superseded by [ai-image-extract-dd.md](./ai-image-extract-dd.md) — the open questions below are decided there. This file is kept for the provider comparison and reasoning.
 
 ## Goal
 
@@ -93,9 +93,9 @@ Failure handling is not an edge case here — free-tier rate limits mean "the ex
 
 ---
 
-## Open Questions (need answers before DD)
+## Open Questions — resolved, see [ai-image-extract-dd.md](./ai-image-extract-dd.md)
 
-1. **Which LLM provider to commit to** — Gemini (recommended), Groq, OpenRouter, or start with Tesseract-only and add an LLM later?
-2. **Confirm the `last4`-only / no-persisted-image approach for cards** (Security section above) — or is showing/storing the full card photo actually wanted despite the exposure?
-3. **Voucher/Refund images** — do these get a permanent `imageUrl` (like Refunds already has) or are they also discard-after-extraction? Refunds already has `imageUrl` and existing UI for it — should extraction reuse that same "attach the image" flow, or should extraction be usable *without* choosing to permanently attach the photo?
-4. **Where's the "Scan" entry point** — a button inside the existing Add modal (opens camera/file picker, then fills the same form), or a separate first-class "Scan a card" flow before the Add modal even opens?
+1. ~~Which LLM provider to commit to~~ → Google Gemini Flash.
+2. ~~Confirm the `last4`-only / no-persisted-image approach for cards~~ → confirmed.
+3. ~~Voucher/Refund images — permanent `imageUrl` or discard-after-extraction~~ → reuse the existing `imageUrl` flow (Voucher gains the column Refund already has).
+4. ~~Where's the "Scan" entry point~~ → a button inside the existing Add modal.
