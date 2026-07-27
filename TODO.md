@@ -122,20 +122,20 @@ A dedicated section for loyalty/membership cards (supermarket clubs, gym members
 
 ---
 
-### ⬜ Refunds Tab
+### ✅ Refunds Tab
 
 A dedicated section to track pending and received store refunds (credit notes, return credits).
 
 **What's needed:**
 
-- ⬜ Define refund fields: provider, amount, status (pending / received), reference number, notes, expectedBy date — store credit only for now
-- ⬜ Add `Refund` model to Prisma schema + migration (seq, familyId, provider, amount, currency, status, referenceId, notes, expectedBy, receivedAt, isActive, createdBy, createdAt)
+- ✅ Define refund fields: provider, amount, status (pending / received), reference number, notes, expiration date — store credit only for now
+- ✅ Add `Refund` model to Prisma schema + migration (seq, familyId, provider, amount, currency, status, referenceId, notes, expiresAt, receivedAt, isActive, createdBy, createdAt)
 - ⬜ **Future:** Add `refundType` (store credit / original payment method) once original payment method flow is defined
-- ⬜ Server actions: `createRefund`, `markRefundReceived`, `deleteRefund`
-- ⬜ Two-section layout: "Pending" on top, "Received" below — same pattern as Vouchers
-- ⬜ Add EN + HE translations
-- ⬜ Add Refunds tab to `BottomNav`
-- ⬜ **Future:** Parse refund from image — upload a receipt or confirmation screenshot, extract provider/amount/reference via Claude vision API, pre-fill the add form
+- ✅ Server actions: `createRefund`, `updateRefund`, `markRefundReceived`, `markRefundUsed`, `useRefundAmount`, `deleteRefund`
+- ✅ Two-section layout: "Pending" on top, "Received" below — same pattern as Vouchers
+- ✅ Add EN + HE translations
+- ✅ Add Refunds tab to `BottomNav`
+- ✅ Parse refund from image (or pasted text) — Scan button in the Add modal calls Gemini Flash to pre-fill provider/amount/currency/referenceId/code/link/expiresAt/notes; same feature also covers Gift Cards and Vouchers (see `plans/ai-image-extract-dd.md`)
 
 ---
 
@@ -167,13 +167,13 @@ Allow editing existing records across all entity types — Gift Cards, Vouchers,
 
 **What's needed:**
 
-- ⬜ `updateCard` server action — editable fields: provider, fullNumber, cvv, link, notes, expiresAt, isReloadable
-- ⬜ `updateVoucher` server action — editable fields: provider, code, link, notes, expiresAt
-- ⬜ `updateClub` server action — editable fields: name, provider, memberId, ownerName, idType, expiresAt, notes
-- ⬜ `updateRefund` server action — editable fields: provider, amount, currency, referenceId, code, link, notes, expectedBy
-- ⬜ Edit mode in each detail modal — tap an Edit button to switch fields to inputs, Save / Cancel
-- ⬜ Re-encrypt sensitive fields on save (fullNumber, cvv, link for cards; code, link for vouchers; memberId for clubs; code, link for refunds)
-- ⬜ Revalidate the relevant path after each update
+- ✅ `updateCard` server action — editable fields: provider, fullNumber, cvv, link, notes, expiresAt, isReloadable
+- ✅ `updateVoucher` server action — editable fields: provider, code, link, value, notes, expiresAt
+- ✅ `updateClub` server action — editable fields: name, provider, memberId, ownerName, idType, expiresAt, notes
+- ✅ `updateRefund` server action — editable fields: provider, amount, currency, referenceId, code, link, notes, expiresAt
+- ✅ Edit mode in each detail modal — tap an Edit button to switch fields to inputs, Save / Cancel
+- ✅ Re-encrypt sensitive fields on save (fullNumber, cvv, link for cards; code, link for vouchers; memberId for clubs; code, link for refunds)
+- ✅ Revalidate the relevant path after each update
 
 ---
 
