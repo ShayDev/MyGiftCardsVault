@@ -38,6 +38,14 @@ function providerColor(provider: string): string {
   return palette[provider.charCodeAt(0) % palette.length]
 }
 
+function formatCurrency(amount: number, currencyLocale: string, currencyCode: string): string {
+  return new Intl.NumberFormat(currencyLocale, {
+    style: 'currency',
+    currency: currencyCode,
+    minimumFractionDigits: 2,
+  }).format(amount)
+}
+
 // ── Modal Shell ────────────────────────────────────────────────────────────────
 
 function Modal({ title, onClose, children }: { title: string; onClose: () => void; children: React.ReactNode }) {
@@ -382,7 +390,7 @@ function VoucherDetailModal({
         {voucher.value !== undefined && (
           <div>
             <p className="text-xs text-slate-400 mb-0.5">{t.voucherValueOptional}</p>
-            <p className="text-sm font-mono font-semibold text-slate-800">{voucher.value.toFixed(2)}</p>
+            <p className="text-sm font-mono font-semibold text-slate-800">{formatCurrency(voucher.value, t.currencyLocale, t.currencyCode)}</p>
           </div>
         )}
 
@@ -560,28 +568,26 @@ function VoucherRow({ voucher, onClick, onDelete }: { voucher: VoucherItem; onCl
         className="flex-1 min-w-0 text-left p-4 flex items-center gap-3"
       >
         <span className="text-xs font-mono text-slate-400 flex-shrink-0 w-8 text-right">#{voucher.seq}</span>
-        <div className="flex-shrink-0">
-          {voucher.provider && (
-            <span className={`px-2.5 py-1 rounded-full text-xs font-semibold ${providerColor(voucher.provider)}`}>
-              {voucher.provider}
-            </span>
-          )}
-        </div>
-        {voucher.expiresAt && (
-          <span className={`flex-shrink-0 text-xs font-mono ${expiringSoon ? 'text-rose-600 font-semibold' : 'text-slate-400'}`}>
-            {t.expires}: {formatExpiresAt(voucher.expiresAt!)}
+        {voucher.provider && (
+          <span className={`flex-shrink-0 px-2.5 py-1 rounded-full text-xs font-semibold ${providerColor(voucher.provider)}`}>
+            {voucher.provider}
           </span>
         )}
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2">
             <span className="text-sm font-medium text-slate-800 truncate">{voucher.name}</span>
+            {voucher.expiresAt && (
+              <span className={`flex-shrink-0 text-xs font-mono ${expiringSoon ? 'text-rose-600 font-semibold' : 'text-slate-400'}`}>
+                {t.expires}: {formatExpiresAt(voucher.expiresAt!)}
+              </span>
+            )}
           </div>
-          {voucher.value !== undefined && (
-            <div className="mt-0.5">
-              <span className="text-xs font-mono text-slate-500">{voucher.value.toFixed(2)}</span>
-            </div>
-          )}
         </div>
+        {voucher.value !== undefined && (
+          <span className="flex-shrink-0 text-xs font-mono text-slate-500">
+            {formatCurrency(voucher.value, t.currencyLocale, t.currencyCode)}
+          </span>
+        )}
         {!onDelete && (
           <div className="flex-shrink-0">
             {voucher.isUsed ? (
