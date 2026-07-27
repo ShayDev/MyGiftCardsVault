@@ -3,6 +3,7 @@
 import React, { useState } from 'react'
 import { useLanguageStore } from '../hooks/useLanguageStore'
 import { getT, type Translations } from '../lib/i18n'
+import { resizeImage } from '../lib/resizeImage'
 import Spinner from './Spinner'
 
 export type ExtractedFields = Record<string, string | number>
@@ -98,7 +99,8 @@ export default function ScanButton({
     setIsScanning(true)
     setError(null)
     try {
-      onExtracted(await extractImage(file, entityType))
+      const resized = await resizeImage(file)
+      onExtracted(await extractImage(resized, entityType))
     } catch {
       setError(t.scanFailed)
     } finally {

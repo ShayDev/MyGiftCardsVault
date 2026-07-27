@@ -7,6 +7,7 @@ import { getT } from '../lib/i18n'
 import { localeDir } from '../lib/i18n'
 import { formatCode } from '../lib/formatCode'
 import { formatExpiresAt } from '../lib/date'
+import { resizeImage } from '../lib/resizeImage'
 import type { ProviderOption } from '../lib/providerTypes'
 import Spinner from './Spinner'
 import ProviderCombobox from './ProviderCombobox'
@@ -138,12 +139,14 @@ function AddRefundModal({
   }
 
   async function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
-    const file = e.target.files?.[0] ?? null
-    setImageFile(file)
-    if (!file) {
+    const rawFile = e.target.files?.[0] ?? null
+    if (!rawFile) {
+      setImageFile(null)
       setImagePreview(null)
       return
     }
+    const file = await resizeImage(rawFile)
+    setImageFile(file)
     setImagePreview(URL.createObjectURL(file))
 
     setIsScanning(true)
