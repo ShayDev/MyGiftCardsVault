@@ -16,7 +16,9 @@ model FamilyGroup {
   id          String        @id @default(uuid())
   name        String        // stored uppercase e.g. "THE SMITHS"
   inviteCode  String        @unique
-  users       User[]
+  ownerId     String        @unique // creator of this family; a user can own at most one family
+  owner       User          @relation("FamilyOwner", fields: [ownerId], references: [id])
+  users       User[]        @relation("FamilyMembers")
   giftCards   GiftCard[]
   vouchers    Voucher[]
   clubMembers ClubMember[]
@@ -25,14 +27,15 @@ model FamilyGroup {
 }
 
 model User {
-  id         String      @id @default(uuid())
-  clerkId    String      @unique
-  email      String      @unique
-  name       String?
-  role       String      @default("member")
-  familyId   String?
-  family     FamilyGroup? @relation(fields: [familyId], references: [id])
-  createdAt  DateTime    @default(now())
+  id          String       @id @default(uuid())
+  clerkId     String       @unique
+  email       String       @unique
+  name        String?
+  role        String       @default("member")
+  familyId    String?
+  family      FamilyGroup? @relation("FamilyMembers", fields: [familyId], references: [id])
+  ownedFamily FamilyGroup? @relation("FamilyOwner")
+  createdAt   DateTime     @default(now())
 }
 
 model GiftCard {
@@ -46,7 +49,7 @@ model GiftCard {
   fullNumber   String?       // full card number, optional
   cvv          String?       // CVV/CVC, optional
   link         String?       // one-time URL (dynamic code via link)
-  expiresAt    String?       // expiration as MMYY, e.g. "1228"
+  expiresAt    DateTime?
   notes        String?       // card notes, optional
   isReloadable Boolean       @default(true)
   isActive     Boolean       @default(true)
@@ -78,7 +81,7 @@ model ClubMember {
   memberId    String?
   ownerName   String?
   idType      String?
-  expiresAt   String?
+  expiresAt   DateTime?
   notes       String?
   isActive    Boolean     @default(true)
   createdBy   String?
@@ -96,7 +99,7 @@ model Refund {
   status      String    @default("pending")
   referenceId String?
   notes       String?
-  expiresAt   String?
+  expiresAt   DateTime?
   receivedAt  DateTime?
   code        String?
   link        String?
@@ -112,7 +115,9 @@ model Refund {
 model UserLoginStat {
   clerkId     String   @id
   loginCount  Int      @default(1)
+  visitCount  Int      @default(0)
   lastLoginAt DateTime @default(now())
+  lastVisitAt DateTime @default(now())
 }
 
 model Voucher {
@@ -125,7 +130,7 @@ model Voucher {
   code        String?
   link        String?
   value       Decimal?    @db.Decimal(65, 30)
-  expiresAt   String?
+  expiresAt   DateTime?
   notes       String?
   isUsed      Boolean     @default(false)
   usedAt      DateTime?
@@ -133,4 +138,21 @@ model Voucher {
   isActive    Boolean     @default(true)
   createdBy   String?
   createdAt   DateTime    @default(now())
+}
+
+// familyId here is intentionally NOT a FK — '0' is a sentinel for "shared
+// across all families" and has no matching FamilyGroup row. See
+// plans/provider-field-hld.md for the full design rationale.
+model Provider {
+  id              String   @id @default(uuid())
+  type            String
+  name            String?
+  nameByCountry   String?
+  country         String   @default("IL")
+  familyId        String   @default("0")
+  balanceCheckUrl String?  // provider's balance-check page — not wired up yet, reserved for a future feature
+  createdBy       String?
+  createdAt       DateTime @default(now())
+
+  @@index([type, country, familyId])
 }

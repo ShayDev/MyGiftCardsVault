@@ -6,6 +6,7 @@ import { redirect } from 'next/navigation'
 import { z } from 'zod'
 import prisma from '../../lib/prisma'
 import { encrypt } from '../../lib/encrypt'
+import { ensureProviderExists } from '../providers/actions'
 
 async function getAuth(): Promise<{ familyId: string; userId: string }> {
   const { userId } = await auth()
@@ -27,7 +28,7 @@ const CreateClubSchema = z.object({
   memberId:  z.string().min(1, 'Member ID is required'),
   ownerName: z.string().optional(),
   idType:    z.enum(['id_number', 'phone', 'member_number', 'email', 'barcode']),
-  expiresAt: z.string().regex(/^(0[1-9]|1[0-2])\d{2}$/, 'Must be MMYY format').optional(),
+  expiresAt: z.coerce.date().optional(),
   notes:     z.string().optional(),
 })
 
@@ -60,11 +61,13 @@ export async function createClub(formData: FormData) {
     },
   })
 
+  await ensureProviderExists('CLUB', data.provider ?? '', familyId, userId).catch(() => {})
+
   revalidatePath('/clubs')
 }
 
 export async function updateClub(clubId: string, formData: FormData) {
-  const { familyId } = await getAuth()
+  const { familyId, userId } = await getAuth()
 
   const raw = {
     name:      formData.get('name') as string,
@@ -91,6 +94,8 @@ export async function updateClub(clubId: string, formData: FormData) {
     },
   })
 
+  await ensureProviderExists('CLUB', data.provider ?? '', familyId, userId).catch(() => {})
+
   revalidatePath('/clubs')
 }
 
@@ -116,4 +121,5 @@ export type ClubItem = {
   expiresAt?: string
   notes?: string
   createdAt: string
+  createdBy?: string | null
 }

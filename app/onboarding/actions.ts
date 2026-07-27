@@ -2,9 +2,9 @@
 
 import { auth, currentUser } from '@clerk/nextjs/server'
 import { redirect } from 'next/navigation'
-import { nanoid } from 'nanoid'
 import { z } from 'zod'
 import prisma from '../../lib/prisma'
+import { generateInviteCode } from '../../lib/inviteCode'
 
 const createSchema = z.object({
   familyName: z.string().min(1).max(50),
@@ -35,16 +35,21 @@ export async function createFamily(formData: FormData) {
   const name = clerkUser?.fullName ?? null
 
   await prisma.$transaction(async (tx) => {
+    const dbUser = await tx.user.upsert({
+      where: { clerkId: userId },
+      update: {},
+      create: { clerkId: userId, email, name },
+    })
     const family = await tx.familyGroup.create({
       data: {
         name: parsed.data.familyName.toUpperCase(),
-        inviteCode: nanoid(12),
+        inviteCode: generateInviteCode(),
+        ownerId: dbUser.id,
       },
     })
-    await tx.user.upsert({
-      where: { clerkId: userId },
-      update: { familyId: family.id },
-      create: { clerkId: userId, email, name, familyId: family.id, role: 'owner' },
+    await tx.user.update({
+      where: { id: dbUser.id },
+      data: { familyId: family.id, role: 'owner' },
     })
   })
 

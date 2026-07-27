@@ -4,6 +4,7 @@ import prisma from '../../lib/prisma'
 import VouchersClient from '../../components/VouchersClient'
 import type { VoucherItem } from './actions'
 import { decrypt, isEncrypted } from '../../lib/encrypt'
+import { getProviderOptions } from '../providers/actions'
 
 export default async function Page() {
   const { userId } = await auth()
@@ -34,7 +35,7 @@ export default async function Page() {
     code: dec(v.code ?? null),
     link: dec(v.link ?? null),
     value: v.value ? parseFloat(v.value.toString()) : undefined,
-    expiresAt: v.expiresAt ?? undefined,
+    expiresAt: v.expiresAt?.toISOString() ?? undefined,
     notes: v.notes ?? undefined,
     isUsed: v.isUsed,
     usedAt: v.usedAt?.toISOString(),
@@ -43,5 +44,7 @@ export default async function Page() {
     createdBy: v.createdBy ?? undefined,
   }))
 
-  return <VouchersClient vouchers={payload} />
+  const providerOptions = await getProviderOptions('VOUCHER')
+
+  return <VouchersClient vouchers={payload} providerOptions={providerOptions} />
 }

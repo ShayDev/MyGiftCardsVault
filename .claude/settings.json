@@ -19,7 +19,34 @@
       "Bash(Select-Object -ExpandProperty FullName)",
       "Bash(findstr -i svix)",
       "Bash(dir \"c:\\\\Dev\\\\CloudeProjects\\\\MyGiftCardsVault\\\\node_modules\" /b)",
-      "Bash(findstr /i svix)"
+      "Bash(findstr /i svix)",
+      "Bash(xargs grep -liE \"family\")",
+      "Skill(artifact-design)",
+      "Skill(artifact-design:*)",
+      "Bash(cat)",
+      "Bash(npx dotenv-cli *)",
+      "Bash(cp /tmp/check_migrations.sql ./scripts/_check.sql)",
+      "Bash(rm -f ./scripts/_check.sql /tmp/check_migrations.sql /tmp/preflight.sql)",
+      "mcp__Neon__list_projects",
+      "mcp__Neon__get_connection_string",
+      "Bash(npm run *)",
+      "mcp__Neon__list_branch_computes",
+      "Bash(git check-ignore *)",
+      "Bash(awk -F'=' '{print \"key=DATABASE_URL, value_length=\" length\\($0\\)-length\\($1\\)-1}')",
+      "Skill(run)",
+      "Skill(run:*)",
+      "Bash(awk -F'=' '{print \"GEMINI_API_KEY length=\" length\\($0\\)-length\\($1\\)-1}')",
+      "Bash(npx --no-install playwright --version)",
+      "Bash(npm ls *)",
+      "Bash(node -e \"console.log\\(require\\('canvas'\\)\\)\")",
+      "Bash(python3 -c \"import PIL; print\\(PIL.__version__\\)\")",
+      "Bash(tail -c 4000 /tmp/nextdev.log 2>&1)",
+      "Read(//tmp/**)",
+      "Bash(node -e ' *)",
+      "Bash(awk -F'=' '{print \"GEMINI_API_KEY value_length=\" length\\($0\\)-length\\($1\\)-1}')"
+    ],
+    "additionalDirectories": [
+      "\\tmp"
     ]
   }
 }

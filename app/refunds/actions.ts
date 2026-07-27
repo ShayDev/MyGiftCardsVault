@@ -6,6 +6,7 @@ import { redirect } from 'next/navigation'
 import { z } from 'zod'
 import prisma from '../../lib/prisma'
 import { encrypt } from '../../lib/encrypt'
+import { ensureProviderExists } from '../providers/actions'
 
 async function getAuth(): Promise<{ familyId: string; userId: string }> {
   const { userId } = await auth()
@@ -28,7 +29,7 @@ const CreateRefundSchema = z.object({
   status:      z.enum(['pending', 'received']).default('received'),
   referenceId: z.string().optional(),
   notes:       z.string().optional(),
-  expiresAt:   z.string().regex(/^(0[1-9]|1[0-2])\d{2}$/).optional(),
+  expiresAt:   z.coerce.date().optional(),
   code:        z.string().optional(),
   link:        z.string().optional(),
   imageUrl:    z.string().optional(),
@@ -70,6 +71,8 @@ export async function createRefund(formData: FormData) {
     },
   })
 
+  await ensureProviderExists('REFUND', data.provider, familyId, userId).catch(() => {})
+
   revalidatePath('/refunds')
 }
 
@@ -80,13 +83,13 @@ const UpdateRefundSchema = z.object({
   status:      z.enum(['pending', 'received']).default('received'),
   referenceId: z.string().optional(),
   notes:       z.string().optional(),
-  expiresAt:   z.string().regex(/^(0[1-9]|1[0-2])\d{2}$/).optional(),
+  expiresAt:   z.coerce.date().optional(),
   code:        z.string().optional(),
   link:        z.string().optional(),
 })
 
 export async function updateRefund(refundId: string, formData: FormData) {
-  const { familyId } = await getAuth()
+  const { familyId, userId } = await getAuth()
 
   const raw = {
     provider:    formData.get('provider') as string,
@@ -117,6 +120,8 @@ export async function updateRefund(refundId: string, formData: FormData) {
       link:        data.link ? encrypt(data.link) : null,
     },
   })
+
+  await ensureProviderExists('REFUND', data.provider, familyId, userId).catch(() => {})
 
   revalidatePath('/refunds')
 }
@@ -205,4 +210,5 @@ export type RefundItem = {
   link?: string
   imageUrl?: string
   createdAt: string
+  createdBy?: string | null
 }

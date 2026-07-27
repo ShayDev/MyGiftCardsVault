@@ -1,11 +1,18 @@
 'use client'
 
-import React, { useState, useTransition } from 'react'
+import React, { useState, useRef, useTransition } from 'react'
 import { createCard, updateCard, deactivateCard, createTransaction, getCardTransactions, type TransactionItem } from '../app/actions'
 import { useLanguageStore } from '../hooks/useLanguageStore'
 import { getT } from '../lib/i18n'
 import { formatCode } from '../lib/formatCode'
+import { formatExpiresAt } from '../lib/date'
+import { firstName } from '../lib/formatName'
+import { useFamilyAttribution } from '../hooks/useFamilyAttributionStore'
+import { adjustNavBadgeCount } from '../hooks/useNavBadgeCountsStore'
+import type { ProviderOption } from '../lib/providerTypes'
 import Spinner from './Spinner'
+import ProviderCombobox from './ProviderCombobox'
+import ScanButton, { type ExtractedFields } from './ScanButton'
 
 export type CardWithBalance = {
   id: string
@@ -20,6 +27,7 @@ export type CardWithBalance = {
   notes?: string
   isReloadable: boolean
   createdAt: string
+  createdBy?: string | null
   balance: number
 }
 
@@ -99,10 +107,13 @@ function Modal({ title, onClose, children }: { title: string; onClose: () => voi
 
 // ── Field ──────────────────────────────────────────────────────────────────────
 
-function Field({ label, error, children }: { label: string; error?: string; children: React.ReactNode }) {
+function Field({ label, error, required, children }: { label: string; error?: string; required?: boolean; children: React.ReactNode }) {
   return (
     <div className="space-y-1.5">
-      <label className="text-sm font-medium text-slate-700">{label}</label>
+      <label className="text-sm font-medium text-slate-700">
+        {label}
+        {required && <span className="text-rose-500"> *</span>}
+      </label>
       {children}
       {error && <p className="text-xs text-rose-500">{error}</p>}
     </div>
@@ -112,14 +123,33 @@ function Field({ label, error, children }: { label: string; error?: string; chil
 const inputClass =
   'w-full h-11 px-3 rounded-xl border border-slate-200 text-sm text-slate-800 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition'
 
+function extractLast4(fullNumber: string): string {
+  return fullNumber.replace(/\D/g, '').slice(-4)
+}
+
 // ── Add Card Modal ─────────────────────────────────────────────────────────────
 
-function AddCardModal({ onClose }: { onClose: () => void }) {
+function AddCardModal({
+  onClose,
+  providerOptions,
+}: {
+  onClose: () => void
+  providerOptions: ProviderOption[]
+}) {
   const t = getT(useLanguageStore((s) => s.locale))
   const [isPending, startTransition] = useTransition()
   const [isReloadable, setIsReloadable] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [link, setLink] = useState('')
+  const [providerPrefill, setProviderPrefill] = useState('')
+  const [providerKey, setProviderKey] = useState(0)
+  const nameRef = useRef<HTMLInputElement>(null)
+  const last4Ref = useRef<HTMLInputElement>(null)
+  const fullNumberRef = useRef<HTMLInputElement>(null)
+  const cvvRef = useRef<HTMLInputElement>(null)
+  const expiresAtRef = useRef<HTMLInputElement>(null)
+  const defaultBalanceRef = useRef<HTMLInputElement>(null)
+  const notesRef = useRef<HTMLInputElement>(null)
 
   function handleSubmit(e: React.SyntheticEvent<HTMLFormElement>) {
     e.preventDefault()
@@ -131,6 +161,7 @@ function AddCardModal({ onClose }: { onClose: () => void }) {
     startTransition(async () => {
       try {
         await createCard(fd)
+        adjustNavBadgeCount('cards', 1)
         onClose()
       } catch (err) {
         setError(err instanceof Error ? err.message : t.failedToCreateCard)
@@ -138,18 +169,54 @@ function AddCardModal({ onClose }: { onClose: () => void }) {
     })
   }
 
+  function handleFullNumberBlur(e: React.FocusEvent<HTMLInputElement>) {
+    if (last4Ref.current && !last4Ref.current.value) {
+      last4Ref.current.value = extractLast4(e.target.value)
+    }
+  }
+
+  function handleExtracted(fields: ExtractedFields) {
+    if (typeof fields.provider === 'string') {
+      setProviderPrefill(fields.provider)
+      setProviderKey((k) => k + 1)
+    }
+    if (nameRef.current && !nameRef.current.value) {
+      const name = typeof fields.name === 'string' ? fields.name : fields.provider
+      if (typeof name === 'string') nameRef.current.value = name
+    }
+    if (typeof fields.link === 'string') setLink(fields.link)
+    if (fullNumberRef.current && typeof fields.fullNumber === 'string') {
+      fullNumberRef.current.value = fields.fullNumber
+      if (last4Ref.current) last4Ref.current.value = extractLast4(fields.fullNumber)
+    }
+    if (cvvRef.current && typeof fields.cvv === 'string') cvvRef.current.value = fields.cvv
+    if (expiresAtRef.current && typeof fields.expiresAt === 'string') expiresAtRef.current.value = fields.expiresAt
+    if (defaultBalanceRef.current && typeof fields.value === 'number') defaultBalanceRef.current.value = String(fields.value)
+    if (notesRef.current && !notesRef.current.value && typeof fields.notes === 'string') notesRef.current.value = fields.notes
+  }
+
   return (
     <Modal title={t.addNewCard} onClose={onClose}>
       <form onSubmit={handleSubmit} className="space-y-4">
-        <Field label={t.cardName}>
-          <input name="name" required placeholder={t.cardNamePlaceholder} className={inputClass} />
+        <ScanButton entityType="CARD" onExtracted={handleExtracted} />
+        <Field label={t.cardName} required>
+          <input ref={nameRef} name="name" required placeholder={t.cardNamePlaceholder} className={inputClass} />
         </Field>
         <Field label={t.providerLabel}>
-          {/* TODO: replace with a closed list (combobox with custom value option) */}
-          <input name="provider" placeholder={t.providerPlaceholder} className={inputClass} />
+          <ProviderCombobox key={providerKey} name="provider" defaultValue={providerPrefill} options={providerOptions} placeholder={t.providerPlaceholder} />
         </Field>
-        <Field label={t.last4Digits}>
+        <Field label={t.fullCardNumberOptional}>
           <input
+            ref={fullNumberRef}
+            name="fullNumber"
+            placeholder={t.fullCardNumberPlaceholder}
+            onBlur={handleFullNumberBlur}
+            className={`${inputClass} font-mono`}
+          />
+        </Field>
+        <Field label={t.last4Digits} required={!link}>
+          <input
+            ref={last4Ref}
             name="last4"
             required={!link}
             maxLength={4}
@@ -159,15 +226,9 @@ function AddCardModal({ onClose }: { onClose: () => void }) {
             className={`${inputClass} font-mono`}
           />
         </Field>
-        <Field label={t.fullCardNumberOptional}>
-          <input
-            name="fullNumber"
-            placeholder={t.fullCardNumberPlaceholder}
-            className={`${inputClass} font-mono`}
-          />
-        </Field>
         <Field label={t.cvvOptional}>
           <input
+            ref={cvvRef}
             name="cvv"
             type="password"
             maxLength={4}
@@ -188,17 +249,17 @@ function AddCardModal({ onClose }: { onClose: () => void }) {
         </Field>
         <Field label={t.expirationOptional}>
           <input
+            ref={expiresAtRef}
             name="expiresAt"
-            maxLength={4}
-            pattern="(0[1-9]|1[0-2])\d{2}"
-            placeholder="MMYY"
-            className={`${inputClass} font-mono`}
+            type="date"
+            className={inputClass}
           />
         </Field>
-        <Field label={t.defaultBalance}>
+        <Field label={t.defaultBalance} required>
           <div className="relative">
             <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 font-medium text-sm">{t.currencySymbol}</span>
             <input
+              ref={defaultBalanceRef}
               name="defaultBalance"
               type="number"
               required
@@ -211,6 +272,7 @@ function AddCardModal({ onClose }: { onClose: () => void }) {
         </Field>
         <Field label={t.notesOptional}>
           <input
+            ref={notesRef}
             name="notes"
             placeholder={t.notesPlaceholder}
             className={inputClass}
@@ -277,6 +339,13 @@ function CardDetailModal({
   const [copiedLink, setCopiedLink] = useState(false)
   const [formattedFull, setFormattedFull] = useState(true)
   const [transactions, setTransactions] = useState<TransactionItem[] | null>(null)
+  const { names: attributionNames, showAddedBy } = useFamilyAttribution()
+
+  function addedByName(clerkId: string | null | undefined): string | null {
+    if (!showAddedBy || !clerkId) return null
+    const name = attributionNames[clerkId]
+    return name ? firstName(name) : null
+  }
 
   function copyFullNumber() {
     if (!card.fullNumber) return
@@ -340,12 +409,15 @@ function CardDetailModal({
           <div className="p-3 rounded-xl border border-slate-100 bg-white">
             <p className="text-xs text-slate-400 mb-1">{t.expires}</p>
             <p className="font-mono text-slate-700 font-medium">
-              {card.expiresAt ? `${card.expiresAt.slice(0, 2)}/${card.expiresAt.slice(2)}` : '—'}
+              {card.expiresAt ? formatExpiresAt(card.expiresAt) : '—'}
             </p>
           </div>
           <div className="p-3 rounded-xl border border-slate-100 bg-white">
             <p className="text-xs text-slate-400 mb-1">{t.dateAdded}</p>
-            <p className="text-sm text-slate-700">{formatDate(card.createdAt)}</p>
+            <p className="text-sm text-slate-700">
+              {formatDate(card.createdAt)}
+              {addedByName(card.createdBy) && ` (${addedByName(card.createdBy)})`}
+            </p>
           </div>
         </div>
 
@@ -492,7 +564,10 @@ function CardDetailModal({
                     <p className={`font-mono text-sm font-semibold ${tx.type === 'RECHARGE' ? 'text-emerald-600' : 'text-rose-500'}`}>
                       {formatTransactionAmount(tx.amount, tx.type, t.currencyLocale, t.currencyCode)}
                     </p>
-                    <p className="text-xs text-slate-400">{formatDate(tx.createdAt)}</p>
+                    <p className="text-xs text-slate-400">
+                      {formatDate(tx.createdAt)}
+                      {addedByName(tx.createdBy) && ` (${addedByName(tx.createdBy)})`}
+                    </p>
                   </div>
                 </li>
               ))}
@@ -543,12 +618,21 @@ function CardDetailModal({
 
 // ── Edit Card Modal ────────────────────────────────────────────────────────────
 
-function EditCardModal({ card, onClose }: { card: CardWithBalance; onClose: () => void }) {
+function EditCardModal({
+  card,
+  onClose,
+  providerOptions,
+}: {
+  card: CardWithBalance
+  onClose: () => void
+  providerOptions: ProviderOption[]
+}) {
   const t = getT(useLanguageStore((s) => s.locale))
   const [isPending, startTransition] = useTransition()
   const [isReloadable, setIsReloadable] = useState(card.isReloadable)
   const [error, setError] = useState<string | null>(null)
   const [link, setLink] = useState(card.link ?? '')
+  const last4Ref = useRef<HTMLInputElement>(null)
 
   function handleSubmit(e: React.SyntheticEvent<HTMLFormElement>) {
     e.preventDefault()
@@ -566,25 +650,24 @@ function EditCardModal({ card, onClose }: { card: CardWithBalance; onClose: () =
     })
   }
 
+  function handleFullNumberBlur(e: React.FocusEvent<HTMLInputElement>) {
+    if (last4Ref.current && !last4Ref.current.value) {
+      last4Ref.current.value = extractLast4(e.target.value)
+    }
+  }
+
   return (
     <Modal title={t.editCard} onClose={onClose}>
       <form onSubmit={handleSubmit} className="space-y-4">
-        <Field label={t.cardName}>
+        <Field label={t.cardName} required>
           <input name="name" required defaultValue={card.name} placeholder={t.cardNamePlaceholder} className={inputClass} />
         </Field>
         <Field label={t.providerLabel}>
-          <input name="provider" defaultValue={card.provider} placeholder={t.providerPlaceholder} className={inputClass} />
-        </Field>
-        <Field label={t.last4Digits}>
-          <input
-            name="last4"
-            required={!link}
-            maxLength={4}
-            minLength={4}
-            pattern="[0-9]{4}"
-            placeholder="1234"
-            defaultValue={card.last4 ?? ''}
-            className={`${inputClass} font-mono`}
+          <ProviderCombobox
+            name="provider"
+            defaultValue={card.provider}
+            options={providerOptions}
+            placeholder={t.providerPlaceholder}
           />
         </Field>
         <Field label={t.fullCardNumberOptional}>
@@ -592,6 +675,20 @@ function EditCardModal({ card, onClose }: { card: CardWithBalance; onClose: () =
             name="fullNumber"
             placeholder={t.fullCardNumberPlaceholder}
             defaultValue={card.fullNumber ?? ''}
+            onBlur={handleFullNumberBlur}
+            className={`${inputClass} font-mono`}
+          />
+        </Field>
+        <Field label={t.last4Digits} required={!link}>
+          <input
+            ref={last4Ref}
+            name="last4"
+            required={!link}
+            maxLength={4}
+            minLength={4}
+            pattern="[0-9]{4}"
+            placeholder="1234"
+            defaultValue={card.last4 ?? ''}
             className={`${inputClass} font-mono`}
           />
         </Field>
@@ -619,11 +716,9 @@ function EditCardModal({ card, onClose }: { card: CardWithBalance; onClose: () =
         <Field label={t.expirationOptional}>
           <input
             name="expiresAt"
-            maxLength={4}
-            pattern="(0[1-9]|1[0-2])\d{2}"
-            placeholder="MMYY"
-            defaultValue={card.expiresAt ?? ''}
-            className={`${inputClass} font-mono`}
+            type="date"
+            defaultValue={card.expiresAt ? card.expiresAt.slice(0, 10) : ''}
+            className={inputClass}
           />
         </Field>
         <Field label={t.notesOptional}>
@@ -693,6 +788,9 @@ function TransactionModal({
     startTransition(async () => {
       try {
         await createTransaction({ cardId: card.id, type, amount: amountNum, notes: notes || undefined })
+        // Mirrors the balance math above — only adjust the badge when crossing the zero boundary.
+        if (currentBalance <= 0 && projected > 0) adjustNavBadgeCount('cards', 1)
+        else if (currentBalance > 0 && projected <= 0) adjustNavBadgeCount('cards', -1)
         onClose()
       } catch (err) {
         setError(err instanceof Error ? err.message : t.transactionFailed)
@@ -719,7 +817,7 @@ function TransactionModal({
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-4">
-        <Field label={t.amount}>
+        <Field label={t.amount} required>
           <div className="relative">
             <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 font-medium text-sm">{t.currencySymbol}</span>
             <input
@@ -787,6 +885,7 @@ function DeleteDialog({ card, onClose }: { card: CardWithBalance; onClose: () =>
     startTransition(async () => {
       try {
         await deactivateCard(card.id)
+        if (card.balance > 0) adjustNavBadgeCount('cards', -1)
         onClose()
       } catch (err) {
         setError(err instanceof Error ? err.message : t.failedToRemoveCard)
@@ -867,7 +966,13 @@ type ModalState =
   | { type: 'transaction'; card: CardWithBalance; txType: 'SPEND' | 'RECHARGE' }
   | { type: 'delete'; card: CardWithBalance }
 
-export default function GiftCardsClient({ cards }: { cards: CardWithBalance[] }) {
+export default function GiftCardsClient({
+  cards,
+  providerOptions,
+}: {
+  cards: CardWithBalance[]
+  providerOptions: ProviderOption[]
+}) {
   const t = getT(useLanguageStore((s) => s.locale))
   const [modal, setModal] = useState<ModalState>({ type: 'none' })
   const [showUsed, setShowUsed] = useState(false)
@@ -1249,7 +1354,7 @@ export default function GiftCardsClient({ cards }: { cards: CardWithBalance[] })
       </div>
 
       {/* Modals */}
-      {modal.type === 'add-card' && <AddCardModal onClose={close} />}
+      {modal.type === 'add-card' && <AddCardModal onClose={close} providerOptions={providerOptions} />}
       {modal.type === 'detail' && (
         <CardDetailModal
           card={modal.card}
@@ -1260,7 +1365,9 @@ export default function GiftCardsClient({ cards }: { cards: CardWithBalance[] })
           onDelete={() => setModal({ type: 'delete', card: modal.card })}
         />
       )}
-      {modal.type === 'edit' && <EditCardModal card={modal.card} onClose={close} />}
+      {modal.type === 'edit' && (
+        <EditCardModal card={modal.card} onClose={close} providerOptions={providerOptions} />
+      )}
       {modal.type === 'transaction' && (
         <TransactionModal
           card={modal.card}

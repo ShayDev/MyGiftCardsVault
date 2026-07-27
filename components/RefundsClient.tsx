@@ -1,12 +1,20 @@
 'use client'
 
-import React, { useState, useTransition } from 'react'
+import React, { useRef, useState, useTransition } from 'react'
 import { createRefund, updateRefund, markRefundReceived, markRefundUsed, useRefundAmount, deleteRefund, type RefundItem } from '../app/refunds/actions'
 import { useLanguageStore } from '../hooks/useLanguageStore'
 import { getT } from '../lib/i18n'
 import { localeDir } from '../lib/i18n'
 import { formatCode } from '../lib/formatCode'
+import { formatExpiresAt } from '../lib/date'
+import { resizeImage } from '../lib/resizeImage'
+import { firstName } from '../lib/formatName'
+import { useFamilyAttribution } from '../hooks/useFamilyAttributionStore'
+import { adjustNavBadgeCount } from '../hooks/useNavBadgeCountsStore'
+import type { ProviderOption } from '../lib/providerTypes'
 import Spinner from './Spinner'
+import ProviderCombobox from './ProviderCombobox'
+import { extractImage, TextExtractArea, type ExtractedFields } from './ScanButton'
 
 // ── Helpers ────────────────────────────────────────────────────────────────────
 
@@ -76,10 +84,13 @@ function Modal({ title, onClose, children }: { title: string; onClose: () => voi
 
 // ── Field ──────────────────────────────────────────────────────────────────────
 
-function Field({ label, error, children }: { label: string; error?: string; children: React.ReactNode }) {
+function Field({ label, error, required, children }: { label: string; error?: string; required?: boolean; children: React.ReactNode }) {
   return (
     <div className="space-y-1.5">
-      <label className="text-sm font-medium text-slate-700">{label}</label>
+      <label className="text-sm font-medium text-slate-700">
+        {label}
+        {required && <span className="text-rose-500"> *</span>}
+      </label>
       {children}
       {error && <p className="text-xs text-rose-500">{error}</p>}
     </div>
@@ -91,7 +102,13 @@ const inputClass =
 
 // ── Add Refund Modal ───────────────────────────────────────────────────────────
 
-function AddRefundModal({ onClose }: { onClose: () => void }) {
+function AddRefundModal({
+  onClose,
+  providerOptions,
+}: {
+  onClose: () => void
+  providerOptions: ProviderOption[]
+}) {
   const locale = useLanguageStore((s) => s.locale)
   const t = getT(locale)
   const defaultCurrency = locale === 'he' ? 'ILS' : 'USD'
@@ -99,15 +116,52 @@ function AddRefundModal({ onClose }: { onClose: () => void }) {
   const [error, setError] = useState<string | null>(null)
   const [imagePreview, setImagePreview] = useState<string | null>(null)
   const [imageFile, setImageFile] = useState<File | null>(null)
+  const [isScanning, setIsScanning] = useState(false)
+  const [scanError, setScanError] = useState<string | null>(null)
+  const [scanMode, setScanMode] = useState<'photo' | 'text'>('text')
+  const [providerPrefill, setProviderPrefill] = useState('')
+  const [providerKey, setProviderKey] = useState(0)
+  const amountRef = useRef<HTMLInputElement>(null)
+  const currencyRef = useRef<HTMLInputElement>(null)
+  const referenceIdRef = useRef<HTMLInputElement>(null)
+  const expiresAtRef = useRef<HTMLInputElement>(null)
+  const notesRef = useRef<HTMLInputElement>(null)
+  const linkRef = useRef<HTMLInputElement>(null)
+  const codeRef = useRef<HTMLInputElement>(null)
 
-  function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
-    const file = e.target.files?.[0] ?? null
-    setImageFile(file)
-    if (file) {
-      const url = URL.createObjectURL(file)
-      setImagePreview(url)
-    } else {
+  function applyExtractedFields(fields: ExtractedFields) {
+    if (typeof fields.provider === 'string') {
+      setProviderPrefill(fields.provider)
+      setProviderKey((k) => k + 1)
+    }
+    if (amountRef.current && typeof fields.amount === 'number') amountRef.current.value = String(fields.amount)
+    if (currencyRef.current && typeof fields.currency === 'string') currencyRef.current.value = fields.currency.toUpperCase()
+    if (referenceIdRef.current && typeof fields.referenceId === 'string') referenceIdRef.current.value = fields.referenceId
+    if (expiresAtRef.current && typeof fields.expiresAt === 'string') expiresAtRef.current.value = fields.expiresAt
+    if (codeRef.current && typeof fields.code === 'string') codeRef.current.value = fields.code
+    if (linkRef.current && typeof fields.link === 'string') linkRef.current.value = fields.link
+    if (notesRef.current && !notesRef.current.value && typeof fields.notes === 'string') notesRef.current.value = fields.notes
+  }
+
+  async function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const rawFile = e.target.files?.[0] ?? null
+    if (!rawFile) {
+      setImageFile(null)
       setImagePreview(null)
+      return
+    }
+    const file = await resizeImage(rawFile)
+    setImageFile(file)
+    setImagePreview(URL.createObjectURL(file))
+
+    setIsScanning(true)
+    setScanError(null)
+    try {
+      applyExtractedFields(await extractImage(file, 'REFUND'))
+    } catch {
+      setScanError(t.scanFailed)
+    } finally {
+      setIsScanning(false)
     }
   }
 
@@ -126,6 +180,7 @@ function AddRefundModal({ onClose }: { onClose: () => void }) {
           fd.set('imageUrl', url)
         }
         await createRefund(fd)
+        adjustNavBadgeCount('refunds', 1)
         onClose()
       } catch (err) {
         setError(err instanceof Error ? err.message : t.failedToCreateRefund)
@@ -136,6 +191,67 @@ function AddRefundModal({ onClose }: { onClose: () => void }) {
   return (
     <Modal title={t.addNewRefund} onClose={onClose}>
       <form onSubmit={handleSubmit} className="space-y-4">
+        <Field label={t.refundImageOptional}>
+          <div className="refund-scan-mode-toggle flex gap-1.5 mb-1.5">
+            <button
+              type="button"
+              onClick={() => setScanMode('text')}
+              className={`text-xs px-2.5 py-1 rounded-full transition-colors ${scanMode === 'text' ? 'bg-emerald-100 text-emerald-700' : 'text-slate-400 hover:bg-slate-100'}`}
+            >
+              {t.scanModeText}
+            </button>
+            <button
+              type="button"
+              onClick={() => setScanMode('photo')}
+              className={`text-xs px-2.5 py-1 rounded-full transition-colors ${scanMode === 'photo' ? 'bg-emerald-100 text-emerald-700' : 'text-slate-400 hover:bg-slate-100'}`}
+            >
+              {t.scanModePhoto}
+            </button>
+          </div>
+          {scanMode === 'photo' ? (
+            <>
+              {imagePreview ? (
+                <label className="refund-image-upload flex flex-col items-center justify-center w-full h-28 rounded-xl border-2 border-dashed border-slate-200 hover:border-emerald-400 cursor-pointer transition-colors bg-slate-50 hover:bg-emerald-50 overflow-hidden">
+                  <img src={imagePreview} alt="preview" className="w-full h-full object-cover" />
+                  <input type="file" accept="image/*" className="hidden" onChange={handleFileChange} />
+                </label>
+              ) : (
+                <div className="refund-image-triggers flex gap-2">
+                  <label className="refund-image-camera flex-1 flex flex-col items-center justify-center h-20 rounded-xl border-2 border-dashed border-slate-200 hover:border-emerald-400 cursor-pointer transition-colors bg-slate-50 hover:bg-emerald-50 text-slate-400">
+                    <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M6.827 6.175A2.31 2.31 0 015.186 7.23c-.38.054-.757.112-1.134.174C3.163 7.54 2.5 8.36 2.5 9.315V18a2.25 2.25 0 002.25 2.25h14.5A2.25 2.25 0 0021.5 18V9.315c0-.955-.663-1.775-1.552-1.912a48.11 48.11 0 00-1.134-.174 2.31 2.31 0 01-1.64-1.055l-.822-1.316a2.192 2.192 0 00-1.736-1.039 48.774 48.774 0 00-4.552 0 2.192 2.192 0 00-1.736 1.039l-.822 1.316z" />
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M16.5 12.75a4.5 4.5 0 11-9 0 4.5 4.5 0 019 0z" />
+                    </svg>
+                    <span className="text-xs mt-1">{t.scanTakePhoto}</span>
+                    <input type="file" accept="image/*" capture="environment" className="hidden" onChange={handleFileChange} />
+                  </label>
+                  <label className="refund-image-gallery flex-1 flex flex-col items-center justify-center h-20 rounded-xl border-2 border-dashed border-slate-200 hover:border-emerald-400 cursor-pointer transition-colors bg-slate-50 hover:bg-emerald-50 text-slate-400">
+                    <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 15.75l5.159-5.159a2.25 2.25 0 013.182 0l5.159 5.159m-1.5-1.5l1.409-1.409a2.25 2.25 0 013.182 0l2.909 2.909M3 4.5h18a1.5 1.5 0 011.5 1.5v12a1.5 1.5 0 01-1.5 1.5H3A1.5 1.5 0 011.5 18V6A1.5 1.5 0 013 4.5z" />
+                    </svg>
+                    <span className="text-xs mt-1">{t.scanChooseImage}</span>
+                    <input type="file" accept="image/*" className="hidden" onChange={handleFileChange} />
+                  </label>
+                </div>
+              )}
+              {isScanning && (
+                <p className="refund-image-scanning flex items-center gap-1.5 text-xs text-slate-400 mt-1"><Spinner className="w-3 h-3" />{t.scanning}</p>
+              )}
+              {scanError && <p className="refund-image-scan-error text-xs text-rose-500 mt-1">{scanError}</p>}
+              {imagePreview && !isScanning && (
+                <button
+                  type="button"
+                  onClick={() => { setImagePreview(null); setImageFile(null) }}
+                  className="text-xs text-rose-500 hover:text-rose-600 mt-1"
+                >
+                  {t.removeCard}
+                </button>
+              )}
+            </>
+          ) : (
+            <TextExtractArea entityType="REFUND" onExtracted={applyExtractedFields} t={t} />
+          )}
+        </Field>
         {/* Status radio */}
         <div className="flex gap-3">
           {(['received', 'pending'] as const).map((s) => (
@@ -148,12 +264,20 @@ function AddRefundModal({ onClose }: { onClose: () => void }) {
           ))}
         </div>
 
-        <Field label={t.refundProvider}>
-          <input name="provider" required placeholder="e.g. Zara, IKEA" className={inputClass} />
+        <Field label={t.refundProvider} required>
+          <ProviderCombobox
+            key={providerKey}
+            name="provider"
+            required
+            defaultValue={providerPrefill}
+            options={providerOptions}
+            placeholder="e.g. Zara, IKEA"
+          />
         </Field>
         <div className="flex gap-3">
-          <Field label={t.refundAmount}>
+          <Field label={t.refundAmount} required>
             <input
+              ref={amountRef}
               name="amount"
               type="number"
               required
@@ -163,8 +287,9 @@ function AddRefundModal({ onClose }: { onClose: () => void }) {
               className={`${inputClass} font-mono`}
             />
           </Field>
-          <Field label={t.refundCurrency}>
+          <Field label={t.refundCurrency} required>
             <input
+              ref={currencyRef}
               name="currency"
               required
               maxLength={3}
@@ -175,49 +300,24 @@ function AddRefundModal({ onClose }: { onClose: () => void }) {
           </Field>
         </div>
         <Field label={t.refundReference}>
-          <input name="referenceId" placeholder={t.refundReferencePlaceholder} className={inputClass} />
+          <input ref={referenceIdRef} name="referenceId" placeholder={t.refundReferencePlaceholder} className={inputClass} />
         </Field>
         <Field label={t.expirationOptional}>
           <input
+            ref={expiresAtRef}
             name="expiresAt"
-            maxLength={4}
-            pattern="(0[1-9]|1[0-2])\d{2}"
-            placeholder="MMYY"
-            className={`${inputClass} font-mono uppercase`}
+            type="date"
+            className={inputClass}
           />
         </Field>
         <Field label={t.refundCode}>
-          <input name="code" placeholder={t.refundCodePlaceholder} className={`${inputClass} font-mono`} />
+          <input ref={codeRef} name="code" placeholder={t.refundCodePlaceholder} className={`${inputClass} font-mono`} />
         </Field>
         <Field label={t.refundLink}>
-          <input name="link" type="url" placeholder={t.refundLinkPlaceholder} className={inputClass} />
+          <input ref={linkRef} name="link" type="url" placeholder={t.refundLinkPlaceholder} className={inputClass} />
         </Field>
         <Field label={t.notesOptional}>
-          <input name="notes" placeholder={t.notesPlaceholder} className={inputClass} />
-        </Field>
-        <Field label={t.refundImageOptional}>
-          <label className="refund-image-upload flex flex-col items-center justify-center w-full h-28 rounded-xl border-2 border-dashed border-slate-200 hover:border-emerald-400 cursor-pointer transition-colors bg-slate-50 hover:bg-emerald-50 overflow-hidden">
-            {imagePreview ? (
-              <img src={imagePreview} alt="preview" className="w-full h-full object-cover" />
-            ) : (
-              <div className="flex flex-col items-center gap-1 text-slate-400">
-                <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5" />
-                </svg>
-                <span className="text-xs">{t.refundImageHint}</span>
-              </div>
-            )}
-            <input type="file" accept="image/*" className="hidden" onChange={handleFileChange} />
-          </label>
-          {imagePreview && (
-            <button
-              type="button"
-              onClick={() => { setImagePreview(null); setImageFile(null) }}
-              className="text-xs text-rose-500 hover:text-rose-600 mt-1"
-            >
-              {t.removeCard}
-            </button>
-          )}
+          <input ref={notesRef} name="notes" placeholder={t.notesPlaceholder} className={inputClass} />
         </Field>
 
         {error && <p className="text-sm text-rose-500 bg-rose-50 px-3 py-2 rounded-lg">{error}</p>}
@@ -244,7 +344,15 @@ function AddRefundModal({ onClose }: { onClose: () => void }) {
 
 // ── Edit Refund Modal ──────────────────────────────────────────────────────────
 
-function EditRefundModal({ refund, onClose }: { refund: RefundItem; onClose: () => void }) {
+function EditRefundModal({
+  refund,
+  onClose,
+  providerOptions,
+}: {
+  refund: RefundItem
+  onClose: () => void
+  providerOptions: ProviderOption[]
+}) {
   const locale = useLanguageStore((s) => s.locale)
   const t = getT(locale)
   const [isPending, startTransition] = useTransition()
@@ -275,14 +383,20 @@ function EditRefundModal({ refund, onClose }: { refund: RefundItem; onClose: () 
             </label>
           ))}
         </div>
-        <Field label={t.refundProvider}>
-          <input name="provider" required defaultValue={refund.provider} placeholder="e.g. Zara, IKEA" className={inputClass} />
+        <Field label={t.refundProvider} required>
+          <ProviderCombobox
+            name="provider"
+            required
+            defaultValue={refund.provider}
+            options={providerOptions}
+            placeholder="e.g. Zara, IKEA"
+          />
         </Field>
         <div className="flex gap-3">
-          <Field label={t.refundAmount}>
+          <Field label={t.refundAmount} required>
             <input name="amount" type="number" required min="0.01" step="0.01" placeholder="0.00" defaultValue={refund.amount} className={`${inputClass} font-mono`} />
           </Field>
-          <Field label={t.refundCurrency}>
+          <Field label={t.refundCurrency} required>
             <input name="currency" required maxLength={3} defaultValue={refund.currency} onChange={(e) => { e.target.value = e.target.value.toUpperCase() }} className={`${inputClass} font-mono uppercase w-24`} />
           </Field>
         </div>
@@ -290,7 +404,7 @@ function EditRefundModal({ refund, onClose }: { refund: RefundItem; onClose: () 
           <input name="referenceId" placeholder={t.refundReferencePlaceholder} defaultValue={refund.referenceId ?? ''} className={inputClass} />
         </Field>
         <Field label={t.expirationOptional}>
-          <input name="expiresAt" maxLength={4} pattern="(0[1-9]|1[0-2])\d{2}" placeholder="MMYY" defaultValue={refund.expiresAt ?? ''} className={`${inputClass} font-mono uppercase`} />
+          <input name="expiresAt" type="date" defaultValue={refund.expiresAt ? refund.expiresAt.slice(0, 10) : ''} className={inputClass} />
         </Field>
         <Field label={t.refundCode}>
           <input name="code" placeholder={t.refundCodePlaceholder} defaultValue={refund.code ?? ''} className={`${inputClass} font-mono`} />
@@ -337,6 +451,9 @@ function UseAmountModal({ refund, onClose }: { refund: RefundItem; onClose: () =
     startTransition(async () => {
       try {
         await useRefundAmount(refund.id, val)
+        // Mirrors useRefundAmount's own "fully used" math in app/refunds/actions.ts — keep in sync.
+        const fullyUsed = refund.usedAmount + val >= refund.amount
+        if (fullyUsed) adjustNavBadgeCount('refunds', -1)
         onClose()
       } catch (err) {
         setError(err instanceof Error ? err.message : t.failedToUpdateRefund)
@@ -406,6 +523,10 @@ function RefundDetailModal({
   const [copiedLink, setCopiedLink] = useState(false)
   const [formattedCode, setFormattedCode] = useState(true)
   const [isPending, startTransition] = useTransition()
+  const { names: attributionNames, showAddedBy } = useFamilyAttribution()
+  const addedByName = showAddedBy && refund.createdBy && attributionNames[refund.createdBy]
+    ? firstName(attributionNames[refund.createdBy])
+    : null
   const [error, setError] = useState<string | null>(null)
   const [showUseAmount, setShowUseAmount] = useState(false)
 
@@ -436,6 +557,7 @@ function RefundDetailModal({
     startTransition(async () => {
       try {
         await deleteRefund(refund.id)
+        if (!refund.isUsed) adjustNavBadgeCount('refunds', -1)
         onClose()
       } catch (err) {
         setError(err instanceof Error ? err.message : t.failedToUpdateRefund)
@@ -486,7 +608,7 @@ function RefundDetailModal({
           <div>
             <p className="text-xs text-slate-400 mb-0.5">{t.expires}</p>
             <p className="text-sm font-mono text-slate-800">
-              {`${refund.expiresAt.slice(0, 2)}/${refund.expiresAt.slice(2)}`}
+              {formatExpiresAt(refund.expiresAt)}
             </p>
           </div>
         )}
@@ -614,7 +736,10 @@ function RefundDetailModal({
         {/* Added */}
         <div>
           <p className="text-xs text-slate-400 mb-0.5">{t.dateAdded}</p>
-          <p className="text-sm text-slate-700">{formatDate(refund.createdAt)}</p>
+          <p className="text-sm text-slate-700">
+            {formatDate(refund.createdAt)}
+            {addedByName && ` (${addedByName})`}
+          </p>
         </div>
 
         {error && <p className="text-sm text-rose-500 bg-rose-50 px-3 py-2 rounded-lg">{error}</p>}
@@ -651,6 +776,7 @@ function RefundDetailModal({
               startTransition(async () => {
                 try {
                   await markRefundUsed(refund.id, !refund.isUsed)
+                  adjustNavBadgeCount('refunds', refund.isUsed ? 1 : -1)
                   onClose()
                 } catch {
                   setError(t.failedToUpdateRefund)
@@ -766,7 +892,7 @@ function RefundRow({ refund, onClick, onDelete }: { refund: RefundItem; onClick:
               )}
               {refund.expiresAt && (
                 <span className="text-xs font-mono text-slate-400">
-                  {`${refund.expiresAt.slice(0, 2)}/${refund.expiresAt.slice(2)}`}
+                  {formatExpiresAt(refund.expiresAt)}
                 </span>
               )}
             </div>
@@ -801,7 +927,13 @@ function RefundRow({ refund, onClick, onDelete }: { refund: RefundItem; onClick:
 
 // ── Main Component ─────────────────────────────────────────────────────────────
 
-export default function RefundsClient({ refunds }: { refunds: RefundItem[] }) {
+export default function RefundsClient({
+  refunds,
+  providerOptions,
+}: {
+  refunds: RefundItem[]
+  providerOptions: ProviderOption[]
+}) {
   const locale = useLanguageStore((s) => s.locale)
   const t = getT(locale)
   const dir = localeDir[locale]
@@ -891,7 +1023,9 @@ export default function RefundsClient({ refunds }: { refunds: RefundItem[] }) {
       </section>
 
       {/* Modals */}
-      {showAdd && <AddRefundModal onClose={() => setShowAdd(false)} />}
+      {showAdd && (
+        <AddRefundModal onClose={() => setShowAdd(false)} providerOptions={providerOptions} />
+      )}
       {selected && (
         <RefundDetailModal
           refund={selected}
@@ -899,7 +1033,13 @@ export default function RefundsClient({ refunds }: { refunds: RefundItem[] }) {
           onEdit={() => { setEditTarget(selected); setSelected(null) }}
         />
       )}
-      {editTarget && <EditRefundModal refund={editTarget} onClose={() => setEditTarget(null)} />}
+      {editTarget && (
+        <EditRefundModal
+          refund={editTarget}
+          onClose={() => setEditTarget(null)}
+          providerOptions={providerOptions}
+        />
+      )}
     </div>
   )
 }

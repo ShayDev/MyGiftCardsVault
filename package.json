@@ -7,8 +7,8 @@
     "build": "prisma generate && next build --webpack",
     "start": "next start",
     "prisma:generate": "prisma generate",
-    "migrate:prod": "dotenv -e .env.production.local -- npx prisma migrate deploy",
-    "migrate:resolve": "dotenv -e .env.production.local -- npx prisma migrate resolve --rolled-back 20260406000000_add_clerk_auth",
+    "migrate:prod": "node scripts/require-env-file.js .env.production.local && dotenv -e .env.production.local -o -- npx prisma migrate deploy",
+    "migrate:resolve": "node scripts/require-env-file.js .env.production.local && dotenv -e .env.production.local -o -- npx prisma migrate resolve --rolled-back 20260406000000_add_clerk_auth",
     "seed": "node prisma/seed.js"
   },
   "dependencies": {

@@ -5,7 +5,13 @@ import { createClub, updateClub, deleteClub, type ClubItem } from '../app/clubs/
 import { useLanguageStore } from '../hooks/useLanguageStore'
 import { getT, localeDir } from '../lib/i18n'
 import { formatCode } from '../lib/formatCode'
+import { formatExpiresAt } from '../lib/date'
+import { firstName } from '../lib/formatName'
+import { useFamilyAttribution } from '../hooks/useFamilyAttributionStore'
+import { adjustNavBadgeCount } from '../hooks/useNavBadgeCountsStore'
+import type { ProviderOption } from '../lib/providerTypes'
 import Spinner from './Spinner'
+import ProviderCombobox from './ProviderCombobox'
 
 // ── Helpers ────────────────────────────────────────────────────────────────────
 
@@ -64,10 +70,13 @@ function Modal({ title, onClose, children }: { title: string; onClose: () => voi
 
 // ── Field ──────────────────────────────────────────────────────────────────────
 
-function Field({ label, error, children }: { label: string; error?: string; children: React.ReactNode }) {
+function Field({ label, error, required, children }: { label: string; error?: string; required?: boolean; children: React.ReactNode }) {
   return (
     <div className="space-y-1.5">
-      <label className="text-sm font-medium text-slate-700">{label}</label>
+      <label className="text-sm font-medium text-slate-700">
+        {label}
+        {required && <span className="text-rose-500"> *</span>}
+      </label>
       {children}
       {error && <p className="text-xs text-rose-500">{error}</p>}
     </div>
@@ -79,7 +88,13 @@ const inputClass =
 
 // ── Add Club Modal ─────────────────────────────────────────────────────────────
 
-function AddClubModal({ onClose }: { onClose: () => void }) {
+function AddClubModal({
+  onClose,
+  providerOptions,
+}: {
+  onClose: () => void
+  providerOptions: ProviderOption[]
+}) {
   const t = getT(useLanguageStore((s) => s.locale))
   const [isPending, startTransition] = useTransition()
   const [error, setError] = useState<string | null>(null)
@@ -90,6 +105,7 @@ function AddClubModal({ onClose }: { onClose: () => void }) {
     startTransition(async () => {
       try {
         await createClub(new FormData(e.currentTarget))
+        adjustNavBadgeCount('clubs', 1)
         onClose()
       } catch (err) {
         setError(err instanceof Error ? err.message : t.failedToCreateClub)
@@ -100,19 +116,19 @@ function AddClubModal({ onClose }: { onClose: () => void }) {
   return (
     <Modal title={t.addNewClub} onClose={onClose}>
       <form onSubmit={handleSubmit} className="space-y-4">
-        <Field label={t.clubName}>
+        <Field label={t.clubName} required>
           <input name="name" required placeholder="e.g. Shufersal Club" className={inputClass} />
         </Field>
         <Field label={t.providerLabel}>
-          <input name="provider" placeholder={t.providerPlaceholder} className={inputClass} />
+          <ProviderCombobox name="provider" options={providerOptions} placeholder={t.providerPlaceholder} />
         </Field>
         <Field label={t.ownerNameLabel}>
           <input name="ownerName" placeholder="e.g. Mom" className={inputClass} />
         </Field>
-        <Field label={t.memberIdLabel}>
+        <Field label={t.memberIdLabel} required>
           <input name="memberId" required placeholder={t.memberIdPlaceholder} className={`${inputClass} font-mono`} />
         </Field>
-        <Field label={t.idTypeLabel}>
+        <Field label={t.idTypeLabel} required>
           <select name="idType" required defaultValue="" className={inputClass}>
             <option value="" disabled>{t.idTypePlaceholder}</option>
             {(Object.entries(t.idTypes) as [keyof typeof t.idTypes, string][]).map(([value, label]) => (
@@ -123,10 +139,8 @@ function AddClubModal({ onClose }: { onClose: () => void }) {
         <Field label={t.expirationOptional}>
           <input
             name="expiresAt"
-            maxLength={4}
-            pattern="(0[1-9]|1[0-2])\d{2}"
-            placeholder="MMYY"
-            className={`${inputClass} font-mono`}
+            type="date"
+            className={inputClass}
           />
         </Field>
         <Field label={t.notesOptional}>
@@ -172,6 +186,10 @@ function ClubDetailModal({
   const [copiedMemberId, setCopiedMemberId] = useState(false)
   const [formattedMemberId, setFormattedMemberId] = useState(true)
   const [isPending, startTransition] = useTransition()
+  const { names: attributionNames, showAddedBy } = useFamilyAttribution()
+  const addedByName = showAddedBy && club.createdBy && attributionNames[club.createdBy]
+    ? firstName(attributionNames[club.createdBy])
+    : null
   const [error, setError] = useState<string | null>(null)
 
   function copyMemberId() {
@@ -191,6 +209,7 @@ function ClubDetailModal({
     startTransition(async () => {
       try {
         await deleteClub(club.id)
+        adjustNavBadgeCount('clubs', -1)
         onUpdated()
         onClose()
       } catch (err) {
@@ -296,7 +315,7 @@ function ClubDetailModal({
         {club.expiresAt && (
           <div>
             <p className="text-xs text-slate-400 mb-0.5">{t.expires}</p>
-            <p className="text-sm font-mono text-slate-800">{`${club.expiresAt!.slice(0, 2)}/${club.expiresAt!.slice(2)}`}</p>
+            <p className="text-sm font-mono text-slate-800">{formatExpiresAt(club.expiresAt!)}</p>
           </div>
         )}
 
@@ -311,7 +330,10 @@ function ClubDetailModal({
         {/* Added */}
         <div>
           <p className="text-xs text-slate-400 mb-0.5">{t.dateAdded}</p>
-          <p className="text-sm text-slate-700">{formatDate(club.createdAt)}</p>
+          <p className="text-sm text-slate-700">
+            {formatDate(club.createdAt)}
+            {addedByName && ` (${addedByName})`}
+          </p>
         </div>
 
         {error && <p className="text-sm text-rose-500 bg-rose-50 px-3 py-2 rounded-lg">{error}</p>}
@@ -343,7 +365,15 @@ function ClubDetailModal({
 
 // ── Edit Club Modal ────────────────────────────────────────────────────────────
 
-function EditClubModal({ club, onClose }: { club: ClubItem; onClose: () => void }) {
+function EditClubModal({
+  club,
+  onClose,
+  providerOptions,
+}: {
+  club: ClubItem
+  onClose: () => void
+  providerOptions: ProviderOption[]
+}) {
   const t = getT(useLanguageStore((s) => s.locale))
   const [isPending, startTransition] = useTransition()
   const [error, setError] = useState<string | null>(null)
@@ -365,19 +395,24 @@ function EditClubModal({ club, onClose }: { club: ClubItem; onClose: () => void 
   return (
     <Modal title={t.editClub} onClose={onClose}>
       <form onSubmit={handleSubmit} className="space-y-4">
-        <Field label={t.clubName}>
+        <Field label={t.clubName} required>
           <input name="name" required defaultValue={club.name} placeholder="e.g. Shufersal Club" className={inputClass} />
         </Field>
         <Field label={t.providerLabel}>
-          <input name="provider" defaultValue={club.provider} placeholder={t.providerPlaceholder} className={inputClass} />
+          <ProviderCombobox
+            name="provider"
+            defaultValue={club.provider}
+            options={providerOptions}
+            placeholder={t.providerPlaceholder}
+          />
         </Field>
         <Field label={t.ownerNameLabel}>
           <input name="ownerName" defaultValue={club.ownerName ?? ''} placeholder="e.g. Mom" className={inputClass} />
         </Field>
-        <Field label={t.memberIdLabel}>
+        <Field label={t.memberIdLabel} required>
           <input name="memberId" required defaultValue={club.memberId ?? ''} placeholder={t.memberIdPlaceholder} className={`${inputClass} font-mono`} />
         </Field>
-        <Field label={t.idTypeLabel}>
+        <Field label={t.idTypeLabel} required>
           <select name="idType" required defaultValue={club.idType ?? ''} className={inputClass}>
             <option value="" disabled>{t.idTypePlaceholder}</option>
             {(Object.entries(t.idTypes) as [keyof typeof t.idTypes, string][]).map(([value, label]) => (
@@ -386,7 +421,7 @@ function EditClubModal({ club, onClose }: { club: ClubItem; onClose: () => void 
           </select>
         </Field>
         <Field label={t.expirationOptional}>
-          <input name="expiresAt" maxLength={4} pattern="(0[1-9]|1[0-2])\d{2}" placeholder="MMYY" defaultValue={club.expiresAt ?? ''} className={`${inputClass} font-mono`} />
+          <input name="expiresAt" type="date" defaultValue={club.expiresAt ? club.expiresAt.slice(0, 10) : ''} className={inputClass} />
         </Field>
         <Field label={t.notesOptional}>
           <input name="notes" placeholder={t.notesPlaceholder} defaultValue={club.notes ?? ''} className={inputClass} />
@@ -442,7 +477,7 @@ function ClubRow({ club, onClick }: { club: ClubItem; onClick: () => void }) {
         </div>
       </div>
       {club.expiresAt && (
-        <span className="flex-shrink-0 text-xs font-mono text-slate-400">{`${club.expiresAt!.slice(0, 2)}/${club.expiresAt!.slice(2)}`}</span>
+        <span className="flex-shrink-0 text-xs font-mono text-slate-400">{formatExpiresAt(club.expiresAt!)}</span>
       )}
     </button>
   )
@@ -450,7 +485,13 @@ function ClubRow({ club, onClick }: { club: ClubItem; onClick: () => void }) {
 
 // ── Main Component ─────────────────────────────────────────────────────────────
 
-export default function ClubsClient({ clubs }: { clubs: ClubItem[] }) {
+export default function ClubsClient({
+  clubs,
+  providerOptions,
+}: {
+  clubs: ClubItem[]
+  providerOptions: ProviderOption[]
+}) {
   const locale = useLanguageStore((s) => s.locale)
   const t = getT(locale)
   const dir = localeDir[locale]
@@ -496,7 +537,9 @@ export default function ClubsClient({ clubs }: { clubs: ClubItem[] }) {
         </section>
       )}
 
-      {showAdd && <AddClubModal onClose={() => setShowAdd(false)} />}
+      {showAdd && (
+        <AddClubModal onClose={() => setShowAdd(false)} providerOptions={providerOptions} />
+      )}
       {selected && (
         <ClubDetailModal
           club={selected}
@@ -505,7 +548,13 @@ export default function ClubsClient({ clubs }: { clubs: ClubItem[] }) {
           onUpdated={() => setSelected(null)}
         />
       )}
-      {editTarget && <EditClubModal club={editTarget} onClose={() => setEditTarget(null)} />}
+      {editTarget && (
+        <EditClubModal
+          club={editTarget}
+          onClose={() => setEditTarget(null)}
+          providerOptions={providerOptions}
+        />
+      )}
     </div>
   )
 }

@@ -4,6 +4,7 @@ import prisma from '../../lib/prisma'
 import ClubsClient from '../../components/ClubsClient'
 import type { ClubItem } from './actions'
 import { decrypt, isEncrypted } from '../../lib/encrypt'
+import { getProviderOptions } from '../providers/actions'
 
 export default async function Page() {
   const { userId } = await auth()
@@ -34,10 +35,13 @@ export default async function Page() {
     memberId:  dec(c.memberId ?? null),
     ownerName: c.ownerName ?? undefined,
     idType:    (c.idType ?? undefined) as ClubItem['idType'],
-    expiresAt: c.expiresAt ?? undefined,
+    expiresAt: c.expiresAt?.toISOString() ?? undefined,
     notes:     c.notes ?? undefined,
     createdAt: c.createdAt.toISOString(),
+    createdBy: c.createdBy,
   }))
 
-  return <ClubsClient clubs={payload} />
+  const providerOptions = await getProviderOptions('CLUB')
+
+  return <ClubsClient clubs={payload} providerOptions={providerOptions} />
 }

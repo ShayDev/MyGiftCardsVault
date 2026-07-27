@@ -14,12 +14,19 @@ export default async function SettingsPage() {
 
   if (!user?.familyId || !user.family) redirect('/onboarding')
 
+  const ownedFamily = await prisma.familyGroup.findFirst({
+    where: { ownerId: user.id },
+    select: { id: true, name: true },
+  })
+
   return (
     <SettingsClient
       familyName={user.family.name}
       inviteCode={user.family.inviteCode}
       userName={user.name}
       email={user.email}
+      ownedFamilyName={ownedFamily?.name ?? null}
+      ownsCurrentFamily={ownedFamily?.id === user.familyId}
     />
   )
 }

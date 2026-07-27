@@ -1,11 +1,18 @@
 'use client'
 
-import React, { useState, useTransition } from 'react'
+import React, { useRef, useState, useTransition } from 'react'
 import { createVoucher, updateVoucher, markVoucherUsed, deleteVoucher, type VoucherItem } from '../app/vouchers/actions'
 import { useLanguageStore } from '../hooks/useLanguageStore'
 import { getT } from '../lib/i18n'
 import { formatCode } from '../lib/formatCode'
+import { formatExpiresAt } from '../lib/date'
+import { firstName } from '../lib/formatName'
+import { useFamilyAttribution } from '../hooks/useFamilyAttributionStore'
+import { adjustNavBadgeCount } from '../hooks/useNavBadgeCountsStore'
+import type { ProviderOption } from '../lib/providerTypes'
 import Spinner from './Spinner'
+import ProviderCombobox from './ProviderCombobox'
+import ScanButton, { type ExtractedFields } from './ScanButton'
 
 // ── Helpers ────────────────────────────────────────────────────────────────────
 
@@ -65,10 +72,13 @@ function Modal({ title, onClose, children }: { title: string; onClose: () => voi
 
 // ── Field ──────────────────────────────────────────────────────────────────────
 
-function Field({ label, error, children }: { label: string; error?: string; children: React.ReactNode }) {
+function Field({ label, error, required, children }: { label: string; error?: string; required?: boolean; children: React.ReactNode }) {
   return (
     <div className="space-y-1.5">
-      <label className="text-sm font-medium text-slate-700">{label}</label>
+      <label className="text-sm font-medium text-slate-700">
+        {label}
+        {required && <span className="text-rose-500"> *</span>}
+      </label>
       {children}
       {error && <p className="text-xs text-rose-500">{error}</p>}
     </div>
@@ -80,10 +90,40 @@ const inputClass =
 
 // ── Add Voucher Modal ──────────────────────────────────────────────────────────
 
-function AddVoucherModal({ onClose }: { onClose: () => void }) {
+function AddVoucherModal({
+  onClose,
+  providerOptions,
+}: {
+  onClose: () => void
+  providerOptions: ProviderOption[]
+}) {
   const t = getT(useLanguageStore((s) => s.locale))
   const [isPending, startTransition] = useTransition()
   const [error, setError] = useState<string | null>(null)
+  const [providerPrefill, setProviderPrefill] = useState('')
+  const [providerKey, setProviderKey] = useState(0)
+  const nameRef = useRef<HTMLInputElement>(null)
+  const codeRef = useRef<HTMLInputElement>(null)
+  const linkRef = useRef<HTMLInputElement>(null)
+  const valueRef = useRef<HTMLInputElement>(null)
+  const expiresAtRef = useRef<HTMLInputElement>(null)
+  const notesRef = useRef<HTMLInputElement>(null)
+
+  function handleExtracted(fields: ExtractedFields) {
+    if (typeof fields.provider === 'string') {
+      setProviderPrefill(fields.provider)
+      setProviderKey((k) => k + 1)
+    }
+    if (nameRef.current && !nameRef.current.value) {
+      const name = typeof fields.name === 'string' ? fields.name : fields.provider
+      if (typeof name === 'string') nameRef.current.value = name
+    }
+    if (codeRef.current && typeof fields.code === 'string') codeRef.current.value = fields.code
+    if (linkRef.current && typeof fields.link === 'string') linkRef.current.value = fields.link
+    if (valueRef.current && typeof fields.value === 'number') valueRef.current.value = String(fields.value)
+    if (expiresAtRef.current && typeof fields.expiresAt === 'string') expiresAtRef.current.value = fields.expiresAt
+    if (notesRef.current && !notesRef.current.value && typeof fields.notes === 'string') notesRef.current.value = fields.notes
+  }
 
   function handleSubmit(e: React.SyntheticEvent<HTMLFormElement>) {
     e.preventDefault()
@@ -93,6 +133,7 @@ function AddVoucherModal({ onClose }: { onClose: () => void }) {
     startTransition(async () => {
       try {
         await createVoucher(fd)
+        adjustNavBadgeCount('vouchers', 1)
         onClose()
       } catch (err) {
         setError(err instanceof Error ? err.message : t.failedToCreateVoucher)
@@ -103,20 +144,22 @@ function AddVoucherModal({ onClose }: { onClose: () => void }) {
   return (
     <Modal title={t.addNewVoucher} onClose={onClose}>
       <form onSubmit={handleSubmit} className="space-y-4">
-        <Field label={t.voucherName}>
-          <input name="name" required placeholder="e.g. Birthday Discount" className={inputClass} />
+        <ScanButton entityType="VOUCHER" onExtracted={handleExtracted} />
+        <Field label={t.voucherName} required>
+          <input ref={nameRef} name="name" required placeholder="e.g. Birthday Discount" className={inputClass} />
         </Field>
         <Field label={t.providerLabel}>
-          <input name="provider" required placeholder={t.providerPlaceholder} className={inputClass} />
+          <ProviderCombobox key={providerKey} name="provider" defaultValue={providerPrefill} options={providerOptions} placeholder={t.providerPlaceholder} />
         </Field>
         <Field label={t.voucherCode}>
-          <input name="code" placeholder={t.voucherCodePlaceholder} className={`${inputClass} font-mono`} />
+          <input ref={codeRef} name="code" placeholder={t.voucherCodePlaceholder} className={`${inputClass} font-mono`} />
         </Field>
         <Field label={t.voucherLink}>
-          <input name="link" type="url" placeholder={t.voucherLinkPlaceholder} className={inputClass} />
+          <input ref={linkRef} name="link" type="url" placeholder={t.voucherLinkPlaceholder} className={inputClass} />
         </Field>
         <Field label={t.voucherValueOptional}>
           <input
+            ref={valueRef}
             name="value"
             type="number"
             min="0.01"
@@ -127,15 +170,14 @@ function AddVoucherModal({ onClose }: { onClose: () => void }) {
         </Field>
         <Field label={t.expirationOptional}>
           <input
+            ref={expiresAtRef}
             name="expiresAt"
-            maxLength={4}
-            pattern="(0[1-9]|1[0-2])\d{2}"
-            placeholder="MMYY"
-            className={`${inputClass} font-mono`}
+            type="date"
+            className={inputClass}
           />
         </Field>
         <Field label={t.notesOptional}>
-          <input name="notes" placeholder={t.notesPlaceholder} className={inputClass} />
+          <input ref={notesRef} name="notes" placeholder={t.notesPlaceholder} className={inputClass} />
         </Field>
         {error && <p className="text-sm text-rose-500 bg-rose-50 px-3 py-2 rounded-lg">{error}</p>}
         <div className="flex gap-3 pt-1">
@@ -177,6 +219,10 @@ function VoucherDetailModal({
   const [copiedCode, setCopiedCode] = useState(false)
   const [copiedLink, setCopiedLink] = useState(false)
   const [formattedCode, setFormattedCode] = useState(true)
+  const { names: attributionNames, showAddedBy } = useFamilyAttribution()
+  const addedByName = showAddedBy && voucher.createdBy && attributionNames[voucher.createdBy]
+    ? firstName(attributionNames[voucher.createdBy])
+    : null
   const [isPending, startTransition] = useTransition()
   const [error, setError] = useState<string | null>(null)
 
@@ -197,6 +243,7 @@ function VoucherDetailModal({
     startTransition(async () => {
       try {
         await markVoucherUsed(voucher.id, !voucher.isUsed)
+        adjustNavBadgeCount('vouchers', voucher.isUsed ? 1 : -1)
         onUpdated()
         onClose()
       } catch (err) {
@@ -210,6 +257,7 @@ function VoucherDetailModal({
     startTransition(async () => {
       try {
         await deleteVoucher(voucher.id)
+        if (!voucher.isUsed) adjustNavBadgeCount('vouchers', -1)
         onUpdated()
         onClose()
       } catch (err) {
@@ -223,9 +271,11 @@ function VoucherDetailModal({
       <div className="space-y-4">
         {/* Header row */}
         <div className="flex items-center gap-3">
-          <span className={`px-2.5 py-1 rounded-full text-xs font-semibold ${providerColor(voucher.provider)}`}>
-            {voucher.provider}
-          </span>
+          {voucher.provider && (
+            <span className={`px-2.5 py-1 rounded-full text-xs font-semibold ${providerColor(voucher.provider)}`}>
+              {voucher.provider}
+            </span>
+          )}
           <span className="text-slate-400 text-xs font-mono">#{voucher.seq}</span>
           {voucher.isUsed ? (
             <span className="ml-auto px-2.5 py-1 rounded-full text-xs font-semibold bg-slate-100 text-slate-500">
@@ -346,7 +396,7 @@ function VoucherDetailModal({
         {voucher.expiresAt && (
           <div>
             <p className="text-xs text-slate-400 mb-0.5">{t.expires}</p>
-            <p className="text-sm font-mono text-slate-800">{`${voucher.expiresAt!.slice(0, 2)}/${voucher.expiresAt!.slice(2)}`}</p>
+            <p className="text-sm font-mono text-slate-800">{formatExpiresAt(voucher.expiresAt!)}</p>
           </div>
         )}
 
@@ -375,7 +425,10 @@ function VoucherDetailModal({
         {/* Added */}
         <div>
           <p className="text-xs text-slate-400 mb-0.5">{t.dateAdded}</p>
-          <p className="text-sm text-slate-700">{formatDate(voucher.createdAt)}</p>
+          <p className="text-sm text-slate-700">
+            {formatDate(voucher.createdAt)}
+            {addedByName && ` (${addedByName})`}
+          </p>
         </div>
 
         {error && <p className="text-sm text-rose-500 bg-rose-50 px-3 py-2 rounded-lg">{error}</p>}
@@ -420,7 +473,15 @@ function VoucherDetailModal({
 
 // ── Edit Voucher Modal ─────────────────────────────────────────────────────────
 
-function EditVoucherModal({ voucher, onClose }: { voucher: VoucherItem; onClose: () => void }) {
+function EditVoucherModal({
+  voucher,
+  onClose,
+  providerOptions,
+}: {
+  voucher: VoucherItem
+  onClose: () => void
+  providerOptions: ProviderOption[]
+}) {
   const t = getT(useLanguageStore((s) => s.locale))
   const [isPending, startTransition] = useTransition()
   const [error, setError] = useState<string | null>(null)
@@ -442,11 +503,16 @@ function EditVoucherModal({ voucher, onClose }: { voucher: VoucherItem; onClose:
   return (
     <Modal title={t.editVoucher} onClose={onClose}>
       <form onSubmit={handleSubmit} className="space-y-4">
-        <Field label={t.voucherName}>
+        <Field label={t.voucherName} required>
           <input name="name" required defaultValue={voucher.name} placeholder="e.g. Birthday Discount" className={inputClass} />
         </Field>
         <Field label={t.providerLabel}>
-          <input name="provider" required defaultValue={voucher.provider} placeholder={t.providerPlaceholder} className={inputClass} />
+          <ProviderCombobox
+            name="provider"
+            defaultValue={voucher.provider}
+            options={providerOptions}
+            placeholder={t.providerPlaceholder}
+          />
         </Field>
         <Field label={t.voucherCode}>
           <input name="code" defaultValue={voucher.code ?? ''} placeholder={t.voucherCodePlaceholder} className={`${inputClass} font-mono`} />
@@ -458,7 +524,7 @@ function EditVoucherModal({ voucher, onClose }: { voucher: VoucherItem; onClose:
           <input name="value" type="number" min="0.01" step="0.01" placeholder="0.00" defaultValue={voucher.value ?? ''} className={`${inputClass} font-mono`} />
         </Field>
         <Field label={t.expirationOptional}>
-          <input name="expiresAt" maxLength={4} pattern="(0[1-9]|1[0-2])\d{2}" placeholder="MMYY" defaultValue={voucher.expiresAt ?? ''} className={`${inputClass} font-mono`} />
+          <input name="expiresAt" type="date" defaultValue={voucher.expiresAt ? voucher.expiresAt.slice(0, 10) : ''} className={inputClass} />
         </Field>
         <Field label={t.notesOptional}>
           <input name="notes" placeholder={t.notesPlaceholder} defaultValue={voucher.notes ?? ''} className={inputClass} />
@@ -497,9 +563,11 @@ function VoucherRow({ voucher, onClick, onDelete }: { voucher: VoucherItem; onCl
       >
         <span className="text-xs font-mono text-slate-400 flex-shrink-0 w-8 text-right">#{voucher.seq}</span>
         <div className="flex-shrink-0">
-          <span className={`px-2.5 py-1 rounded-full text-xs font-semibold ${providerColor(voucher.provider)}`}>
-            {voucher.provider}
-          </span>
+          {voucher.provider && (
+            <span className={`px-2.5 py-1 rounded-full text-xs font-semibold ${providerColor(voucher.provider)}`}>
+              {voucher.provider}
+            </span>
+          )}
         </div>
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2">
@@ -510,7 +578,7 @@ function VoucherRow({ voucher, onClick, onDelete }: { voucher: VoucherItem; onCl
               <span className="text-xs font-mono text-slate-500">{voucher.value.toFixed(2)}</span>
             )}
             {voucher.expiresAt && (
-              <span className="text-xs font-mono text-slate-400">{`${voucher.expiresAt!.slice(0, 2)}/${voucher.expiresAt!.slice(2)}`}</span>
+              <span className="text-xs font-mono text-slate-400">{formatExpiresAt(voucher.expiresAt!)}</span>
             )}
           </div>
         </div>
@@ -549,7 +617,13 @@ function VoucherRow({ voucher, onClick, onDelete }: { voucher: VoucherItem; onCl
 
 // ── Main Component ─────────────────────────────────────────────────────────────
 
-export default function VouchersClient({ vouchers }: { vouchers: VoucherItem[] }) {
+export default function VouchersClient({
+  vouchers,
+  providerOptions,
+}: {
+  vouchers: VoucherItem[]
+  providerOptions: ProviderOption[]
+}) {
   const t = getT(useLanguageStore((s) => s.locale))
   const [showAdd, setShowAdd] = useState(false)
   const [selected, setSelected] = useState<VoucherItem | null>(null)
@@ -636,7 +710,9 @@ export default function VouchersClient({ vouchers }: { vouchers: VoucherItem[] }
       </section>
 
       {/* Modals */}
-      {showAdd && <AddVoucherModal onClose={() => setShowAdd(false)} />}
+      {showAdd && (
+        <AddVoucherModal onClose={() => setShowAdd(false)} providerOptions={providerOptions} />
+      )}
       {selected && (
         <VoucherDetailModal
           voucher={selected}
@@ -645,7 +721,13 @@ export default function VouchersClient({ vouchers }: { vouchers: VoucherItem[] }
           onUpdated={() => setSelected(null)}
         />
       )}
-      {editTarget && <EditVoucherModal voucher={editTarget} onClose={() => setEditTarget(null)} />}
+      {editTarget && (
+        <EditVoucherModal
+          voucher={editTarget}
+          onClose={() => setEditTarget(null)}
+          providerOptions={providerOptions}
+        />
+      )}
     </div>
   )
 }

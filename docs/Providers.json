@@ -1,0 +1,33 @@
+{
+  "GiftCards": [
+    { "english": "BuyMe", "hebrew": "ביי מי" },
+    { "english": "HitechZone", "hebrew": "הייטק זון" },
+    { "english": "Max", "hebrew": "מקס" },
+    { "english": "Isracard", "hebrew": "ישראכרט" },
+    { "english": "Cal", "hebrew": "כאל" },
+    { "english": "Dream Card", "hebrew": "דרים כארד" },
+    { "english": "Pais", "hebrew": "פיס" },
+    { "english": "Hever", "hebrew": "חבר" },
+    { "english": "Xtra", "hebrew": "אקסטרה" },
+    { "english": "Raayonit", "hebrew": "רעיונית" },
+    { "english": "Shufersal", "hebrew": "שופרסל" }
+  ],
+  "Vouchers": [
+    { "english": "HitechZone", "hebrew": "הייטק זון" },
+    { "english": "Pais", "hebrew": "פיס" },
+    { "english": "Hever", "hebrew": "חבר" }
+  ],
+  "Refunds": [
+    { "english": "Zara", "hebrew": "זארה" },
+    { "english": "IKEA", "hebrew": "איקאה" },
+    { "english": "Fox", "hebrew": "פוקס" },
+    { "english": "Castro", "hebrew": "קסטרו" }
+  ],
+  "Clubs": [
+    { "english": "Fox", "hebrew": "פוקס" },
+    { "english": "Castro", "hebrew": "קסטרו" },
+    { "english": "Zara", "hebrew": "זארה" },
+    { "english": "Tzomet Sfarim", "hebrew": "צומת ספרים" },
+    { "english": "Steimatzky", "hebrew": "סטימצקי" }
+  ]
+}

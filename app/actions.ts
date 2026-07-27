@@ -6,6 +6,8 @@ import { redirect } from 'next/navigation'
 import { z } from 'zod'
 import prisma from '../lib/prisma'
 import { encrypt } from '../lib/encrypt'
+import { ensureProviderExists } from './providers/actions'
+import { getBalancesForCards } from '../lib/balance'
 
 async function getAuthenticatedFamilyId(): Promise<{ familyId: string; userId: string }> {
   const { userId } = await auth()
@@ -28,7 +30,7 @@ const CreateCardSchema = z.object({
   fullNumber: z.string().min(1).optional(),
   cvv: z.string().regex(/^\d{3,4}$/, 'Must be 3 or 4 digits').optional(),
   link: z.url().optional(),
-  expiresAt: z.string().regex(/^(0[1-9]|1[0-2])\d{2}$/, 'Must be MMYY format').optional(),
+  expiresAt: z.coerce.date().optional(),
   defaultBalance: z.number().positive('Default balance must be positive'),
   notes: z.string().optional(),
   isReloadable: z.boolean(),
@@ -79,6 +81,8 @@ export async function createCard(formData: FormData) {
     },
   })
 
+  await ensureProviderExists('CARD', data.provider ?? '', familyId, userId).catch(() => {})
+
   revalidatePath('/cards')
 }
 
@@ -89,13 +93,13 @@ const UpdateCardSchema = z.object({
   fullNumber: z.string().min(1).optional(),
   cvv: z.string().regex(/^\d{3,4}$/, 'Must be 3 or 4 digits').optional(),
   link: z.url().optional(),
-  expiresAt: z.string().regex(/^(0[1-9]|1[0-2])\d{2}$/, 'Must be MMYY format').optional(),
+  expiresAt: z.coerce.date().optional(),
   notes: z.string().optional(),
   isReloadable: z.boolean(),
 }).refine((d) => d.last4 || d.link, { message: 'Last 4 digits or a link is required' })
 
 export async function updateCard(cardId: string, formData: FormData) {
-  const { familyId } = await getAuthenticatedFamilyId()
+  const { familyId, userId } = await getAuthenticatedFamilyId()
 
   const raw = {
     name: formData.get('name') as string,
@@ -125,6 +129,8 @@ export async function updateCard(cardId: string, formData: FormData) {
       isReloadable: data.isReloadable,
     },
   })
+
+  await ensureProviderExists('CARD', data.provider ?? '', familyId, userId).catch(() => {})
 
   revalidatePath('/cards')
 }
@@ -181,6 +187,7 @@ export type TransactionItem = {
   amount: number
   notes: string | null
   createdAt: string
+  createdBy: string | null
 }
 
 export async function getCardTransactions(cardId: string): Promise<TransactionItem[]> {
@@ -197,11 +204,59 @@ export async function getCardTransactions(cardId: string): Promise<TransactionIt
     orderBy: { createdAt: 'desc' },
   })
 
-  return transactions.map((tx: { id: string; type: 'SPEND' | 'RECHARGE'; amount: { toString(): string }; notes: string | null; createdAt: Date }) => ({
+  return transactions.map((tx: { id: string; type: 'SPEND' | 'RECHARGE'; amount: { toString(): string }; notes: string | null; createdAt: Date; createdBy: string | null }) => ({
     id: tx.id,
     type: tx.type,
     amount: parseFloat(tx.amount.toString()),
     notes: tx.notes,
     createdAt: tx.createdAt.toISOString(),
+    createdBy: tx.createdBy,
   }))
+}
+
+// Master switch — false means attribution never shows anywhere and the DB is never queried for it.
+const ENABLE_ADDED_BY_ATTRIBUTION = true
+// Only relevant when the flag above is true — attribution only shows once the family has more than this many members.
+const MIN_FAMILY_SIZE_FOR_ATTRIBUTION = 1
+
+export async function getFamilyAttribution(): Promise<{ names: Record<string, string>; showAddedBy: boolean }> {
+  if (!ENABLE_ADDED_BY_ATTRIBUTION) return { names: {}, showAddedBy: false }
+
+  const { familyId } = await getAuthenticatedFamilyId()
+
+  const users = await prisma.user.findMany({
+    where: { familyId },
+    select: { clerkId: true, name: true },
+  })
+
+  const names = Object.fromEntries(
+    users.filter((u: { clerkId: string; name: string | null }) => u.name).map((u: { clerkId: string; name: string | null }) => [u.clerkId, u.name as string])
+  )
+  const showAddedBy = users.length > MIN_FAMILY_SIZE_FOR_ATTRIBUTION
+
+  return { names, showAddedBy }
+}
+
+export type NavBadgeCounts = { cards: number; vouchers: number; clubs: number; refunds: number }
+
+// On by default; flip to false if this ever proves costly at real family sizes — when off,
+// no count query runs at all and every badge stays hidden.
+const ENABLE_NAV_BADGES = true
+
+export async function getNavBadgeCounts(): Promise<NavBadgeCounts> {
+  if (!ENABLE_NAV_BADGES) return { cards: 0, vouchers: 0, clubs: 0, refunds: 0 }
+
+  const { familyId } = await getAuthenticatedFamilyId()
+
+  const [activeCards, vouchers, clubs, refunds] = await Promise.all([
+    prisma.giftCard.findMany({ where: { familyId, isActive: true }, select: { id: true } }),
+    prisma.voucher.count({ where: { familyId, isActive: true, isUsed: false } }),
+    prisma.clubMember.count({ where: { familyId, isActive: true } }),
+    prisma.refund.count({ where: { familyId, isActive: true, isUsed: false } }),
+  ])
+
+  const balances = await getBalancesForCards(activeCards.map((c: { id: string }) => c.id))
+  const cards = activeCards.filter((c: { id: string }) => (balances.get(c.id)?.toNumber() ?? 0) > 0).length
+
+  return { cards, vouchers, clubs, refunds }
 }

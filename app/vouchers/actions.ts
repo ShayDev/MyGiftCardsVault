@@ -6,6 +6,7 @@ import { redirect } from 'next/navigation'
 import { z } from 'zod'
 import prisma from '../../lib/prisma'
 import { encrypt } from '../../lib/encrypt'
+import { ensureProviderExists } from '../providers/actions'
 
 async function getAuth(): Promise<{ familyId: string; userId: string }> {
   const { userId } = await auth()
@@ -23,11 +24,11 @@ async function getAuth(): Promise<{ familyId: string; userId: string }> {
 
 const CreateVoucherSchema = z.object({
   name: z.string().min(1, 'Name is required'),
-  provider: z.string().min(1, 'Provider is required'),
+  provider: z.string().optional(),
   code: z.string().optional(),
   link: z.url().optional(),
   value: z.number().positive().optional(),
-  expiresAt: z.string().regex(/^(0[1-9]|1[0-2])\d{2}$/, 'Must be MMYY format').optional(),
+  expiresAt: z.coerce.date().optional(),
   notes: z.string().optional(),
 }).refine((d) => d.code || d.link, { message: 'A code or link is required' })
 
@@ -39,7 +40,7 @@ export async function createVoucher(formData: FormData) {
 
   const raw = {
     name: formData.get('name') as string,
-    provider: formData.get('provider') as string,
+    provider: (formData.get('provider') as string) || undefined,
     code: (formData.get('code') as string) || undefined,
     link: (formData.get('link') as string) || undefined,
     value: parsedValue && !isNaN(parsedValue) ? parsedValue : undefined,
@@ -53,7 +54,7 @@ export async function createVoucher(formData: FormData) {
     data: {
       familyId,
       name: data.name,
-      provider: data.provider,
+      provider: data.provider ?? '',
       code: data.code ? encrypt(data.code) : null,
       link: data.link ? encrypt(data.link) : null,
       value: data.value ?? null,
@@ -63,18 +64,20 @@ export async function createVoucher(formData: FormData) {
     },
   })
 
+  await ensureProviderExists('VOUCHER', data.provider ?? '', familyId, userId).catch(() => {})
+
   revalidatePath('/vouchers')
 }
 
 export async function updateVoucher(voucherId: string, formData: FormData) {
-  const { familyId } = await getAuth()
+  const { familyId, userId } = await getAuth()
 
   const rawValue = formData.get('value') as string
   const parsedValue = rawValue ? parseFloat(rawValue) : undefined
 
   const raw = {
     name: formData.get('name') as string,
-    provider: formData.get('provider') as string,
+    provider: (formData.get('provider') as string) || undefined,
     code: (formData.get('code') as string) || undefined,
     link: (formData.get('link') as string) || undefined,
     value: parsedValue && !isNaN(parsedValue) ? parsedValue : undefined,
@@ -88,7 +91,7 @@ export async function updateVoucher(voucherId: string, formData: FormData) {
     where: { id: voucherId, familyId },
     data: {
       name: data.name,
-      provider: data.provider,
+      provider: data.provider ?? '',
       code: data.code ? encrypt(data.code) : null,
       link: data.link ? encrypt(data.link) : null,
       value: data.value ?? null,
@@ -96,6 +99,8 @@ export async function updateVoucher(voucherId: string, formData: FormData) {
       notes: data.notes ?? null,
     },
   })
+
+  await ensureProviderExists('VOUCHER', data.provider ?? '', familyId, userId).catch(() => {})
 
   revalidatePath('/vouchers')
 }

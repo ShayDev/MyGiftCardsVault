@@ -88,7 +88,7 @@ Track which user created each record, mirroring the existing `createdAt` pattern
 - ✅ Add `createdBy String?` (FK → `User.id`) to `GiftCard`, `Transaction`, `Voucher`, and `ClubMember` tables
 - ✅ Migration (column present in schema + Neon)
 - ✅ Populate `createdBy` in all relevant Server Actions (`app/actions.ts`, `app/vouchers/actions.ts`)
-- ⬜ Optionally display "Added by" in card/voucher detail modals
+- ✅ Optionally display "Added by" in card/voucher detail modals (+ transaction history)
 
 ---
 
@@ -122,33 +122,42 @@ A dedicated section for loyalty/membership cards (supermarket clubs, gym members
 
 ---
 
-### ⬜ Refunds Tab
+### ✅ Refunds Tab
 
 A dedicated section to track pending and received store refunds (credit notes, return credits).
 
 **What's needed:**
 
-- ⬜ Define refund fields: provider, amount, status (pending / received), reference number, notes, expectedBy date — store credit only for now
-- ⬜ Add `Refund` model to Prisma schema + migration (seq, familyId, provider, amount, currency, status, referenceId, notes, expectedBy, receivedAt, isActive, createdBy, createdAt)
+- ✅ Define refund fields: provider, amount, status (pending / received), reference number, notes, expiration date — store credit only for now
+- ✅ Add `Refund` model to Prisma schema + migration (seq, familyId, provider, amount, currency, status, referenceId, notes, expiresAt, receivedAt, isActive, createdBy, createdAt)
 - ⬜ **Future:** Add `refundType` (store credit / original payment method) once original payment method flow is defined
-- ⬜ Server actions: `createRefund`, `markRefundReceived`, `deleteRefund`
-- ⬜ Two-section layout: "Pending" on top, "Received" below — same pattern as Vouchers
-- ⬜ Add EN + HE translations
-- ⬜ Add Refunds tab to `BottomNav`
-- ⬜ **Future:** Parse refund from image — upload a receipt or confirmation screenshot, extract provider/amount/reference via Claude vision API, pre-fill the add form
+- ✅ Server actions: `createRefund`, `updateRefund`, `markRefundReceived`, `markRefundUsed`, `useRefundAmount`, `deleteRefund`
+- ✅ Two-section layout: "Pending" on top, "Received" below — same pattern as Vouchers
+- ✅ Add EN + HE translations
+- ✅ Add Refunds tab to `BottomNav`
+- ✅ Parse refund from image (or pasted text) — Scan button in the Add modal calls Gemini Flash to pre-fill provider/amount/currency/referenceId/code/link/expiresAt/notes; same feature also covers Gift Cards and Vouchers (see `plans/ai-image-extract-dd.md`)
 
 ---
 
-### ⬜ Provider Field — Closed List with Custom Value
+### ✅ Provider Field — Closed List with Custom Value
 
-Replace the free-text provider input across all create forms with a combobox: a curated list of known providers, plus a "custom" option for anything not in the list.
+Replace the free-text provider input with a searchable combobox: a closed list of known providers stored in the DB (keyed by entity type), plus the ability to type a custom value that gets saved to the list for next time.
+
+**Scope:** Gift Cards, Vouchers, Refunds, and Clubs all wired up — `ProviderCombobox` reused as-is across all four Add/Edit forms with per-type option lists (`CARD`/`VOUCHER`/`REFUND`/`CLUB`).
 
 **What's needed:**
 
-- ⬜ Define a shared list of common providers (Amazon, Target, Starbucks, IKEA, Zara, etc.)
-- ⬜ Build a `ProviderCombobox` component — dropdown list + free-text fallback input
-- ⬜ Wire it into the Add Card, Add Voucher, Add Club, and Add Refund forms
-- ⬜ Add translations for built-in provider names if needed
+- ✅ Add a `Provider` table to Prisma schema + migration: `id`, `type` (`CARD`/`VOUCHER`/`CLUB`/`REFUND`), `name` (canonical/English, nullable), `nameByCountry` (localized display, nullable — at least one of the two set, enforced via DB `CHECK`), `country` (ISO 3166-1 alpha-2, default `IL`), `familyId` (default `'0'` sentinel = shared/global, not a real FK; a real family id = custom option added by that family), `balanceCheckUrl` (nullable, reserved — unused for now), `createdBy` (loose reference to `User.id`), `createdAt`
+- ✅ Seed script to populate built-in providers per type — curated Israeli defaults (BuyMe, Isracard, Cal, Max, Shufersal, etc. for `CARD`; Pais/Hever/HitechZone for `VOUCHER`; Zara/IKEA/Fox/Castro for `REFUND`; Fox/Castro/Zara/Tzomet Sfarim/Steimatzky for `CLUB`) as global rows (`familyId = '0'`) — run against dev and prod, replacing the earlier generic international seed list
+- ✅ Query/action to fetch provider options for a given `type`: global rows + the current family's own custom rows, deduped by displayed name
+- ✅ When the combobox is submitted with a name not already in the list, insert it into `Provider` (matching `type`, `familyId` = current family) — routed into `name` if the typed text is plain English, otherwise `nameByCountry`; English entries capitalized to match the seeded list's styling
+- ✅ Build a `ProviderCombobox` component supporting: browse the list, type-ahead search/filter (matching across both the English and localized name, not just what's displayed), and free-text entry for anything not found (all three interaction modes, not just one)
+- ✅ Wire into Add/Edit forms for Gift Cards (`CARD`), Vouchers (`VOUCHER`), Refunds (`REFUND`, required field), and Clubs (`CLUB`) — `ProviderCombobox` gained a `required` prop for Refunds' mandatory provider field
+- ✅ `ProviderCombobox` decoupled from Gift Card specifics (accepts `options`/`required` as props) — proven by reuse across all four entity types with zero component changes needed
+- ⬜ **Future:** cache `getProviderOptions` (e.g. Next's `unstable_cache`/`"use cache"`, keyed by `type`+`familyId`, invalidated via `revalidateTag` from `ensureProviderExists`) if `/cards` load latency ever actually shows it's worth it — skipped for now since it's one small indexed query, not a measured bottleneck
+- ⬜ **Future:** surface `balanceCheckUrl` in the UI (e.g. a "Check balance" link/button on the card detail modal) — column exists and is populated nowhere yet, purely reserved for this
+
+**See:** `plans/provider-field-hld.md` for full design.
 
 ---
 
@@ -158,13 +167,13 @@ Allow editing existing records across all entity types — Gift Cards, Vouchers,
 
 **What's needed:**
 
-- ⬜ `updateCard` server action — editable fields: provider, fullNumber, cvv, link, notes, expiresAt, isReloadable
-- ⬜ `updateVoucher` server action — editable fields: provider, code, link, notes, expiresAt
-- ⬜ `updateClub` server action — editable fields: name, provider, memberId, ownerName, idType, expiresAt, notes
-- ⬜ `updateRefund` server action — editable fields: provider, amount, currency, referenceId, code, link, notes, expectedBy
-- ⬜ Edit mode in each detail modal — tap an Edit button to switch fields to inputs, Save / Cancel
-- ⬜ Re-encrypt sensitive fields on save (fullNumber, cvv, link for cards; code, link for vouchers; memberId for clubs; code, link for refunds)
-- ⬜ Revalidate the relevant path after each update
+- ✅ `updateCard` server action — editable fields: provider, fullNumber, cvv, link, notes, expiresAt, isReloadable
+- ✅ `updateVoucher` server action — editable fields: provider, code, link, value, notes, expiresAt
+- ✅ `updateClub` server action — editable fields: name, provider, memberId, ownerName, idType, expiresAt, notes
+- ✅ `updateRefund` server action — editable fields: provider, amount, currency, referenceId, code, link, notes, expiresAt
+- ✅ Edit mode in each detail modal — tap an Edit button to switch fields to inputs, Save / Cancel
+- ✅ Re-encrypt sensitive fields on save (fullNumber, cvv, link for cards; code, link for vouchers; memberId for clubs; code, link for refunds)
+- ✅ Revalidate the relevant path after each update
 
 ---
 
@@ -192,6 +201,20 @@ Search across all tabs (Gift Cards, Vouchers, Clubs, Refunds) from a single inpu
 - ⬜ Results grouped by type (Cards / Vouchers / Clubs / Refunds) with tap-to-open detail modal
 - ⬜ Client-side filtering for small families; server-side `ILIKE` query for scale
 - ⬜ Debounced input — no search-on-every-keystroke
+
+---
+
+### ✅ Nav Badge Counts (Active Items per Tab)
+
+Show a small badge on each bottom-nav tab (Gift Cards, Vouchers, Clubs, Refunds) with the count of "active" items in that section.
+
+**What's needed:**
+
+- ✅ Boolean feature flag (`ENABLE_NAV_BADGES` in `app/actions.ts`), on by default — flip to `false` to skip the count query entirely and hide all badges, same pattern as `ENABLE_ADDED_BY_ATTRIBUTION`
+- ✅ "Active" per entity: GiftCard = `isActive && balance > 0`, Voucher = `isActive && !isUsed`, ClubMember = `isActive`, Refund = `isActive && !isUsed`
+- ✅ `getNavBadgeCounts()` Server Action counting all four entity types in one pass, fetched once per browser session via `hooks/useNavBadgeCountsStore.ts` (same plain-Zustand, no-`persist`, fetch-once shape as `useFamilyAttributionStore.ts`)
+- ✅ Badge UI on `BottomNav` — numeric pill, hidden when count is 0, capped at `MAX_BADGE_COUNT = 9` showing `9+` above that
+- ✅ User actions across all four entities (`GiftCardsClient`/`VouchersClient`/`ClubsClient`/`RefundsClient`) call `adjustNavBadgeCount()` on success (+1/-1) instead of re-querying — no i18n needed, it's just a number
 
 ---
 
