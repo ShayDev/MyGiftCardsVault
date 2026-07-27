@@ -8,6 +8,7 @@ import { formatCode } from '../lib/formatCode'
 import { formatExpiresAt } from '../lib/date'
 import { firstName } from '../lib/formatName'
 import { useFamilyAttribution } from '../hooks/useFamilyAttributionStore'
+import { adjustNavBadgeCount } from '../hooks/useNavBadgeCountsStore'
 import type { ProviderOption } from '../lib/providerTypes'
 import Spinner from './Spinner'
 import ProviderCombobox from './ProviderCombobox'
@@ -104,6 +105,7 @@ function AddClubModal({
     startTransition(async () => {
       try {
         await createClub(new FormData(e.currentTarget))
+        adjustNavBadgeCount('clubs', 1)
         onClose()
       } catch (err) {
         setError(err instanceof Error ? err.message : t.failedToCreateClub)
@@ -207,6 +209,7 @@ function ClubDetailModal({
     startTransition(async () => {
       try {
         await deleteClub(club.id)
+        adjustNavBadgeCount('clubs', -1)
         onUpdated()
         onClose()
       } catch (err) {

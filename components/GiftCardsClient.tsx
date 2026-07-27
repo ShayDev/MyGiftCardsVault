@@ -8,6 +8,7 @@ import { formatCode } from '../lib/formatCode'
 import { formatExpiresAt } from '../lib/date'
 import { firstName } from '../lib/formatName'
 import { useFamilyAttribution } from '../hooks/useFamilyAttributionStore'
+import { adjustNavBadgeCount } from '../hooks/useNavBadgeCountsStore'
 import type { ProviderOption } from '../lib/providerTypes'
 import Spinner from './Spinner'
 import ProviderCombobox from './ProviderCombobox'
@@ -160,6 +161,7 @@ function AddCardModal({
     startTransition(async () => {
       try {
         await createCard(fd)
+        adjustNavBadgeCount('cards', 1)
         onClose()
       } catch (err) {
         setError(err instanceof Error ? err.message : t.failedToCreateCard)
@@ -786,6 +788,9 @@ function TransactionModal({
     startTransition(async () => {
       try {
         await createTransaction({ cardId: card.id, type, amount: amountNum, notes: notes || undefined })
+        // Mirrors the balance math above — only adjust the badge when crossing the zero boundary.
+        if (currentBalance <= 0 && projected > 0) adjustNavBadgeCount('cards', 1)
+        else if (currentBalance > 0 && projected <= 0) adjustNavBadgeCount('cards', -1)
         onClose()
       } catch (err) {
         setError(err instanceof Error ? err.message : t.transactionFailed)
@@ -880,6 +885,7 @@ function DeleteDialog({ card, onClose }: { card: CardWithBalance; onClose: () =>
     startTransition(async () => {
       try {
         await deactivateCard(card.id)
+        if (card.balance > 0) adjustNavBadgeCount('cards', -1)
         onClose()
       } catch (err) {
         setError(err instanceof Error ? err.message : t.failedToRemoveCard)

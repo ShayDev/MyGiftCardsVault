@@ -10,6 +10,7 @@ import { formatExpiresAt } from '../lib/date'
 import { resizeImage } from '../lib/resizeImage'
 import { firstName } from '../lib/formatName'
 import { useFamilyAttribution } from '../hooks/useFamilyAttributionStore'
+import { adjustNavBadgeCount } from '../hooks/useNavBadgeCountsStore'
 import type { ProviderOption } from '../lib/providerTypes'
 import Spinner from './Spinner'
 import ProviderCombobox from './ProviderCombobox'
@@ -179,6 +180,7 @@ function AddRefundModal({
           fd.set('imageUrl', url)
         }
         await createRefund(fd)
+        adjustNavBadgeCount('refunds', 1)
         onClose()
       } catch (err) {
         setError(err instanceof Error ? err.message : t.failedToCreateRefund)
@@ -449,6 +451,9 @@ function UseAmountModal({ refund, onClose }: { refund: RefundItem; onClose: () =
     startTransition(async () => {
       try {
         await useRefundAmount(refund.id, val)
+        // Mirrors useRefundAmount's own "fully used" math in app/refunds/actions.ts — keep in sync.
+        const fullyUsed = refund.usedAmount + val >= refund.amount
+        if (fullyUsed) adjustNavBadgeCount('refunds', -1)
         onClose()
       } catch (err) {
         setError(err instanceof Error ? err.message : t.failedToUpdateRefund)
@@ -552,6 +557,7 @@ function RefundDetailModal({
     startTransition(async () => {
       try {
         await deleteRefund(refund.id)
+        if (!refund.isUsed) adjustNavBadgeCount('refunds', -1)
         onClose()
       } catch (err) {
         setError(err instanceof Error ? err.message : t.failedToUpdateRefund)
@@ -770,6 +776,7 @@ function RefundDetailModal({
               startTransition(async () => {
                 try {
                   await markRefundUsed(refund.id, !refund.isUsed)
+                  adjustNavBadgeCount('refunds', refund.isUsed ? 1 : -1)
                   onClose()
                 } catch {
                   setError(t.failedToUpdateRefund)

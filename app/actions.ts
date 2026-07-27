@@ -7,6 +7,7 @@ import { z } from 'zod'
 import prisma from '../lib/prisma'
 import { encrypt } from '../lib/encrypt'
 import { ensureProviderExists } from './providers/actions'
+import { getBalancesForCards } from '../lib/balance'
 
 async function getAuthenticatedFamilyId(): Promise<{ familyId: string; userId: string }> {
   const { userId } = await auth()
@@ -234,4 +235,28 @@ export async function getFamilyAttribution(): Promise<{ names: Record<string, st
   const showAddedBy = users.length > MIN_FAMILY_SIZE_FOR_ATTRIBUTION
 
   return { names, showAddedBy }
+}
+
+export type NavBadgeCounts = { cards: number; vouchers: number; clubs: number; refunds: number }
+
+// On by default; flip to false if this ever proves costly at real family sizes — when off,
+// no count query runs at all and every badge stays hidden.
+const ENABLE_NAV_BADGES = true
+
+export async function getNavBadgeCounts(): Promise<NavBadgeCounts> {
+  if (!ENABLE_NAV_BADGES) return { cards: 0, vouchers: 0, clubs: 0, refunds: 0 }
+
+  const { familyId } = await getAuthenticatedFamilyId()
+
+  const [activeCards, vouchers, clubs, refunds] = await Promise.all([
+    prisma.giftCard.findMany({ where: { familyId, isActive: true }, select: { id: true } }),
+    prisma.voucher.count({ where: { familyId, isActive: true, isUsed: false } }),
+    prisma.clubMember.count({ where: { familyId, isActive: true } }),
+    prisma.refund.count({ where: { familyId, isActive: true, isUsed: false } }),
+  ])
+
+  const balances = await getBalancesForCards(activeCards.map((c: { id: string }) => c.id))
+  const cards = activeCards.filter((c: { id: string }) => (balances.get(c.id)?.toNumber() ?? 0) > 0).length
+
+  return { cards, vouchers, clubs, refunds }
 }

@@ -8,6 +8,7 @@ import { formatCode } from '../lib/formatCode'
 import { formatExpiresAt } from '../lib/date'
 import { firstName } from '../lib/formatName'
 import { useFamilyAttribution } from '../hooks/useFamilyAttributionStore'
+import { adjustNavBadgeCount } from '../hooks/useNavBadgeCountsStore'
 import type { ProviderOption } from '../lib/providerTypes'
 import Spinner from './Spinner'
 import ProviderCombobox from './ProviderCombobox'
@@ -132,6 +133,7 @@ function AddVoucherModal({
     startTransition(async () => {
       try {
         await createVoucher(fd)
+        adjustNavBadgeCount('vouchers', 1)
         onClose()
       } catch (err) {
         setError(err instanceof Error ? err.message : t.failedToCreateVoucher)
@@ -241,6 +243,7 @@ function VoucherDetailModal({
     startTransition(async () => {
       try {
         await markVoucherUsed(voucher.id, !voucher.isUsed)
+        adjustNavBadgeCount('vouchers', voucher.isUsed ? 1 : -1)
         onUpdated()
         onClose()
       } catch (err) {
@@ -254,6 +257,7 @@ function VoucherDetailModal({
     startTransition(async () => {
       try {
         await deleteVoucher(voucher.id)
+        if (!voucher.isUsed) adjustNavBadgeCount('vouchers', -1)
         onUpdated()
         onClose()
       } catch (err) {

@@ -204,18 +204,17 @@ Search across all tabs (Gift Cards, Vouchers, Clubs, Refunds) from a single inpu
 
 ---
 
-### ⬜ Nav Badge Counts (Active Items per Tab)
+### ✅ Nav Badge Counts (Active Items per Tab)
 
 Show a small badge on each bottom-nav tab (Gift Cards, Vouchers, Clubs, Refunds) with the count of "active" items in that section.
 
 **What's needed:**
 
-- ⬜ Boolean feature flag (e.g. `ENABLE_NAV_BADGES`), **on by default** — flip to `false` if it ever turns out to be a performance problem at real family sizes; when off, no count query runs at all and no badges render, same pattern as `ENABLE_ADDED_BY_ATTRIBUTION` in `app/actions.ts`
-- ⬜ Define "active" per entity before building: e.g. GiftCard = `isActive && balance > 0`, Voucher = `isActive && !isUsed`, ClubMember = `isActive`, Refund = `isActive && !isUsed`
-- ⬜ One Server Action counting all four entity types in a single pass, fetched **once per browser session** — reuse the exact `hooks/useFamilyAttributionStore.ts` shape (plain Zustand store, no `persist` middleware, lazy-fetch-once-then-cache hook)
-- ⬜ Badge UI on `BottomNav` tabs — small numeric pill, hidden entirely when a count is 0; a `MAX_BADGE_COUNT` constant (e.g. `9`) caps the displayed number, showing `9+` for anything higher
-- ⬜ User actions (add/delete/mark-used/spend-to-zero/etc.) update the cached local count directly (+1 / -1) instead of re-querying the DB, so the badge stays in sync without extra round trips
-- ⬜ EN + HE translations if any label text ends up needed (likely none — just a number)
+- ✅ Boolean feature flag (`ENABLE_NAV_BADGES` in `app/actions.ts`), on by default — flip to `false` to skip the count query entirely and hide all badges, same pattern as `ENABLE_ADDED_BY_ATTRIBUTION`
+- ✅ "Active" per entity: GiftCard = `isActive && balance > 0`, Voucher = `isActive && !isUsed`, ClubMember = `isActive`, Refund = `isActive && !isUsed`
+- ✅ `getNavBadgeCounts()` Server Action counting all four entity types in one pass, fetched once per browser session via `hooks/useNavBadgeCountsStore.ts` (same plain-Zustand, no-`persist`, fetch-once shape as `useFamilyAttributionStore.ts`)
+- ✅ Badge UI on `BottomNav` — numeric pill, hidden when count is 0, capped at `MAX_BADGE_COUNT = 9` showing `9+` above that
+- ✅ User actions across all four entities (`GiftCardsClient`/`VouchersClient`/`ClubsClient`/`RefundsClient`) call `adjustNavBadgeCount()` on success (+1/-1) instead of re-querying — no i18n needed, it's just a number
 
 ---
 
