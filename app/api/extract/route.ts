@@ -36,6 +36,7 @@ const SCHEMAS: Record<EntityType, object> = {
       amount:      { type: 'NUMBER' },
       currency:    { type: 'STRING', description: '3-letter ISO currency code' },
       referenceId: { type: 'STRING' },
+      code:        { type: 'STRING', description: 'the redemption/credit code for this refund/store-credit, if there is one — omit if there is none' },
       expiresAt:   { type: 'STRING', description: 'YYYY-MM-DD, otherwise omit this field if no expiration is mentioned at all. If only a month and year are given (e.g. "MM/YY" printed on a card), use day 01 of that month. If a date is ambiguous between day-first and month-first (e.g. two 2-digit groups), interpret it as DD/MM (day before month), not MM/DD.' },
       link:        { type: 'STRING', description: 'a redemption/view URL for the credit, if there is one — omit if there is none' },
       notes:       { type: 'STRING', description: 'any relevant context about the refund/order mentioned in the text (e.g. what was returned/why) — omit if none is mentioned' },
@@ -46,13 +47,13 @@ const SCHEMAS: Record<EntityType, object> = {
 const IMAGE_PROMPTS: Record<EntityType, string> = {
   CARD: 'Read this gift card photo (front and back if both are shown). Return the provider/brand name as printed, a distinct product name/title if there is one separate from the brand, the full card number, the CVV if visible on the back, the expiration date if visible, the balance/denomination amount if printed on the card, a redemption URL if the card is redeemed via a link instead of a number, and any note about who it is from or the occasion if visible.',
   VOUCHER: 'Read this voucher or promo code image. Return the provider/brand name, a distinct title/name if there is one separate from the brand, the code, a redemption URL if it is redeemed via a link instead of a code, the value/amount if printed, the expiration date if visible, and any note about who it is from or the occasion if visible.',
-  REFUND: 'Read this receipt or refund confirmation. Return the store/provider name, the amount, the 3-letter currency code, any order/reference number, a redemption/view URL if present, a store-credit expiration date if shown, and any other relevant context about the order/return.',
+  REFUND: 'Read this receipt or refund confirmation. Return the store/provider name, the amount, the 3-letter currency code, any order/reference number, a redemption/credit code if present, a redemption/view URL if present, a store-credit expiration date if shown, and any other relevant context about the order/return.',
 }
 
 const TEXT_PROMPTS: Record<EntityType, string> = {
   CARD: 'Extract gift card details from this pasted text (e.g. a digital gift card email). Return the provider/brand name, a distinct product name/title if there is one separate from the brand, the full card number, the CVV if mentioned, the expiration date if mentioned, the balance/denomination amount if mentioned, a redemption URL if the card is redeemed via a link instead of a number, and any note about who it is from or the occasion if mentioned.',
   VOUCHER: 'Extract voucher/promo details from this pasted text (e.g. an email or SMS). Return the provider/brand name, a distinct title/name if there is one separate from the brand, the code, a redemption URL if it is redeemed via a link instead of a code, the value/amount if mentioned, the expiration date if mentioned, and any note about who it is from or the occasion if mentioned.',
-  REFUND: 'Extract refund/store-credit details from this pasted text (e.g. a confirmation email). Return the store/provider name, the amount, the 3-letter currency code, any order/reference number, a redemption/view URL if present, a store-credit expiration date if mentioned, and any other relevant context about the order/return.',
+  REFUND: 'Extract refund/store-credit details from this pasted text (e.g. a confirmation email). Return the store/provider name, the amount, the 3-letter currency code, any order/reference number, a redemption/credit code if mentioned, a redemption/view URL if present, a store-credit expiration date if mentioned, and any other relevant context about the order/return.',
 }
 
 function isEntityType(value: unknown): value is EntityType {
