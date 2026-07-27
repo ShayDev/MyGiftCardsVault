@@ -88,7 +88,7 @@ Track which user created each record, mirroring the existing `createdAt` pattern
 - ✅ Add `createdBy String?` (FK → `User.id`) to `GiftCard`, `Transaction`, `Voucher`, and `ClubMember` tables
 - ✅ Migration (column present in schema + Neon)
 - ✅ Populate `createdBy` in all relevant Server Actions (`app/actions.ts`, `app/vouchers/actions.ts`)
-- ⬜ Optionally display "Added by" in card/voucher detail modals
+- ✅ Optionally display "Added by" in card/voucher detail modals (+ transaction history)
 
 ---
 

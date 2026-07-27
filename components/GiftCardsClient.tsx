@@ -6,6 +6,8 @@ import { useLanguageStore } from '../hooks/useLanguageStore'
 import { getT } from '../lib/i18n'
 import { formatCode } from '../lib/formatCode'
 import { formatExpiresAt } from '../lib/date'
+import { firstName } from '../lib/formatName'
+import { useFamilyAttribution } from '../hooks/useFamilyAttributionStore'
 import type { ProviderOption } from '../lib/providerTypes'
 import Spinner from './Spinner'
 import ProviderCombobox from './ProviderCombobox'
@@ -24,6 +26,7 @@ export type CardWithBalance = {
   notes?: string
   isReloadable: boolean
   createdAt: string
+  createdBy?: string | null
   balance: number
 }
 
@@ -334,6 +337,13 @@ function CardDetailModal({
   const [copiedLink, setCopiedLink] = useState(false)
   const [formattedFull, setFormattedFull] = useState(true)
   const [transactions, setTransactions] = useState<TransactionItem[] | null>(null)
+  const { names: attributionNames, showAddedBy } = useFamilyAttribution()
+
+  function addedByName(clerkId: string | null | undefined): string | null {
+    if (!showAddedBy || !clerkId) return null
+    const name = attributionNames[clerkId]
+    return name ? firstName(name) : null
+  }
 
   function copyFullNumber() {
     if (!card.fullNumber) return
@@ -402,7 +412,10 @@ function CardDetailModal({
           </div>
           <div className="p-3 rounded-xl border border-slate-100 bg-white">
             <p className="text-xs text-slate-400 mb-1">{t.dateAdded}</p>
-            <p className="text-sm text-slate-700">{formatDate(card.createdAt)}</p>
+            <p className="text-sm text-slate-700">
+              {formatDate(card.createdAt)}
+              {addedByName(card.createdBy) && ` (${addedByName(card.createdBy)})`}
+            </p>
           </div>
         </div>
 
@@ -549,7 +562,10 @@ function CardDetailModal({
                     <p className={`font-mono text-sm font-semibold ${tx.type === 'RECHARGE' ? 'text-emerald-600' : 'text-rose-500'}`}>
                       {formatTransactionAmount(tx.amount, tx.type, t.currencyLocale, t.currencyCode)}
                     </p>
-                    <p className="text-xs text-slate-400">{formatDate(tx.createdAt)}</p>
+                    <p className="text-xs text-slate-400">
+                      {formatDate(tx.createdAt)}
+                      {addedByName(tx.createdBy) && ` (${addedByName(tx.createdBy)})`}
+                    </p>
                   </div>
                 </li>
               ))}

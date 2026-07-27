@@ -45,6 +45,7 @@ export default async function Page() {
     notes: c.notes ?? undefined,
     isReloadable: c.isReloadable,
     createdAt: c.createdAt.toISOString(),
+    createdBy: c.createdBy,
     balance: parseFloat(balances.get(c.id)?.toString() ?? '0'),
   }))
 

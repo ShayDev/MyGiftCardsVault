@@ -186,6 +186,7 @@ export type TransactionItem = {
   amount: number
   notes: string | null
   createdAt: string
+  createdBy: string | null
 }
 
 export async function getCardTransactions(cardId: string): Promise<TransactionItem[]> {
@@ -202,11 +203,35 @@ export async function getCardTransactions(cardId: string): Promise<TransactionIt
     orderBy: { createdAt: 'desc' },
   })
 
-  return transactions.map((tx: { id: string; type: 'SPEND' | 'RECHARGE'; amount: { toString(): string }; notes: string | null; createdAt: Date }) => ({
+  return transactions.map((tx: { id: string; type: 'SPEND' | 'RECHARGE'; amount: { toString(): string }; notes: string | null; createdAt: Date; createdBy: string | null }) => ({
     id: tx.id,
     type: tx.type,
     amount: parseFloat(tx.amount.toString()),
     notes: tx.notes,
     createdAt: tx.createdAt.toISOString(),
+    createdBy: tx.createdBy,
   }))
+}
+
+// Master switch — false means attribution never shows anywhere and the DB is never queried for it.
+const ENABLE_ADDED_BY_ATTRIBUTION = true
+// Only relevant when the flag above is true — attribution only shows once the family has more than this many members.
+const MIN_FAMILY_SIZE_FOR_ATTRIBUTION = 1
+
+export async function getFamilyAttribution(): Promise<{ names: Record<string, string>; showAddedBy: boolean }> {
+  if (!ENABLE_ADDED_BY_ATTRIBUTION) return { names: {}, showAddedBy: false }
+
+  const { familyId } = await getAuthenticatedFamilyId()
+
+  const users = await prisma.user.findMany({
+    where: { familyId },
+    select: { clerkId: true, name: true },
+  })
+
+  const names = Object.fromEntries(
+    users.filter((u: { clerkId: string; name: string | null }) => u.name).map((u: { clerkId: string; name: string | null }) => [u.clerkId, u.name as string])
+  )
+  const showAddedBy = users.length > MIN_FAMILY_SIZE_FOR_ATTRIBUTION
+
+  return { names, showAddedBy }
 }
