@@ -81,6 +81,15 @@ function formatDate(iso: string): string {
   })
 }
 
+function isExpiringSoon(expiresAt: string | undefined, days = 90): boolean {
+  if (!expiresAt) return false
+  const exp = new Date(expiresAt)
+  const now = new Date()
+  const threshold = new Date()
+  threshold.setDate(threshold.getDate() + days)
+  return exp >= now && exp <= threshold
+}
+
 // ── Modal Shell ────────────────────────────────────────────────────────────────
 
 function Modal({ title, onClose, children }: { title: string; onClose: () => void; children: React.ReactNode }) {
@@ -408,7 +417,7 @@ function CardDetailModal({
           </div>
           <div className="p-3 rounded-xl border border-slate-100 bg-white">
             <p className="text-xs text-slate-400 mb-1">{t.expires}</p>
-            <p className="font-mono text-slate-700 font-medium">
+            <p className={`font-mono font-medium ${isExpiringSoon(card.expiresAt) ? 'text-rose-600' : 'text-slate-700'}`}>
               {card.expiresAt ? formatExpiresAt(card.expiresAt) : '—'}
             </p>
           </div>
@@ -933,10 +942,11 @@ function DeleteDialog({ card, onClose }: { card: CardWithBalance; onClose: () =>
 // ── Stat Card ──────────────────────────────────────────────────────────────────
 
 function StatCard({
-  label, value, icon, iconClass, valueClass,
+  label, value, subValue, icon, iconClass, valueClass,
 }: {
   label: string
   value: string
+  subValue?: string
   icon: React.ReactNode
   iconClass: string
   valueClass?: string
@@ -947,6 +957,7 @@ function StatCard({
         <div>
           <p className="text-xs text-slate-500 font-medium">{label}</p>
           <p className={`text-xl font-bold mt-0.5 ${valueClass ?? 'text-slate-800'}`}>{value}</p>
+          {subValue && <p className="text-xs text-slate-400 font-medium mt-0.5">{subValue}</p>}
         </div>
         <div className={`w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0 ${iconClass}`}>
           {icon}
@@ -982,7 +993,17 @@ export default function GiftCardsClient({
 
   const totalBalance = active.reduce((sum, c) => sum + c.balance, 0)
   const reloadableCount = active.filter((c) => c.isReloadable).length
-  const emptyCount = active.filter((c) => c.balance <= 0).length
+
+  const now = new Date()
+  const oneMonthFromNow = new Date()
+  oneMonthFromNow.setMonth(oneMonthFromNow.getMonth() + 1)
+  const expiringSoon = active.filter((c) => {
+    if (!c.expiresAt) return false
+    const exp = new Date(c.expiresAt)
+    return exp >= now && exp <= oneMonthFromNow
+  })
+  const expiringSoonCount = expiringSoon.length
+  const expiringSoonSum = expiringSoon.reduce((sum, c) => sum + c.balance, 0)
 
   const close = () => setModal({ type: 'none' })
 
@@ -1023,13 +1044,14 @@ export default function GiftCardsClient({
             }
           />
           <StatCard
-            label={t.emptyCards}
-            value={String(emptyCount)}
-            valueClass={emptyCount > 0 ? 'text-rose-600' : undefined}
+            label={t.expiringSoon}
+            value={String(expiringSoonCount)}
+            subValue={expiringSoonCount > 0 ? formatCurrency(expiringSoonSum, t.currencyLocale, t.currencyCode) : undefined}
+            valueClass={expiringSoonCount > 0 ? 'text-rose-600' : undefined}
             iconClass="bg-rose-50 text-rose-500"
             icon={
               <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M20 12H4" />
+                <path strokeLinecap="round" strokeLinejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
               </svg>
             }
           />
@@ -1086,7 +1108,7 @@ export default function GiftCardsClient({
                       <th className="text-start font-medium text-slate-500 px-4 py-3">{t.colCardNumber}</th>
                       <th className="text-start font-medium text-slate-500 px-4 py-3">{t.colType}</th>
                       <th className="text-end font-medium text-slate-500 px-4 py-3">{t.colBalance}</th>
-                      <th className="text-start font-medium text-slate-500 px-4 py-3">{t.colAdded}</th>
+                      <th className="text-start font-medium text-slate-500 px-4 py-3">{t.expires}</th>
                       <th className="text-end font-medium text-slate-500 px-5 py-3">{t.colActions}</th>
                     </tr>
                   </thead>
@@ -1129,8 +1151,18 @@ export default function GiftCardsClient({
                             {formatCurrency(card.balance, t.currencyLocale, t.currencyCode)}
                           </span>
                         </td>
-                        <td className="px-4 py-3.5 text-slate-400 text-xs whitespace-nowrap">
-                          {formatDate(card.createdAt)}
+                        <td className="px-4 py-3.5 text-xs whitespace-nowrap">
+                          {card.expiresAt ? (
+                            isExpiringSoon(card.expiresAt) ? (
+                              <span className="inline-flex items-center px-2 py-0.5 rounded-full font-medium bg-rose-50 text-rose-600 border border-rose-100">
+                                {formatExpiresAt(card.expiresAt)}
+                              </span>
+                            ) : (
+                              <span className="text-slate-400">{formatExpiresAt(card.expiresAt)}</span>
+                            )
+                          ) : (
+                            <span className="text-slate-400">—</span>
+                          )}
                         </td>
                         <td className="px-5 py-3.5">
                           <div className="flex items-center justify-end gap-1.5">
@@ -1195,6 +1227,11 @@ export default function GiftCardsClient({
                           <span className="text-xs text-emerald-600">{t.reloadableLabel}</span>
                         ) : (
                           <span className="text-xs text-slate-400">{t.oneTime}</span>
+                        )}
+                        {card.expiresAt && (
+                          <div className={`text-xs mt-0.5 ${isExpiringSoon(card.expiresAt) ? 'text-rose-600 font-semibold' : 'text-slate-400'}`}>
+                            {formatExpiresAt(card.expiresAt)}
+                          </div>
                         )}
                       </div>
                     </div>
@@ -1288,7 +1325,7 @@ export default function GiftCardsClient({
                           </span>
                         </td>
                         <td className="px-4 py-3.5 text-slate-400 text-xs whitespace-nowrap">
-                          {formatDate(card.createdAt)}
+                          {card.expiresAt ? formatExpiresAt(card.expiresAt) : '—'}
                         </td>
                         <td className="px-5 py-3.5">
                           <div className="flex items-center justify-end gap-1.5">

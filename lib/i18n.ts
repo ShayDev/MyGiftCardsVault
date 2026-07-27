@@ -13,6 +13,7 @@ const translations = {
     totalCards: 'Total Cards',
     reloadable: 'Rechargeable',
     emptyCards: 'Empty Cards',
+    expiringSoon: 'Expires in the coming month',
     // Table headers
     allCards: 'All Cards',
     colCard: 'Card',
@@ -243,6 +244,7 @@ const translations = {
     totalCards: 'סה״כ כרטיסים',
     reloadable: 'ניתן לטעינה',
     emptyCards: 'כרטיסים ריקים',
+    expiringSoon: 'פג תוקף בקרוב',
     // Table headers
     allCards: 'כל הכרטיסים',
     colCard: 'כרטיס',
