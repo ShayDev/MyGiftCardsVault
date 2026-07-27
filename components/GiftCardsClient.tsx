@@ -1114,7 +1114,7 @@ export default function GiftCardsClient({
                   </thead>
                   <tbody className="divide-y divide-slate-100">
                     {active.map((card) => (
-                      <tr key={card.id} className="hover:bg-slate-50/70 transition-colors group">
+                      <tr key={card.id} className={`transition-colors group ${isExpiringSoon(card.expiresAt) ? 'bg-rose-50/60 hover:bg-rose-50' : 'hover:bg-slate-50/70'}`}>
                         <td className="px-3 py-3.5 text-xs font-mono text-slate-400 text-right">#{card.seq}</td>
                         <td className="px-5 py-3.5">
                           <button
@@ -1201,7 +1201,7 @@ export default function GiftCardsClient({
               {/* Mobile Cards */}
               <div className="cards-list-mobile sm:hidden divide-y divide-slate-100">
                 {active.map((card) => (
-                  <div key={card.id} className="px-4 py-4">
+                  <div key={card.id} className={`px-4 py-4 ${isExpiringSoon(card.expiresAt) ? 'bg-rose-50/60' : ''}`}>
                     <div className="flex items-center gap-3 mb-3">
                       <span className="text-xs font-mono text-slate-400 flex-shrink-0 w-7 text-right">#{card.seq}</span>
                       <div className={`w-10 h-10 rounded-xl flex items-center justify-center text-sm font-bold flex-shrink-0 ${providerColor(card.provider)}`}>
