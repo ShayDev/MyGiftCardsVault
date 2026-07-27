@@ -55,14 +55,14 @@ export default function RootLayout({
                     />
                   </svg>
                 </div>
-                <div className="header-brand-name">
+                <h1 className="header-brand-name">
                   <span className="font-bold text-slate-900 tracking-tight">
                     GiftCards
                   </span>
                   <span className="font-bold text-emerald-600 tracking-tight">
                     Vault
                   </span>
-                </div>
+                </h1>
               </div>
               <div className="header-actions flex items-center gap-2">
                 <HeaderNav />

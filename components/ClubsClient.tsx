@@ -5,7 +5,7 @@ import { createClub, updateClub, deleteClub, type ClubItem } from '../app/clubs/
 import { useLanguageStore } from '../hooks/useLanguageStore'
 import { getT, localeDir } from '../lib/i18n'
 import { formatCode } from '../lib/formatCode'
-import { formatExpiresAt } from '../lib/date'
+import { formatExpiresAt, formatDate } from '../lib/date'
 import { firstName } from '../lib/formatName'
 import { useFamilyAttribution } from '../hooks/useFamilyAttributionStore'
 import { adjustNavBadgeCount } from '../hooks/useNavBadgeCountsStore'
@@ -36,17 +36,10 @@ function providerColor(provider: string): string {
   return palette[provider.charCodeAt(0) % palette.length]
 }
 
-function formatDate(iso: string): string {
-  return new Date(iso).toLocaleDateString('en-US', {
-    month: 'short',
-    day: 'numeric',
-    year: 'numeric',
-  })
-}
-
 // ── Modal Shell ────────────────────────────────────────────────────────────────
 
 function Modal({ title, onClose, children }: { title: string; onClose: () => void; children: React.ReactNode }) {
+  const t = getT(useLanguageStore((s) => s.locale))
   return (
     <div className="modal-overlay fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4">
       <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={onClose} />
@@ -55,7 +48,8 @@ function Modal({ title, onClose, children }: { title: string; onClose: () => voi
           <h2 className="font-semibold text-slate-800 text-base">{title}</h2>
           <button
             onClick={onClose}
-            className="w-8 h-8 flex items-center justify-center rounded-full text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-colors"
+            aria-label={t.close}
+            className="w-11 h-11 flex items-center justify-center rounded-full text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-colors"
           >
             <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
@@ -331,7 +325,7 @@ function ClubDetailModal({
         <div>
           <p className="text-xs text-slate-400 mb-0.5">{t.dateAdded}</p>
           <p className="text-sm text-slate-700">
-            {formatDate(club.createdAt)}
+            {formatDate(club.createdAt, t.currencyLocale)}
             {addedByName && ` (${addedByName})`}
           </p>
         </div>

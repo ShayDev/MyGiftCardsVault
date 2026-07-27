@@ -234,6 +234,7 @@ const translations = {
     failedToUpdateClub: 'Failed to update club',
     // Misc
     cards: (n: number) => `${n} card${n !== 1 ? 's' : ''}`,
+    close: 'Close',
   },
   he: {
     // Header
@@ -465,6 +466,7 @@ const translations = {
     failedToUpdateClub: 'עדכון המועדון נכשל',
     // Misc
     cards: (n: number) => n === 1 ? 'כרטיס אחד' : `${n} כרטיסים`,
+    close: 'סגור',
   },
 } as const
 

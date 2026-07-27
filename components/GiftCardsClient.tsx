@@ -5,7 +5,7 @@ import { createCard, updateCard, deactivateCard, createTransaction, getCardTrans
 import { useLanguageStore } from '../hooks/useLanguageStore'
 import { getT } from '../lib/i18n'
 import { formatCode } from '../lib/formatCode'
-import { formatExpiresAt } from '../lib/date'
+import { formatExpiresAt, formatDate } from '../lib/date'
 import { firstName } from '../lib/formatName'
 import { useFamilyAttribution } from '../hooks/useFamilyAttributionStore'
 import { adjustNavBadgeCount } from '../hooks/useNavBadgeCountsStore'
@@ -73,14 +73,6 @@ function formatTransactionAmount(amount: number, type: 'RECHARGE' | 'SPEND', cur
   }).format(type === 'SPEND' ? -amount : amount)
 }
 
-function formatDate(iso: string): string {
-  return new Date(iso).toLocaleDateString('en-US', {
-    month: 'short',
-    day: 'numeric',
-    year: 'numeric',
-  })
-}
-
 function isExpiringSoon(expiresAt: string | undefined, days = 90): boolean {
   if (!expiresAt) return false
   const exp = new Date(expiresAt)
@@ -93,6 +85,7 @@ function isExpiringSoon(expiresAt: string | undefined, days = 90): boolean {
 // ── Modal Shell ────────────────────────────────────────────────────────────────
 
 function Modal({ title, onClose, children }: { title: string; onClose: () => void; children: React.ReactNode }) {
+  const t = getT(useLanguageStore((s) => s.locale))
   return (
     <div className="modal-overlay fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4">
       <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={onClose} />
@@ -101,7 +94,8 @@ function Modal({ title, onClose, children }: { title: string; onClose: () => voi
           <h2 className="font-semibold text-slate-800 text-base">{title}</h2>
           <button
             onClick={onClose}
-            className="w-8 h-8 flex items-center justify-center rounded-full text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-colors"
+            aria-label={t.close}
+            className="w-11 h-11 flex items-center justify-center rounded-full text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-colors"
           >
             <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
@@ -294,6 +288,9 @@ function AddCardModal({
           </div>
           <button
             type="button"
+            role="switch"
+            aria-checked={isReloadable}
+            aria-label={t.reloadable}
             onClick={() => setIsReloadable(!isReloadable)}
             className={`relative w-11 h-6 rounded-full transition-colors ${isReloadable ? 'bg-emerald-500' : 'bg-slate-200'}`}
           >
@@ -424,7 +421,7 @@ function CardDetailModal({
           <div className="p-3 rounded-xl border border-slate-100 bg-white">
             <p className="text-xs text-slate-400 mb-1">{t.dateAdded}</p>
             <p className="text-sm text-slate-700">
-              {formatDate(card.createdAt)}
+              {formatDate(card.createdAt, t.currencyLocale)}
               {addedByName(card.createdBy) && ` (${addedByName(card.createdBy)})`}
             </p>
           </div>
@@ -574,7 +571,7 @@ function CardDetailModal({
                       {formatTransactionAmount(tx.amount, tx.type, t.currencyLocale, t.currencyCode)}
                     </p>
                     <p className="text-xs text-slate-400">
-                      {formatDate(tx.createdAt)}
+                      {formatDate(tx.createdAt, t.currencyLocale)}
                       {addedByName(tx.createdBy) && ` (${addedByName(tx.createdBy)})`}
                     </p>
                   </div>
@@ -740,6 +737,9 @@ function EditCardModal({
           </div>
           <button
             type="button"
+            role="switch"
+            aria-checked={isReloadable}
+            aria-label={t.reloadable}
             onClick={() => setIsReloadable(!isReloadable)}
             className={`relative w-11 h-6 rounded-full transition-colors ${isReloadable ? 'bg-emerald-500' : 'bg-slate-200'}`}
           >
@@ -1169,7 +1169,7 @@ export default function GiftCardsClient({
                             {card.isReloadable && (
                               <button
                                 onClick={() => setModal({ type: 'transaction', card, txType: 'RECHARGE' })}
-                                className="h-8 px-2.5 text-xs font-medium rounded-lg border border-emerald-200 text-emerald-600 hover:bg-emerald-50 transition-colors"
+                                className="h-11 px-2.5 text-xs font-medium rounded-lg border border-emerald-200 text-emerald-600 hover:bg-emerald-50 transition-colors"
                               >
                                 {t.recharge}
                               </button>
@@ -1177,13 +1177,14 @@ export default function GiftCardsClient({
                             <button
                               onClick={() => setModal({ type: 'transaction', card, txType: 'SPEND' })}
                               disabled={card.balance <= 0}
-                              className="h-8 px-2.5 text-xs font-medium rounded-lg border border-rose-200 text-rose-600 hover:bg-rose-50 transition-colors disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-transparent"
+                              className="h-11 px-2.5 text-xs font-medium rounded-lg border border-rose-200 text-rose-600 hover:bg-rose-50 transition-colors disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-transparent"
                             >
                               {t.spend}
                             </button>
                             <button
                               onClick={() => setModal({ type: 'delete', card })}
-                              className="h-8 w-8 flex items-center justify-center rounded-lg text-slate-400 hover:text-rose-500 hover:bg-rose-50 transition-colors"
+                              className="h-11 w-11 flex items-center justify-center rounded-lg text-slate-400 hover:text-rose-500 hover:bg-rose-50 transition-colors"
+                              aria-label={t.removeCard}
                               title={t.removeCard}
                             >
                               <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
@@ -1253,6 +1254,7 @@ export default function GiftCardsClient({
                       </button>
                       <button
                         onClick={() => setModal({ type: 'delete', card })}
+                        aria-label={t.removeCard}
                         className="min-h-[44px] w-11 flex items-center justify-center rounded-xl border border-slate-200 text-slate-400 hover:text-rose-500 hover:border-rose-200 transition-colors"
                       >
                         <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
@@ -1331,7 +1333,8 @@ export default function GiftCardsClient({
                           <div className="flex items-center justify-end gap-1.5">
                             <button
                               onClick={() => setModal({ type: 'delete', card })}
-                              className="h-8 w-8 flex items-center justify-center rounded-lg text-slate-400 hover:text-rose-500 hover:bg-rose-50 transition-colors"
+                              className="h-11 w-11 flex items-center justify-center rounded-lg text-slate-400 hover:text-rose-500 hover:bg-rose-50 transition-colors"
+                              aria-label={t.removeCard}
                               title={t.removeCard}
                             >
                               <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
@@ -1375,6 +1378,7 @@ export default function GiftCardsClient({
                     <div className="flex gap-2 justify-end">
                       <button
                         onClick={() => setModal({ type: 'delete', card })}
+                        aria-label={t.removeCard}
                         className="min-h-[44px] w-11 flex items-center justify-center rounded-xl border border-slate-200 text-slate-400 hover:text-rose-500 hover:border-rose-200 transition-colors"
                       >
                         <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>

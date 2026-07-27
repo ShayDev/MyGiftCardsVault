@@ -6,7 +6,7 @@ import { useLanguageStore } from '../hooks/useLanguageStore'
 import { getT } from '../lib/i18n'
 import { localeDir } from '../lib/i18n'
 import { formatCode } from '../lib/formatCode'
-import { formatExpiresAt } from '../lib/date'
+import { formatExpiresAt, formatDate } from '../lib/date'
 import { resizeImage } from '../lib/resizeImage'
 import { firstName } from '../lib/formatName'
 import { useFamilyAttribution } from '../hooks/useFamilyAttributionStore'
@@ -42,14 +42,6 @@ function providerColor(provider: string): string {
   return palette[provider.charCodeAt(0) % palette.length]
 }
 
-function formatDate(iso: string): string {
-  return new Date(iso).toLocaleDateString('en-US', {
-    month: 'short',
-    day: 'numeric',
-    year: 'numeric',
-  })
-}
-
 function formatAmount(amount: number, currency: string, locale: string): string {
   try {
     return new Intl.NumberFormat(locale, { style: 'currency', currency, minimumFractionDigits: 2 }).format(amount)
@@ -61,6 +53,7 @@ function formatAmount(amount: number, currency: string, locale: string): string 
 // ── Modal Shell ────────────────────────────────────────────────────────────────
 
 function Modal({ title, onClose, children }: { title: string; onClose: () => void; children: React.ReactNode }) {
+  const t = getT(useLanguageStore((s) => s.locale))
   return (
     <div className="modal-overlay fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4">
       <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={onClose} />
@@ -69,7 +62,8 @@ function Modal({ title, onClose, children }: { title: string; onClose: () => voi
           <h2 className="font-semibold text-slate-800 text-base">{title}</h2>
           <button
             onClick={onClose}
-            className="w-8 h-8 flex items-center justify-center rounded-full text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-colors"
+            aria-label={t.close}
+            className="w-11 h-11 flex items-center justify-center rounded-full text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-colors"
           >
             <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
@@ -617,7 +611,7 @@ function RefundDetailModal({
         {!isPending_ && refund.receivedAt && (
           <div>
             <p className="text-xs text-slate-400 mb-0.5">{t.refundReceivedOn}</p>
-            <p className="text-sm text-slate-700">{formatDate(refund.receivedAt)}</p>
+            <p className="text-sm text-slate-700">{formatDate(refund.receivedAt, t.currencyLocale)}</p>
           </div>
         )}
 
@@ -737,7 +731,7 @@ function RefundDetailModal({
         <div>
           <p className="text-xs text-slate-400 mb-0.5">{t.dateAdded}</p>
           <p className="text-sm text-slate-700">
-            {formatDate(refund.createdAt)}
+            {formatDate(refund.createdAt, t.currencyLocale)}
             {addedByName && ` (${addedByName})`}
           </p>
         </div>
