@@ -38,6 +38,7 @@ export default async function Page() {
     expiresAt: c.expiresAt?.toISOString() ?? undefined,
     notes:     c.notes ?? undefined,
     createdAt: c.createdAt.toISOString(),
+    createdBy: c.createdBy,
   }))
 
   const providerOptions = await getProviderOptions('CLUB')

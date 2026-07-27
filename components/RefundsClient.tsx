@@ -8,6 +8,8 @@ import { localeDir } from '../lib/i18n'
 import { formatCode } from '../lib/formatCode'
 import { formatExpiresAt } from '../lib/date'
 import { resizeImage } from '../lib/resizeImage'
+import { firstName } from '../lib/formatName'
+import { useFamilyAttribution } from '../hooks/useFamilyAttributionStore'
 import type { ProviderOption } from '../lib/providerTypes'
 import Spinner from './Spinner'
 import ProviderCombobox from './ProviderCombobox'
@@ -516,6 +518,10 @@ function RefundDetailModal({
   const [copiedLink, setCopiedLink] = useState(false)
   const [formattedCode, setFormattedCode] = useState(true)
   const [isPending, startTransition] = useTransition()
+  const { names: attributionNames, showAddedBy } = useFamilyAttribution()
+  const addedByName = showAddedBy && refund.createdBy && attributionNames[refund.createdBy]
+    ? firstName(attributionNames[refund.createdBy])
+    : null
   const [error, setError] = useState<string | null>(null)
   const [showUseAmount, setShowUseAmount] = useState(false)
 
@@ -724,7 +730,10 @@ function RefundDetailModal({
         {/* Added */}
         <div>
           <p className="text-xs text-slate-400 mb-0.5">{t.dateAdded}</p>
-          <p className="text-sm text-slate-700">{formatDate(refund.createdAt)}</p>
+          <p className="text-sm text-slate-700">
+            {formatDate(refund.createdAt)}
+            {addedByName && ` (${addedByName})`}
+          </p>
         </div>
 
         {error && <p className="text-sm text-rose-500 bg-rose-50 px-3 py-2 rounded-lg">{error}</p>}

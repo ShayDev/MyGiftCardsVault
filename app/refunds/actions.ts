@@ -210,4 +210,5 @@ export type RefundItem = {
   link?: string
   imageUrl?: string
   createdAt: string
+  createdBy?: string | null
 }

@@ -121,4 +121,5 @@ export type ClubItem = {
   expiresAt?: string
   notes?: string
   createdAt: string
+  createdBy?: string | null
 }

@@ -45,6 +45,7 @@ export default async function Page() {
     link:        dec(r.link ?? null),
     imageUrl:    dec(r.imageUrl ?? null),
     createdAt:   r.createdAt.toISOString(),
+    createdBy:   r.createdBy,
   }))
 
   const providerOptions = await getProviderOptions('REFUND')
