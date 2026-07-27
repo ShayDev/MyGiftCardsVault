@@ -21,7 +21,7 @@ export default async function Page() {
 
   const cards = await prisma.giftCard.findMany({
     where: { familyId, isActive: true },
-    orderBy: { createdAt: 'desc' },
+    orderBy: { expiresAt: { sort: 'asc', nulls: 'last' } },
   })
 
   const balances = await getBalancesForCards(cards.map((c) => c.id))

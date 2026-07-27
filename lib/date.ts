@@ -16,3 +16,12 @@ export function formatDate(iso: string, localeTag: string): string {
   }
   return d.toLocaleDateString(localeTag, { month: 'short', day: 'numeric', year: 'numeric' })
 }
+
+export function isExpiringSoon(expiresAt: string | undefined, days = 90): boolean {
+  if (!expiresAt) return false
+  const exp = new Date(expiresAt)
+  const now = new Date()
+  const threshold = new Date()
+  threshold.setDate(threshold.getDate() + days)
+  return exp >= now && exp <= threshold
+}

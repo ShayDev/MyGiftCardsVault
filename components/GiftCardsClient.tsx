@@ -5,7 +5,7 @@ import { createCard, updateCard, deactivateCard, createTransaction, getCardTrans
 import { useLanguageStore } from '../hooks/useLanguageStore'
 import { getT } from '../lib/i18n'
 import { formatCode } from '../lib/formatCode'
-import { formatExpiresAt, formatDate } from '../lib/date'
+import { formatExpiresAt, formatDate, isExpiringSoon } from '../lib/date'
 import { firstName } from '../lib/formatName'
 import { useFamilyAttribution } from '../hooks/useFamilyAttributionStore'
 import { adjustNavBadgeCount } from '../hooks/useNavBadgeCountsStore'
@@ -71,15 +71,6 @@ function formatTransactionAmount(amount: number, type: 'RECHARGE' | 'SPEND', cur
     minimumFractionDigits: 2,
     signDisplay: 'always',
   }).format(type === 'SPEND' ? -amount : amount)
-}
-
-function isExpiringSoon(expiresAt: string | undefined, days = 90): boolean {
-  if (!expiresAt) return false
-  const exp = new Date(expiresAt)
-  const now = new Date()
-  const threshold = new Date()
-  threshold.setDate(threshold.getDate() + days)
-  return exp >= now && exp <= threshold
 }
 
 // ── Modal Shell ────────────────────────────────────────────────────────────────
@@ -412,7 +403,7 @@ function CardDetailModal({
               </span>
             )}
           </div>
-          <div className="p-3 rounded-xl border border-slate-100 bg-white">
+          <div className={`p-3 rounded-xl border ${isExpiringSoon(card.expiresAt) ? 'border-rose-200 bg-rose-50' : 'border-slate-100 bg-white'}`}>
             <p className="text-xs text-slate-400 mb-1">{t.expires}</p>
             <p className={`font-mono font-medium ${isExpiringSoon(card.expiresAt) ? 'text-rose-600' : 'text-slate-700'}`}>
               {card.expiresAt ? formatExpiresAt(card.expiresAt) : '—'}
@@ -1010,6 +1001,10 @@ export default function GiftCardsClient({
   return (
     <>
       <div className="cards-page space-y-6">
+        {/* Page header */}
+        <div className="cards-page-header flex items-center justify-between">
+          <h1 className="text-xl font-bold text-slate-800">{t.cardsTab}</h1>
+        </div>
         {/* Summary Stats */}
         <div className="cards-stats grid grid-cols-2 sm:grid-cols-4 gap-3">
           <StatCard
@@ -1231,7 +1226,7 @@ export default function GiftCardsClient({
                         )}
                         {card.expiresAt && (
                           <div className={`text-xs mt-0.5 ${isExpiringSoon(card.expiresAt) ? 'text-rose-600 font-semibold' : 'text-slate-400'}`}>
-                            {formatExpiresAt(card.expiresAt)}
+                            {t.expires}: {formatExpiresAt(card.expiresAt)}
                           </div>
                         )}
                       </div>
@@ -1373,6 +1368,11 @@ export default function GiftCardsClient({
                           {formatCurrency(0, t.currencyLocale, t.currencyCode)}
                         </div>
                         <span className="text-xs text-slate-400">{t.oneTime}</span>
+                        {card.expiresAt && (
+                          <div className={`text-xs mt-0.5 ${isExpiringSoon(card.expiresAt) ? 'text-rose-600 font-semibold' : 'text-slate-400'}`}>
+                            {t.expires}: {formatExpiresAt(card.expiresAt)}
+                          </div>
+                        )}
                       </div>
                     </div>
                     <div className="flex gap-2 justify-end">

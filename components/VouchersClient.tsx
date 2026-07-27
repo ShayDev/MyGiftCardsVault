@@ -5,7 +5,7 @@ import { createVoucher, updateVoucher, markVoucherUsed, deleteVoucher, type Vouc
 import { useLanguageStore } from '../hooks/useLanguageStore'
 import { getT } from '../lib/i18n'
 import { formatCode } from '../lib/formatCode'
-import { formatExpiresAt, formatDate } from '../lib/date'
+import { formatExpiresAt, formatDate, isExpiringSoon } from '../lib/date'
 import { firstName } from '../lib/formatName'
 import { useFamilyAttribution } from '../hooks/useFamilyAttributionStore'
 import { adjustNavBadgeCount } from '../hooks/useNavBadgeCountsStore'
@@ -388,9 +388,9 @@ function VoucherDetailModal({
 
         {/* Expiry */}
         {voucher.expiresAt && (
-          <div>
+          <div className={isExpiringSoon(voucher.expiresAt) ? 'p-2 -m-2 rounded-xl bg-rose-50 border border-rose-200' : undefined}>
             <p className="text-xs text-slate-400 mb-0.5">{t.expires}</p>
-            <p className="text-sm font-mono text-slate-800">{formatExpiresAt(voucher.expiresAt!)}</p>
+            <p className={`text-sm font-mono ${isExpiringSoon(voucher.expiresAt) ? 'text-rose-600 font-semibold' : 'text-slate-800'}`}>{formatExpiresAt(voucher.expiresAt!)}</p>
           </div>
         )}
 
@@ -548,8 +548,12 @@ function VoucherRow({ voucher, onClick, onDelete }: { voucher: VoucherItem; onCl
     startDelete(async () => { await onDelete?.() })
   }
 
+  const expiringSoon = isExpiringSoon(voucher.expiresAt)
+
   return (
-    <div className="voucher-row w-full bg-white rounded-2xl border border-slate-100 shadow-sm hover:shadow-md hover:border-slate-200 transition-all flex items-center gap-3 pr-2">
+    <div className={`voucher-row w-full rounded-2xl border shadow-sm hover:shadow-md transition-all flex items-center gap-3 pr-2 ${
+      expiringSoon ? 'bg-rose-50/60 border-rose-200 hover:bg-rose-50' : 'bg-white border-slate-100 hover:border-slate-200'
+    }`}>
       <button
         type="button"
         onClick={onClick}
@@ -563,18 +567,20 @@ function VoucherRow({ voucher, onClick, onDelete }: { voucher: VoucherItem; onCl
             </span>
           )}
         </div>
+        {voucher.expiresAt && (
+          <span className={`flex-shrink-0 text-xs font-mono ${expiringSoon ? 'text-rose-600 font-semibold' : 'text-slate-400'}`}>
+            {t.expires}: {formatExpiresAt(voucher.expiresAt!)}
+          </span>
+        )}
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2">
             <span className="text-sm font-medium text-slate-800 truncate">{voucher.name}</span>
           </div>
-          <div className="flex items-center gap-2 mt-0.5">
-            {voucher.value !== undefined && (
+          {voucher.value !== undefined && (
+            <div className="mt-0.5">
               <span className="text-xs font-mono text-slate-500">{voucher.value.toFixed(2)}</span>
-            )}
-            {voucher.expiresAt && (
-              <span className="text-xs font-mono text-slate-400">{formatExpiresAt(voucher.expiresAt!)}</span>
-            )}
-          </div>
+            </div>
+          )}
         </div>
         {!onDelete && (
           <div className="flex-shrink-0">

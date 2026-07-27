@@ -19,7 +19,7 @@ export default async function Page() {
 
   const clubs = await prisma.clubMember.findMany({
     where: { familyId: user.familyId, isActive: true },
-    orderBy: { seq: 'asc' },
+    orderBy: { expiresAt: { sort: 'asc', nulls: 'last' } },
   })
 
   function dec(val: string | null): string | undefined {
