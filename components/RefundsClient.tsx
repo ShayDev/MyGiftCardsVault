@@ -6,7 +6,7 @@ import { useLanguageStore } from '../hooks/useLanguageStore'
 import { getT } from '../lib/i18n'
 import { localeDir } from '../lib/i18n'
 import { formatCode } from '../lib/formatCode'
-import { formatExpiresAt, formatDate, isExpiringSoon } from '../lib/date'
+import { formatExpiresAt, formatDate, formatDateSlashFull, isExpiringSoon } from '../lib/date'
 import { resizeImage } from '../lib/resizeImage'
 import { firstName } from '../lib/formatName'
 import { useFamilyAttribution } from '../hooks/useFamilyAttributionStore'
@@ -613,7 +613,7 @@ function RefundDetailModal({
           <div className={isExpiringSoon(refund.expiresAt) ? 'p-2 rounded-xl bg-rose-50 border border-rose-200' : undefined}>
             <p className="text-xs text-slate-400 mb-0.5">{t.expires}</p>
             <p className={`text-sm font-mono ${isExpiringSoon(refund.expiresAt) ? 'text-rose-600 font-semibold' : 'text-slate-800'}`}>
-              {formatExpiresAt(refund.expiresAt)}
+              {formatDateSlashFull(refund.expiresAt)}
             </p>
           </div>
         )}
@@ -742,7 +742,7 @@ function RefundDetailModal({
         <div>
           <p className="text-xs text-slate-400 mb-0.5">{t.dateAdded}</p>
           <p className="text-sm text-slate-700">
-            {formatDate(refund.createdAt, t.currencyLocale)}
+            {formatDateSlashFull(refund.createdAt)}
             {addedByName && ` (${addedByName})`}
           </p>
         </div>

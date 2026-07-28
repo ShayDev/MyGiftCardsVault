@@ -5,7 +5,7 @@ import { createVoucher, updateVoucher, markVoucherUsed, deleteVoucher, type Vouc
 import { useLanguageStore } from '../hooks/useLanguageStore'
 import { getT } from '../lib/i18n'
 import { formatCode } from '../lib/formatCode'
-import { formatExpiresAt, formatDate, isExpiringSoon } from '../lib/date'
+import { formatExpiresAt, formatDate, formatDateSlashFull, isExpiringSoon } from '../lib/date'
 import { firstName } from '../lib/formatName'
 import { useFamilyAttribution } from '../hooks/useFamilyAttributionStore'
 import { adjustNavBadgeCount } from '../hooks/useNavBadgeCountsStore'
@@ -409,7 +409,7 @@ function VoucherDetailModal({
         {voucher.expiresAt && (
           <div className={isExpiringSoon(voucher.expiresAt) ? 'p-2 rounded-xl bg-rose-50 border border-rose-200' : undefined}>
             <p className="text-xs text-slate-400 mb-0.5">{t.expires}</p>
-            <p className={`text-sm font-mono ${isExpiringSoon(voucher.expiresAt) ? 'text-rose-600 font-semibold' : 'text-slate-800'}`}>{formatExpiresAt(voucher.expiresAt!)}</p>
+            <p className={`text-sm font-mono ${isExpiringSoon(voucher.expiresAt) ? 'text-rose-600 font-semibold' : 'text-slate-800'}`}>{formatDateSlashFull(voucher.expiresAt!)}</p>
           </div>
         )}
 
@@ -439,7 +439,7 @@ function VoucherDetailModal({
         <div>
           <p className="text-xs text-slate-400 mb-0.5">{t.dateAdded}</p>
           <p className="text-sm text-slate-700">
-            {formatDate(voucher.createdAt, t.currencyLocale)}
+            {formatDateSlashFull(voucher.createdAt)}
             {addedByName && ` (${addedByName})`}
           </p>
         </div>

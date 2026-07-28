@@ -417,13 +417,13 @@ function CardDetailModal({
           <div className={`p-3 rounded-xl border ${isExpiringSoon(card.expiresAt) ? 'border-rose-200 bg-rose-50' : 'border-slate-100 bg-white'}`}>
             <p className="text-xs text-slate-400 mb-1">{t.expires}</p>
             <p className={`font-mono font-medium ${isExpiringSoon(card.expiresAt) ? 'text-rose-600' : 'text-slate-700'}`}>
-              {card.expiresAt ? formatExpiresAt(card.expiresAt) : '—'}
+              {card.expiresAt ? formatDateSlashFull(card.expiresAt) : '—'}
             </p>
           </div>
           <div className="p-3 rounded-xl border border-slate-100 bg-white">
             <p className="text-xs text-slate-400 mb-1">{t.dateAdded}</p>
             <p className="text-sm text-slate-700">
-              {formatDate(card.createdAt, t.currencyLocale)}
+              {formatDateSlashFull(card.createdAt)}
               {addedByName(card.createdBy) && ` (${addedByName(card.createdBy)})`}
             </p>
           </div>
@@ -1161,10 +1161,10 @@ export default function GiftCardsClient({
                           {card.expiresAt ? (
                             isExpiringSoon(card.expiresAt) ? (
                               <span className="inline-flex items-center px-2 py-0.5 rounded-full font-medium bg-rose-50 text-rose-600 border border-rose-100">
-                                {formatExpiresAt(card.expiresAt)}
+                                {formatDateSlashFull(card.expiresAt)}
                               </span>
                             ) : (
-                              <span className="text-slate-400">{formatExpiresAt(card.expiresAt)}</span>
+                              <span className="text-slate-400">{formatDateSlashFull(card.expiresAt)}</span>
                             )
                           ) : (
                             <span className="text-slate-400">—</span>
@@ -1333,7 +1333,7 @@ export default function GiftCardsClient({
                           </span>
                         </td>
                         <td className="px-4 py-3.5 text-slate-400 text-xs whitespace-nowrap">
-                          {card.expiresAt ? formatExpiresAt(card.expiresAt) : '—'}
+                          {card.expiresAt ? formatDateSlashFull(card.expiresAt) : '—'}
                         </td>
                         <td className="px-5 py-3.5">
                           <div className="flex items-center justify-end gap-1.5">

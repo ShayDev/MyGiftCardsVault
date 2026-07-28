@@ -5,7 +5,7 @@ import { createClub, updateClub, deleteClub, type ClubItem } from '../app/clubs/
 import { useLanguageStore } from '../hooks/useLanguageStore'
 import { getT, localeDir } from '../lib/i18n'
 import { formatCode } from '../lib/formatCode'
-import { formatExpiresAt, formatDate } from '../lib/date'
+import { formatExpiresAt, formatDateSlashFull } from '../lib/date'
 import { firstName } from '../lib/formatName'
 import { useFamilyAttribution } from '../hooks/useFamilyAttributionStore'
 import { adjustNavBadgeCount } from '../hooks/useNavBadgeCountsStore'
@@ -320,7 +320,7 @@ function ClubDetailModal({
         {club.expiresAt && (
           <div>
             <p className="text-xs text-slate-400 mb-0.5">{t.expires}</p>
-            <p className="text-sm font-mono text-slate-800">{formatExpiresAt(club.expiresAt!)}</p>
+            <p className="text-sm font-mono text-slate-800">{formatDateSlashFull(club.expiresAt!)}</p>
           </div>
         )}
 
@@ -336,7 +336,7 @@ function ClubDetailModal({
         <div>
           <p className="text-xs text-slate-400 mb-0.5">{t.dateAdded}</p>
           <p className="text-sm text-slate-700">
-            {formatDate(club.createdAt, t.currencyLocale)}
+            {formatDateSlashFull(club.createdAt)}
             {addedByName && ` (${addedByName})`}
           </p>
         </div>
