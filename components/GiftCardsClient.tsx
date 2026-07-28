@@ -5,7 +5,7 @@ import { createCard, updateCard, deactivateCard, createTransaction, getCardTrans
 import { useLanguageStore } from '../hooks/useLanguageStore'
 import { getT } from '../lib/i18n'
 import { formatCode } from '../lib/formatCode'
-import { formatExpiresAt, formatDate, isExpiringSoon } from '../lib/date'
+import { formatExpiresAt, formatDate, formatDateSlashFull, isExpiringSoon } from '../lib/date'
 import { firstName } from '../lib/formatName'
 import { useFamilyAttribution } from '../hooks/useFamilyAttributionStore'
 import { adjustNavBadgeCount } from '../hooks/useNavBadgeCountsStore'
@@ -558,7 +558,7 @@ function CardDetailModal({
           ) : (
             <ul className="divide-y divide-slate-100 max-h-48 overflow-y-auto">
               {transactions.map((tx) => (
-                <li key={tx.id} className="flex items-center justify-between px-3 py-2.5">
+                <li key={tx.id} className="flex items-start justify-between px-3 py-2.5">
                   <div className="flex items-center gap-2">
                     <span className={`w-2 h-2 rounded-full flex-shrink-0 ${tx.type === 'RECHARGE' ? 'bg-emerald-500' : 'bg-rose-400'}`} />
                     <div>
@@ -568,13 +568,13 @@ function CardDetailModal({
                       {tx.notes && <p className="text-xs text-slate-400">{tx.notes}</p>}
                     </div>
                   </div>
-                  <div className="text-right flex-shrink-0">
+                  <div className="flex flex-col items-end text-right flex-shrink-0">
                     <p className={`font-mono text-sm font-semibold ${tx.type === 'RECHARGE' ? 'text-emerald-600' : 'text-rose-500'}`}>
                       {formatTransactionAmount(tx.amount, tx.type, t.currencyLocale, t.currencyCode)}
                     </p>
-                    <p className="text-xs text-slate-400">
-                      {formatDate(tx.createdAt, t.currencyLocale)}
-                      {addedByName(tx.createdBy) && ` (${addedByName(tx.createdBy)})`}
+                    <p className="text-xs text-slate-400 mt-0.5">
+                      {addedByName(tx.createdBy) && `(${addedByName(tx.createdBy)}) `}
+                      {formatDateSlashFull(tx.createdAt)}
                     </p>
                   </div>
                 </li>
