@@ -396,7 +396,7 @@ function VoucherDetailModal({
 
         {/* Expiry */}
         {voucher.expiresAt && (
-          <div className={isExpiringSoon(voucher.expiresAt) ? 'p-2 -m-2 rounded-xl bg-rose-50 border border-rose-200' : undefined}>
+          <div className={isExpiringSoon(voucher.expiresAt) ? 'p-2 rounded-xl bg-rose-50 border border-rose-200' : undefined}>
             <p className="text-xs text-slate-400 mb-0.5">{t.expires}</p>
             <p className={`text-sm font-mono ${isExpiringSoon(voucher.expiresAt) ? 'text-rose-600 font-semibold' : 'text-slate-800'}`}>{formatExpiresAt(voucher.expiresAt!)}</p>
           </div>
