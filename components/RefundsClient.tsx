@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useRef, useState, useTransition } from 'react'
+import React, { useRef, useState, useEffect, useTransition } from 'react'
 import { createRefund, updateRefund, markRefundReceived, markRefundUsed, useRefundAmount, deleteRefund, type RefundItem } from '../app/refunds/actions'
 import { useLanguageStore } from '../hooks/useLanguageStore'
 import { getT } from '../lib/i18n'
@@ -54,10 +54,21 @@ function formatAmount(amount: number, currency: string, locale: string): string 
 
 function Modal({ title, onClose, children }: { title: string; onClose: () => void; children: React.ReactNode }) {
   const t = getT(useLanguageStore((s) => s.locale))
+  const dialogRef = useRef<HTMLDialogElement>(null)
+
+  useEffect(() => {
+    dialogRef.current?.showModal()
+  }, [])
+
   return (
-    <div className="modal-overlay fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4">
-      <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={onClose} />
-      <div role="dialog" aria-modal="true" aria-labelledby="modal-title" className="modal-panel relative w-full sm:max-w-md bg-white rounded-t-3xl sm:rounded-2xl shadow-2xl overflow-hidden max-h-[90dvh] flex flex-col">
+    <dialog
+      ref={dialogRef}
+      onClose={onClose}
+      onClick={(e) => { if (e.target === dialogRef.current) onClose() }}
+      aria-labelledby="modal-title"
+      className="modal-overlay fixed inset-0 z-50 w-full h-full m-0 max-w-none max-h-none border-0 bg-transparent p-0 sm:p-4 flex items-end sm:items-center justify-center backdrop:bg-black/40 backdrop:backdrop-blur-sm"
+    >
+      <div className="modal-panel relative w-full sm:max-w-md bg-white rounded-t-3xl sm:rounded-2xl shadow-2xl overflow-hidden max-h-[90dvh] flex flex-col">
         <div className="modal-header flex items-center justify-between px-5 py-4 border-b border-slate-100 flex-shrink-0">
           <h2 id="modal-title" className="font-semibold text-slate-800 text-base">{title}</h2>
           <button
@@ -72,7 +83,7 @@ function Modal({ title, onClose, children }: { title: string; onClose: () => voi
         </div>
         <div className="px-5 py-5 overflow-y-auto">{children}</div>
       </div>
-    </div>
+    </dialog>
   )
 }
 
