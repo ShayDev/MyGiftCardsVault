@@ -1030,7 +1030,8 @@ export default function GiftCardsClient({
         <div className="cards-page-header flex items-center justify-between">
           <h1 className="text-xl font-bold text-slate-800">{t.cardsTab}</h1>
         </div>
-        {/* Summary Stats */}
+        {/* Summary Stats — hidden while searching, since these are portfolio totals, not search-scoped */}
+        {!rawQuery && (
         <div className="cards-stats grid grid-cols-2 sm:grid-cols-4 gap-3">
           <StatCard
             label={t.totalBalance}
@@ -1076,6 +1077,7 @@ export default function GiftCardsClient({
             }
           />
         </div>
+        )}
 
         {/* Table */}
         <div className="cards-table-container bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">

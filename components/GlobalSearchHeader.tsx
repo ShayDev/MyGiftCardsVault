@@ -104,8 +104,8 @@ export default function GlobalSearchHeader() {
           </svg>
         </div>
         <div className="header-brand-name">
-          <span className="font-bold text-slate-900 tracking-tight">{t.brandFirst}</span>
-          <span className="font-bold text-emerald-600 tracking-tight">{t.brandSecond}</span>
+          <span className="font-bold text-slate-900 tracking-tight">GiftCards</span>
+          <span className="font-bold text-emerald-600 tracking-tight">Vault</span>
         </div>
       </div>
       <div className="header-actions flex items-center gap-2">
