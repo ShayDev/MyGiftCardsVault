@@ -11,10 +11,12 @@ import { resizeImage } from '../lib/resizeImage'
 import { firstName } from '../lib/formatName'
 import { useFamilyAttribution } from '../hooks/useFamilyAttributionStore'
 import { adjustNavBadgeCount } from '../hooks/useNavBadgeCountsStore'
+import { useSearchQueryStore } from '../hooks/useSearchQueryStore'
 import type { ProviderOption } from '../lib/providerTypes'
 import Spinner from './Spinner'
 import ProviderCombobox from './ProviderCombobox'
 import { extractImage, TextExtractArea, type ExtractedFields } from './ScanButton'
+import { HighlightMatch } from './HighlightMatch'
 
 // ── Helpers ────────────────────────────────────────────────────────────────────
 
@@ -825,7 +827,7 @@ function RefundDetailModal({
 
 // ── Refund Row ─────────────────────────────────────────────────────────────────
 
-function RefundRow({ refund, onClick, onDelete }: { refund: RefundItem; onClick: () => void; onDelete?: () => Promise<void> }) {
+function RefundRow({ refund, query, onClick, onDelete }: { refund: RefundItem; query: string; onClick: () => void; onDelete?: () => Promise<void> }) {
   const locale = useLanguageStore((s) => s.locale)
   const t = getT(locale)
   const dir = localeDir[locale]
@@ -881,7 +883,7 @@ function RefundRow({ refund, onClick, onDelete }: { refund: RefundItem; onClick:
       >
         <span className="text-xs font-mono text-slate-400 flex-shrink-0 w-6" dir="ltr">#{refund.seq}</span>
         <span className={`flex-shrink-0 px-2.5 py-1 rounded-full text-xs font-semibold ${providerColor(refund.provider)}`}>
-          {refund.provider}
+          <HighlightMatch text={refund.provider} query={query} />
         </span>
         {refund.expiresAt && (
           <span className={`flex-shrink-0 text-xs font-mono ${expiringSoon ? 'text-rose-600 font-semibold' : 'text-slate-400'}`}>
@@ -901,7 +903,7 @@ function RefundRow({ refund, onClick, onDelete }: { refund: RefundItem; onClick:
           </div>
           {refund.referenceId && (
             <div className="mt-0.5">
-              <span className="text-xs font-mono text-slate-400 truncate">{refund.referenceId}</span>
+              <span className="text-xs font-mono text-slate-400 truncate"><HighlightMatch text={refund.referenceId} query={query} /></span>
             </div>
           )}
         </div>
@@ -953,6 +955,17 @@ export default function RefundsClient({
   const active = refunds.filter((r) => !r.isUsed)
   const used = refunds.filter((r) => r.isUsed)
 
+  const rawQuery = useSearchQueryStore((s) => s.query).trim()
+  const query = rawQuery.toLowerCase()
+  const matchesQuery = (r: RefundItem) =>
+    !query ||
+    r.provider.toLowerCase().includes(query) ||
+    (r.notes?.toLowerCase().includes(query) ?? false) ||
+    (r.referenceId?.toLowerCase().includes(query) ?? false) ||
+    (r.code?.toLowerCase().includes(query) ?? false)
+  const visibleActive = active.filter(matchesQuery)
+  const visibleUsed = used.filter(matchesQuery)
+
   return (
     <div className="refunds-page space-y-6" dir={dir}>
       {/* Page header */}
@@ -974,8 +987,8 @@ export default function RefundsClient({
       <section className="refunds-section-active">
         <div className="flex items-center gap-2 mb-3">
           <h2 className="text-sm font-semibold text-slate-500 uppercase tracking-wide">{t.activeVouchers}</h2>
-          {active.length > 0 && (
-            <span className="text-xs text-slate-400 bg-slate-100 px-2 py-0.5 rounded-full">{active.length}</span>
+          {visibleActive.length > 0 && (
+            <span className="text-xs text-slate-400 bg-slate-100 px-2 py-0.5 rounded-full">{visibleActive.length}</span>
           )}
         </div>
         {active.length === 0 ? (
@@ -990,10 +1003,14 @@ export default function RefundsClient({
               {t.addRefund}
             </button>
           </div>
+        ) : visibleActive.length === 0 ? (
+          <div className="bg-white rounded-2xl border border-slate-100 shadow-sm p-8 text-center">
+            <p className="text-slate-400 text-sm">{t.searchNoResults(rawQuery)}</p>
+          </div>
         ) : (
           <div className="space-y-2">
-            {active.map((r) => (
-              <RefundRow key={r.id} refund={r} onClick={() => setSelected(r)} />
+            {visibleActive.map((r) => (
+              <RefundRow key={r.id} refund={r} query={rawQuery} onClick={() => setSelected(r)} />
             ))}
           </div>
         )}
@@ -1006,8 +1023,8 @@ export default function RefundsClient({
           className="flex items-center gap-2 mb-3 w-full text-left"
         >
           <h2 className="text-sm font-semibold text-slate-500 uppercase tracking-wide">{t.usedVouchers}</h2>
-          {used.length > 0 && (
-            <span className="text-xs text-slate-400 bg-slate-100 px-2 py-0.5 rounded-full">{used.length}</span>
+          {visibleUsed.length > 0 && (
+            <span className="text-xs text-slate-400 bg-slate-100 px-2 py-0.5 rounded-full">{visibleUsed.length}</span>
           )}
           <svg
             className={`ml-auto w-4 h-4 text-slate-400 transition-transform ${showUsed ? 'rotate-180' : ''}`}
@@ -1016,10 +1033,15 @@ export default function RefundsClient({
             <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
           </svg>
         </button>
-        {showUsed && used.length > 0 && (
+        {showUsed && used.length > 0 && visibleUsed.length === 0 && (
+          <div className="bg-white rounded-2xl border border-slate-100 shadow-sm p-6 text-center">
+            <p className="text-slate-400 text-sm">{t.searchNoResults(rawQuery)}</p>
+          </div>
+        )}
+        {showUsed && visibleUsed.length > 0 && (
           <div className="space-y-2">
-            {used.map((r) => (
-              <RefundRow key={r.id} refund={r} onClick={() => setSelected(r)} onDelete={() => deleteRefund(r.id)} />
+            {visibleUsed.map((r) => (
+              <RefundRow key={r.id} refund={r} query={rawQuery} onClick={() => setSelected(r)} onDelete={() => deleteRefund(r.id)} />
             ))}
           </div>
         )}

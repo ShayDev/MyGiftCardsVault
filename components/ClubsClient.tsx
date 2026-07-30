@@ -9,9 +9,11 @@ import { formatExpiresAt, formatDateSlashFull } from '../lib/date'
 import { firstName } from '../lib/formatName'
 import { useFamilyAttribution } from '../hooks/useFamilyAttributionStore'
 import { adjustNavBadgeCount } from '../hooks/useNavBadgeCountsStore'
+import { useSearchQueryStore } from '../hooks/useSearchQueryStore'
 import type { ProviderOption } from '../lib/providerTypes'
 import Spinner from './Spinner'
 import ProviderCombobox from './ProviderCombobox'
+import { HighlightMatch } from './HighlightMatch'
 
 // ── Helpers ────────────────────────────────────────────────────────────────────
 
@@ -447,7 +449,7 @@ function EditClubModal({
 
 // ── Club Row ───────────────────────────────────────────────────────────────────
 
-function ClubRow({ club, onClick }: { club: ClubItem; onClick: () => void }) {
+function ClubRow({ club, query, onClick }: { club: ClubItem; query: string; onClick: () => void }) {
   const t = getT(useLanguageStore((s) => s.locale))
   const maskedId = club.memberId ? club.memberId.replace(/.(?=.{4})/g, '•') : null
 
@@ -461,20 +463,22 @@ function ClubRow({ club, onClick }: { club: ClubItem; onClick: () => void }) {
       {club.provider && (
         <div className="flex-shrink-0">
           <span className={`px-2.5 py-1 rounded-full text-xs font-semibold ${providerColor(club.provider)}`}>
-            {club.provider}
+            <HighlightMatch text={club.provider} query={query} />
           </span>
         </div>
       )}
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-2">
-          <span className="text-sm font-medium text-slate-800 truncate">{club.name}</span>
+          <span className="text-sm font-medium text-slate-800 truncate"><HighlightMatch text={club.name} query={query} /></span>
           {maskedId && (
+            // memberId is filtered against as-typed but rendered masked here — no visible
+            // highlight for a match that came in purely via the hidden digits.
             <span className="text-sm font-mono font-semibold text-slate-600 tracking-wider flex-shrink-0" dir="ltr">{maskedId}</span>
           )}
         </div>
         <div className="flex items-center gap-2 mt-0.5">
           {club.ownerName && (
-            <span className="text-xs text-slate-400 truncate">{club.ownerName}</span>
+            <span className="text-xs text-slate-400 truncate"><HighlightMatch text={club.ownerName} query={query} /></span>
           )}
           {club.idType && (
             <span className="text-xs text-slate-400">{t.idTypes[club.idType]}</span>
@@ -504,6 +508,17 @@ export default function ClubsClient({
   const [selected, setSelected] = useState<ClubItem | null>(null)
   const [editTarget, setEditTarget] = useState<ClubItem | null>(null)
 
+  const rawQuery = useSearchQueryStore((s) => s.query).trim()
+  const query = rawQuery.toLowerCase()
+  const matchesQuery = (c: ClubItem) =>
+    !query ||
+    c.name.toLowerCase().includes(query) ||
+    c.provider.toLowerCase().includes(query) ||
+    (c.notes?.toLowerCase().includes(query) ?? false) ||
+    (c.ownerName?.toLowerCase().includes(query) ?? false) ||
+    (c.memberId?.toLowerCase().includes(query) ?? false)
+  const visibleClubs = clubs.filter(matchesQuery)
+
   return (
     <div className="clubs-page space-y-6" dir={dir}>
       <div className="clubs-page-header flex items-center justify-between">
@@ -532,11 +547,15 @@ export default function ClubsClient({
             {t.addClub}
           </button>
         </div>
+      ) : visibleClubs.length === 0 ? (
+        <div className="bg-white rounded-2xl border border-slate-100 shadow-sm p-8 text-center">
+          <p className="text-slate-400 text-sm">{t.searchNoResults(rawQuery)}</p>
+        </div>
       ) : (
         <section className="clubs-section">
           <div className="space-y-2">
-            {clubs.map((c) => (
-              <ClubRow key={c.id} club={c} onClick={() => setSelected(c)} />
+            {visibleClubs.map((c) => (
+              <ClubRow key={c.id} club={c} query={rawQuery} onClick={() => setSelected(c)} />
             ))}
           </div>
         </section>

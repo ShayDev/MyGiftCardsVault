@@ -9,10 +9,12 @@ import { formatExpiresAt, formatDate, formatDateSlashFull, isExpiringSoon } from
 import { firstName } from '../lib/formatName'
 import { useFamilyAttribution } from '../hooks/useFamilyAttributionStore'
 import { adjustNavBadgeCount } from '../hooks/useNavBadgeCountsStore'
+import { useSearchQueryStore } from '../hooks/useSearchQueryStore'
 import type { ProviderOption } from '../lib/providerTypes'
 import Spinner from './Spinner'
 import ProviderCombobox from './ProviderCombobox'
 import ScanButton, { type ExtractedFields } from './ScanButton'
+import { HighlightMatch } from './HighlightMatch'
 
 // ── Helpers ────────────────────────────────────────────────────────────────────
 
@@ -558,7 +560,7 @@ function EditVoucherModal({
 
 // ── Voucher Row ────────────────────────────────────────────────────────────────
 
-function VoucherRow({ voucher, onClick, onDelete }: { voucher: VoucherItem; onClick: () => void; onDelete?: () => Promise<void> }) {
+function VoucherRow({ voucher, query, onClick, onDelete }: { voucher: VoucherItem; query: string; onClick: () => void; onDelete?: () => Promise<void> }) {
   const t = getT(useLanguageStore((s) => s.locale))
   const [deleting, startDelete] = useTransition()
 
@@ -581,12 +583,12 @@ function VoucherRow({ voucher, onClick, onDelete }: { voucher: VoucherItem; onCl
         <span className="text-xs font-mono text-slate-400 flex-shrink-0 w-8 text-right">#{voucher.seq}</span>
         {voucher.provider && (
           <span className={`flex-shrink-0 px-2.5 py-1 rounded-full text-xs font-semibold ${providerColor(voucher.provider)}`}>
-            {voucher.provider}
+            <HighlightMatch text={voucher.provider} query={query} />
           </span>
         )}
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2">
-            <span className="text-sm font-medium text-slate-800 truncate">{voucher.name}</span>
+            <span className="text-sm font-medium text-slate-800 truncate"><HighlightMatch text={voucher.name} query={query} /></span>
             {voucher.expiresAt && (
               <span className={`flex-shrink-0 text-xs font-mono ${expiringSoon ? 'text-rose-600 font-semibold' : 'text-slate-400'}`}>
                 {t.expires}: {formatExpiresAt(voucher.expiresAt!)}
@@ -650,6 +652,17 @@ export default function VouchersClient({
   const active = vouchers.filter((v) => !v.isUsed)
   const used = vouchers.filter((v) => v.isUsed)
 
+  const rawQuery = useSearchQueryStore((s) => s.query).trim()
+  const query = rawQuery.toLowerCase()
+  const matchesQuery = (v: VoucherItem) =>
+    !query ||
+    v.name.toLowerCase().includes(query) ||
+    v.provider.toLowerCase().includes(query) ||
+    (v.notes?.toLowerCase().includes(query) ?? false) ||
+    (v.code?.toLowerCase().includes(query) ?? false)
+  const visibleActive = active.filter(matchesQuery)
+  const visibleUsed = used.filter(matchesQuery)
+
   return (
     <div className="vouchers-page space-y-6">
       {/* Page header */}
@@ -671,8 +684,8 @@ export default function VouchersClient({
       <section className="vouchers-section-active">
         <div className="flex items-center gap-2 mb-3">
           <h2 className="text-sm font-semibold text-slate-500 uppercase tracking-wide">{t.activeVouchers}</h2>
-          {active.length > 0 && (
-            <span className="text-xs text-slate-400 bg-slate-100 px-2 py-0.5 rounded-full">{active.length}</span>
+          {visibleActive.length > 0 && (
+            <span className="text-xs text-slate-400 bg-slate-100 px-2 py-0.5 rounded-full">{visibleActive.length}</span>
           )}
         </div>
         {active.length === 0 ? (
@@ -687,10 +700,14 @@ export default function VouchersClient({
               {t.addVoucher}
             </button>
           </div>
+        ) : visibleActive.length === 0 ? (
+          <div className="bg-white rounded-2xl border border-slate-100 shadow-sm p-8 text-center">
+            <p className="text-slate-400 text-sm">{t.searchNoResults(rawQuery)}</p>
+          </div>
         ) : (
           <div className="space-y-2">
-            {active.map((v) => (
-              <VoucherRow key={v.id} voucher={v} onClick={() => setSelected(v)} />
+            {visibleActive.map((v) => (
+              <VoucherRow key={v.id} voucher={v} query={rawQuery} onClick={() => setSelected(v)} />
             ))}
           </div>
         )}
@@ -703,8 +720,8 @@ export default function VouchersClient({
           className="flex items-center gap-2 mb-3 w-full text-left"
         >
           <h2 className="text-sm font-semibold text-slate-500 uppercase tracking-wide">{t.usedVouchers}</h2>
-          {used.length > 0 && (
-            <span className="text-xs text-slate-400 bg-slate-100 px-2 py-0.5 rounded-full">{used.length}</span>
+          {visibleUsed.length > 0 && (
+            <span className="text-xs text-slate-400 bg-slate-100 px-2 py-0.5 rounded-full">{visibleUsed.length}</span>
           )}
           <svg
             className={`ml-auto w-4 h-4 text-slate-400 transition-transform ${showUsed ? 'rotate-180' : ''}`}
@@ -717,10 +734,14 @@ export default function VouchersClient({
           <div className="bg-white rounded-2xl border border-slate-100 shadow-sm p-6 text-center">
             <p className="text-slate-400 text-sm">{t.noUsedVouchers}</p>
           </div>
+        ) : showUsed && visibleUsed.length === 0 ? (
+          <div className="bg-white rounded-2xl border border-slate-100 shadow-sm p-6 text-center">
+            <p className="text-slate-400 text-sm">{t.searchNoResults(rawQuery)}</p>
+          </div>
         ) : showUsed ? (
           <div className="space-y-2">
-            {used.map((v) => (
-              <VoucherRow key={v.id} voucher={v} onClick={() => setSelected(v)} onDelete={() => deleteVoucher(v.id)} />
+            {visibleUsed.map((v) => (
+              <VoucherRow key={v.id} voucher={v} query={rawQuery} onClick={() => setSelected(v)} onDelete={() => deleteVoucher(v.id)} />
             ))}
           </div>
         ) : null}

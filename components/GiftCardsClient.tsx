@@ -9,10 +9,12 @@ import { formatExpiresAt, formatDate, formatDateSlashFull, isExpiringSoon } from
 import { firstName } from '../lib/formatName'
 import { useFamilyAttribution } from '../hooks/useFamilyAttributionStore'
 import { adjustNavBadgeCount } from '../hooks/useNavBadgeCountsStore'
+import { useSearchQueryStore } from '../hooks/useSearchQueryStore'
 import type { ProviderOption } from '../lib/providerTypes'
 import Spinner from './Spinner'
 import ProviderCombobox from './ProviderCombobox'
 import ScanButton, { type ExtractedFields } from './ScanButton'
+import { HighlightMatch } from './HighlightMatch'
 
 export type CardWithBalance = {
   id: string
@@ -993,6 +995,18 @@ export default function GiftCardsClient({
   const active = cards.filter((c) => c.balance > 0 || c.isReloadable)
   const used = cards.filter((c) => c.balance <= 0 && !c.isReloadable)
 
+  const rawQuery = useSearchQueryStore((s) => s.query).trim()
+  const query = rawQuery.toLowerCase()
+  const matchesQuery = (c: CardWithBalance) =>
+    !query ||
+    c.name.toLowerCase().includes(query) ||
+    c.provider.toLowerCase().includes(query) ||
+    (c.notes?.toLowerCase().includes(query) ?? false) ||
+    (c.last4?.includes(query) ?? false) ||
+    (c.fullNumber?.includes(query) ?? false)
+  const visibleActive = active.filter(matchesQuery)
+  const visibleUsed = used.filter(matchesQuery)
+
   const totalBalance = active.reduce((sum, c) => sum + c.balance, 0)
   const reloadableCount = active.filter((c) => c.isReloadable).length
 
@@ -1069,7 +1083,7 @@ export default function GiftCardsClient({
             <div className="flex items-center gap-2">
               <h2 className="font-semibold text-slate-800 text-base">{t.allCards}</h2>
               <span className="text-xs text-slate-400 bg-slate-100 px-2 py-0.5 rounded-full">
-                {t.cards(active.length)}
+                {t.cards(visibleActive.length)}
               </span>
             </div>
             <div className="flex items-center gap-2">
@@ -1101,6 +1115,10 @@ export default function GiftCardsClient({
                 {t.addFirstCard}
               </button>
             </div>
+          ) : visibleActive.length === 0 ? (
+            <div className="py-16 text-center">
+              <p className="text-slate-400 text-sm">{t.searchNoResults(rawQuery)}</p>
+            </div>
           ) : (
             <>
               {/* Desktop Table */}
@@ -1119,7 +1137,7 @@ export default function GiftCardsClient({
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-100">
-                    {active.map((card) => (
+                    {visibleActive.map((card) => (
                       <tr key={card.id} className={`transition-colors group ${isExpiringSoon(card.expiresAt) ? 'bg-rose-50/60 hover:bg-rose-50' : 'hover:bg-slate-50/70'}`}>
                         <td className="px-3 py-3.5 text-xs font-mono text-slate-400 text-right">#{card.seq}</td>
                         <td className="px-5 py-3.5">
@@ -1130,13 +1148,13 @@ export default function GiftCardsClient({
                             <div className={`w-9 h-9 rounded-lg flex items-center justify-center text-sm font-bold flex-shrink-0 ${providerColor(card.provider)}`}>
                               {(card.provider || card.name).slice(0, 2).toUpperCase()}
                             </div>
-                            <span className="font-medium text-slate-800 truncate underline-offset-2 hover:underline">{card.name}</span>
+                            <span className="font-medium text-slate-800 truncate underline-offset-2 hover:underline"><HighlightMatch text={card.name} query={rawQuery} /></span>
                           </button>
                         </td>
-                        <td className="px-4 py-3.5 text-slate-600">{card.provider}</td>
+                        <td className="px-4 py-3.5 text-slate-600"><HighlightMatch text={card.provider} query={rawQuery} /></td>
                         <td className="px-4 py-3.5">
                           <span className="font-mono text-slate-500 tracking-widest text-xs">
-                            {card.last4 ? `•••• ${card.last4}` : '—'}
+                            {card.last4 ? <>•••• <HighlightMatch text={card.last4} query={rawQuery} /></> : '—'}
                           </span>
                         </td>
                         <td className="px-4 py-3.5">
@@ -1207,7 +1225,7 @@ export default function GiftCardsClient({
 
               {/* Mobile Cards */}
               <div className="cards-list-mobile sm:hidden divide-y divide-slate-100">
-                {active.map((card) => (
+                {visibleActive.map((card) => (
                   <div key={card.id} className={`px-4 py-4 ${isExpiringSoon(card.expiresAt) ? 'bg-rose-50/60' : ''}`}>
                     <div className="flex items-center gap-3 mb-3">
                       <span className="text-xs font-mono text-slate-400 flex-shrink-0 w-7 text-right">#{card.seq}</span>
@@ -1218,11 +1236,11 @@ export default function GiftCardsClient({
                         onClick={() => setModal({ type: 'detail', card })}
                         className="flex-1 min-w-0 text-left"
                       >
-                        <div className="font-medium text-slate-800 truncate">{card.name}</div>
+                        <div className="font-medium text-slate-800 truncate"><HighlightMatch text={card.name} query={rawQuery} /></div>
                         <div className="text-xs text-slate-400">
-                          {card.provider}
+                          <HighlightMatch text={card.provider} query={rawQuery} />
                           {card.last4 && (
-                            <span className="font-mono ml-1.5 tracking-widest">•••• {card.last4}</span>
+                            <span className="font-mono ml-1.5 tracking-widest">•••• <HighlightMatch text={card.last4} query={rawQuery} /></span>
                           )}
                         </div>
                       </button>
@@ -1281,8 +1299,8 @@ export default function GiftCardsClient({
             className="flex items-center gap-2 mb-3 w-full text-left"
           >
             <h2 className="text-sm font-semibold text-slate-500 uppercase tracking-wide">{t.usedCards}</h2>
-            {used.length > 0 && (
-              <span className="text-xs text-slate-400 bg-slate-100 px-2 py-0.5 rounded-full">{t.cards(used.length)}</span>
+            {visibleUsed.length > 0 && (
+              <span className="text-xs text-slate-400 bg-slate-100 px-2 py-0.5 rounded-full">{t.cards(visibleUsed.length)}</span>
             )}
             <svg
               className={`ml-auto w-4 h-4 text-slate-400 transition-transform ${showUsed ? 'rotate-180' : ''}`}
@@ -1295,13 +1313,17 @@ export default function GiftCardsClient({
             <div className="bg-white rounded-2xl border border-slate-100 shadow-sm p-6 text-center">
               <p className="text-slate-400 text-sm">{t.noUsedCards}</p>
             </div>
+          ) : showUsed && visibleUsed.length === 0 ? (
+            <div className="bg-white rounded-2xl border border-slate-100 shadow-sm p-6 text-center">
+              <p className="text-slate-400 text-sm">{t.searchNoResults(rawQuery)}</p>
+            </div>
           ) : showUsed ? (
             <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
               {/* Desktop Table */}
               <div className="cards-used-table-desktop hidden sm:block overflow-x-auto">
                 <table className="w-full text-sm">
                   <tbody className="divide-y divide-slate-100">
-                    {used.map((card) => (
+                    {visibleUsed.map((card) => (
                       <tr key={card.id} className="hover:bg-slate-50/70 transition-colors group">
                         <td className="px-3 py-3.5 text-xs font-mono text-slate-400 text-right w-10">#{card.seq}</td>
                         <td className="px-5 py-3.5 w-[28%]">
@@ -1312,13 +1334,13 @@ export default function GiftCardsClient({
                             <div className={`w-9 h-9 rounded-lg flex items-center justify-center text-sm font-bold flex-shrink-0 ${providerColor(card.provider)}`}>
                               {(card.provider || card.name).slice(0, 2).toUpperCase()}
                             </div>
-                            <span className="font-medium text-slate-800 truncate underline-offset-2 hover:underline">{card.name}</span>
+                            <span className="font-medium text-slate-800 truncate underline-offset-2 hover:underline"><HighlightMatch text={card.name} query={rawQuery} /></span>
                           </button>
                         </td>
-                        <td className="px-4 py-3.5 text-slate-600">{card.provider}</td>
+                        <td className="px-4 py-3.5 text-slate-600"><HighlightMatch text={card.provider} query={rawQuery} /></td>
                         <td className="px-4 py-3.5">
                           <span className="font-mono text-slate-500 tracking-widest text-xs">
-                            {card.last4 ? `•••• ${card.last4}` : '—'}
+                            {card.last4 ? <>•••• <HighlightMatch text={card.last4} query={rawQuery} /></> : '—'}
                           </span>
                         </td>
                         <td className="px-4 py-3.5">
@@ -1357,7 +1379,7 @@ export default function GiftCardsClient({
 
               {/* Mobile */}
               <div className="cards-used-list-mobile sm:hidden divide-y divide-slate-100">
-                {used.map((card) => (
+                {visibleUsed.map((card) => (
                   <div key={card.id} className="px-4 py-4">
                     <div className="flex items-center gap-3 mb-3">
                       <span className="text-xs font-mono text-slate-400 flex-shrink-0 w-7 text-right">#{card.seq}</span>
@@ -1368,10 +1390,10 @@ export default function GiftCardsClient({
                         onClick={() => setModal({ type: 'detail', card })}
                         className="flex-1 min-w-0 text-left"
                       >
-                        <div className="font-medium text-slate-800 truncate">{card.name}</div>
+                        <div className="font-medium text-slate-800 truncate"><HighlightMatch text={card.name} query={rawQuery} /></div>
                         <div className="text-xs text-slate-400">
-                          {card.provider}
-                          {card.last4 && <span className="font-mono ml-1.5 tracking-widest">•••• {card.last4}</span>}
+                          <HighlightMatch text={card.provider} query={rawQuery} />
+                          {card.last4 && <span className="font-mono ml-1.5 tracking-widest">•••• <HighlightMatch text={card.last4} query={rawQuery} /></span>}
                         </div>
                       </button>
                       <div className="text-right flex-shrink-0">

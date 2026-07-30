@@ -235,6 +235,11 @@ const translations = {
     // Misc
     cards: (n: number) => `${n} card${n !== 1 ? 's' : ''}`,
     close: 'Close',
+    // Search
+    searchLabel: 'Search',
+    searchPlaceholder: 'Search this list…',
+    searchRecent: 'Recent',
+    searchNoResults: (query: string) => `No results for "${query}"`,
   },
   he: {
     // Header
@@ -467,6 +472,11 @@ const translations = {
     // Misc
     cards: (n: number) => n === 1 ? 'כרטיס אחד' : `${n} כרטיסים`,
     close: 'סגור',
+    // Search
+    searchLabel: 'חיפוש',
+    searchPlaceholder: 'חיפוש ברשימה…',
+    searchRecent: 'אחרונים',
+    searchNoResults: (query: string) => `אין תוצאות עבור "${query}"`,
   },
 } as const
 
