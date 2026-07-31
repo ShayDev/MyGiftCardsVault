@@ -1,0 +1,124 @@
+Here is the Technical Design Document (DD) for the programmatic balance check feature.
+
+---
+
+# Technical Design Document: Provider-Agnostic Balance Checker
+
+## 1. Executive Summary
+
+This document outlines the architecture for programmatically fetching gift card balances from Israeli providers (BuyMe, Max, Isracard, HitechZone, etc.). Because **none of the target providers offer public or documented APIs for gift card balances**, this system utilizes a **Provider Adapter Registry** pattern.
+
+The application will provide a unified interface to the user, dynamically adjust required form inputs based on the selected card provider, and execute backend scraping or internal API emulation to retrieve the balance, bypassing Web Application Firewalls (WAFs).
+
+## 2. Scope & Constraints
+
+- **In Scope:** Universal schema definition, frontend dynamic form rendering, backend server action routing, adapter registry, and a "Dummy/Mock" adapter for initial testing.
+- **Out of Scope for Phase 1:** Full reverse-engineering of all seeded providers. Adapters will be implemented iteratively in Phase 2.
+- **Constraints:**
+- Strict WAFs (Cloudflare, PerimeterX) employed by Israeli financial sites.
+- Varied authentication requirements (some require just a barcode, others require a 16-digit PAN + CVV/PIN).
+- We **must not** persist user gift card numbers or PINs in our database; credentials must be transient (kept in memory only during the server action).
+
+## 3. High-Level Architecture
+
+The system follows a strict separation of concerns, decoupling the UI from the messy reality of web scraping and undocumented API consumption.
+
+| Component             | Responsibility                                                                                                                    | Technology/Pattern             |
+| --------------------- | --------------------------------------------------------------------------------------------------------------------------------- | ------------------------------ |
+| **Client UI**         | Queries the registry for provider requirements. Renders appropriate inputs (e.g., just "Voucher Code" vs. "Card Number" + "PIN"). | React (Client Component)       |
+| **Server Action**     | Acts as the secure proxy. Receives credentials, looks up the correct adapter, and executes the balance check securely.            | Next.js Server Action          |
+| **Adapter Registry**  | Central map of `ProviderID` to its respective `BalanceAdapter` class.                                                             | Singleton Map / Factory        |
+| **Concrete Adapters** | Contains the specific scraping logic or REST API emulation for a given provider (e.g., `BuyMeAdapter`, `MaxAdapter`).             | Node.js, Playwright (Headless) |
+
+## 4. Core Data Contracts
+
+### 4.1. Provider Field Definitions
+
+Informs the UI which fields to render and validate before submitting to the server.
+
+```typescript
+export interface ProviderFieldRequirement {
+  name: "cardNumber" | "pin" | "cvv" | "idNumber";
+  label: string; // e.g., "Voucher Code" or "4-Digit PIN"
+  required: boolean;
+  regex?: string; // e.g., '^[0-9]{16}$' for instant client-side validation
+}
+```
+
+### 4.2. The Adapter Interface
+
+Every provider class must implement this contract so the Server Action can treat them interchangeably.
+
+```typescript
+export interface BalanceAdapter {
+  providerId: string;
+  name: string;
+  fields: ProviderFieldRequirement[];
+
+  // Executes the actual check
+  fetchBalance(
+    credentials: Record<string, string>,
+  ): Promise<BalanceCheckResult>;
+}
+```
+
+### 4.3. Unified Response Payload
+
+The normalized response sent back to the client, regardless of how the underlying provider formats their internal data.
+
+```typescript
+export interface BalanceCheckResult {
+  success: boolean;
+  currency: string; // Always "ILS" for Israeli providers
+  balance?: number; // Current available funds
+  originalValue?: number; // The loaded value (if exposed by provider)
+  expirationDate?: string; // ISO 8601 string
+  error?: string; // User-friendly error (e.g., "Invalid PIN")
+  raw?: unknown; // Hidden from client, logged for debugging
+}
+```
+
+## 5. Implementation Strategies (Concrete Adapters)
+
+When implementing specific providers (Phase 2), we will utilize one of two execution strategies inside the `fetchBalance` method. (Note: Precedent exists in the Israeli developer community for scraping financial data via headless Chromium, as seen in projects like `israeli-bank-scrapers`).
+
+### Strategy A: Internal API Emulation
+
+Best for providers with weak bot protection.
+
+- **Mechanism:** Use `fetch` or `axios` from the Node backend to send a `POST` request directly to the provider's internal API (found via Network Tab inspection).
+- **Requirements:** Must spoof `User-Agent`, `Accept-Language`, and sometimes reverse-engineer session cookies.
+- **Risk:** High likelihood of triggering Cloudflare `403 Forbidden` errors.
+
+### Strategy B: Headless Browser Automation (Primary Fallback)
+
+Mandatory for providers like Max or BuyMe if they use advanced bot protection (PerimeterX).
+
+- **Mechanism:** Spin up a headless Chromium instance using **Playwright**.
+- **Flow:**
+
+1. Navigate to the public balance-check URL.
+2. Programmatically fill the `.locator()` inputs with the credentials.
+3. Click "Submit".
+4. Wait for the DOM element containing the balance (e.g., `.balance-value`) to render.
+5. Scrape the inner text, parse to float, and return.
+
+- **Performance Impact:** Slow (can take 3-6 seconds per request), but highly resilient.
+
+## 6. Security & Compliance
+
+1. **Zero Data Retention:** The `credentials` object passed to the server action must be dropped from memory the moment `fetchBalance` resolves. It is strictly forbidden to log or save `cardNumber` or `pin` to a database.
+2. **Rate Limiting:** Because Headless browsers consume significant CPU/RAM, the Server Action must implement strict IP-based rate limiting (e.g., max 5 checks per minute per user) to prevent DDoS attacks on our own infrastructure.
+3. **Error Masking:** Raw scraping errors (e.g., "Playwright Timeout - selector not found") must be caught and masked as generic errors ("Provider is currently unavailable") to avoid exposing our stack to users.
+
+## 7. Execution Plan
+
+- **Phase 1: Infrastructure & Plumbing**
+- Create the `BalanceAdapter` interface and Registry.
+- Build a `DummyAdapter` (always returns 150 ILS after a 2-second delay) to test the UI flow.
+- Implement dynamic UI form fields based on `Adapter.fields`.
+
+- **Phase 2: Provider Discovery (Targeted Reverse-Engineering)**
+- Isolate our first target provider (e.g., BuyMe).
+- Analyze their web request flow.
+- Implement the specific adapter (deciding between Strategy A or B).
