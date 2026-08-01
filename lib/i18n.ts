@@ -237,7 +237,7 @@ const translations = {
     close: 'Close',
     // Search
     searchLabel: 'Search',
-    searchPlaceholder: 'Search this list…',
+    searchPlaceholder: (category: string) => `Search ${category}…`,
     searchRecent: 'Recent',
     searchNoResults: (query: string) => `No results for "${query}"`,
   },
@@ -474,7 +474,7 @@ const translations = {
     close: 'סגור',
     // Search
     searchLabel: 'חיפוש',
-    searchPlaceholder: 'חיפוש ברשימה…',
+    searchPlaceholder: (category: string) => `חיפוש ב${category}…`,
     searchRecent: 'אחרונים',
     searchNoResults: (query: string) => `אין תוצאות עבור "${query}"`,
   },

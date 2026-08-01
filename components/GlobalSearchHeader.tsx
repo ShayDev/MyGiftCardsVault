@@ -29,6 +29,16 @@ export default function GlobalSearchHeader() {
 
   const canSearch = isSignedIn && !HIDDEN_PATHS.some((p) => pathname.startsWith(p))
 
+  const categoryLabel = pathname.startsWith('/cards')
+    ? t.cardsTab
+    : pathname.startsWith('/vouchers')
+    ? t.vouchersTab
+    : pathname.startsWith('/refunds')
+    ? t.refundsTab
+    : pathname.startsWith('/clubs')
+    ? t.clubsTab
+    : t.searchLabel
+
   function collapse() {
     if (query.trim()) addRecent(query)
     setQuery('')
@@ -54,7 +64,7 @@ export default function GlobalSearchHeader() {
           value={query}
           onChange={(e) => setQuery(e.target.value)}
           onKeyDown={(e) => { if (e.key === 'Escape') collapse() }}
-          placeholder={t.searchPlaceholder}
+          placeholder={t.searchPlaceholder(categoryLabel)}
           aria-label={t.searchLabel}
           className="global-search-input flex-1 h-11 px-3 rounded-xl border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
         />
