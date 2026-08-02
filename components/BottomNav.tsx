@@ -75,7 +75,9 @@ export default function BottomNav() {
     <nav className="bottom-nav fixed bottom-0 left-0 right-0 z-40 bg-white border-t border-slate-200 safe-area-inset-bottom">
       <div className="bottom-nav-tabs max-w-6xl mx-auto flex">
         {tabs.map((tab) => {
-          const count = badgeCounts[tab.badgeKey]
+          const { count, hasExpired, hasExpiringSoon } = badgeCounts[tab.badgeKey]
+          const badgeColor = hasExpired ? 'bg-rose-500' : hasExpiringSoon ? 'bg-amber-500' : 'bg-emerald-500'
+          const badgeTitle = hasExpired ? t.navBadgeHasExpired : hasExpiringSoon ? t.navBadgeExpiringSoon : undefined
           return (
             <Link
               key={tab.href}
@@ -87,7 +89,10 @@ export default function BottomNav() {
               <span className={`bottom-nav-icon relative ${tab.active ? 'text-emerald-600' : 'text-slate-400'}`}>
                 {tab.icon}
                 {count > 0 && (
-                  <span className="bottom-nav-badge absolute -top-1.5 -right-2 min-w-[16px] h-4 px-1 rounded-full bg-emerald-500 text-white text-[10px] leading-4 font-semibold text-center">
+                  <span
+                    className={`bottom-nav-badge absolute -top-1.5 -right-2 min-w-[16px] h-4 px-1 rounded-full text-white text-[10px] leading-4 font-semibold text-center ${badgeColor}`}
+                    title={badgeTitle}
+                  >
                     {badgeText(count)}
                   </span>
                 )}

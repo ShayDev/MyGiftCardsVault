@@ -24,11 +24,13 @@ export function formatDate(iso: string, localeTag: string): string {
   return d.toLocaleDateString(localeTag, { month: 'short', day: 'numeric', year: 'numeric' })
 }
 
+// Also true for already-past-due dates, not just the upcoming window — an
+// expired item needs the same (or more) attention as one about to expire, so
+// it shouldn't drop out of the highlight once it's past its date.
 export function isExpiringSoon(expiresAt: string | undefined, days = 90): boolean {
   if (!expiresAt) return false
   const exp = new Date(expiresAt)
-  const now = new Date()
   const threshold = new Date()
   threshold.setDate(threshold.getDate() + days)
-  return exp >= now && exp <= threshold
+  return exp <= threshold
 }

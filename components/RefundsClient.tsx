@@ -885,11 +885,6 @@ function RefundRow({ refund, query, onClick, onDelete }: { refund: RefundItem; q
         <span className={`flex-shrink-0 px-2.5 py-1 rounded-full text-xs font-semibold ${providerColor(refund.provider)}`}>
           <HighlightMatch text={refund.provider} query={query} />
         </span>
-        {refund.expiresAt && (
-          <span className={`flex-shrink-0 text-xs font-mono ${expiringSoon ? 'text-rose-600 font-semibold' : 'text-slate-400'}`}>
-            {t.expires}: {formatExpiresAt(refund.expiresAt)}
-          </span>
-        )}
         <div className="flex-1 min-w-0">
           <div className="flex items-baseline gap-2" dir="ltr">
             <p className="text-sm font-mono font-semibold text-slate-800">
@@ -907,6 +902,11 @@ function RefundRow({ refund, query, onClick, onDelete }: { refund: RefundItem; q
             </div>
           )}
         </div>
+        {refund.expiresAt && (
+          <span className={`flex-shrink-0 text-xs font-mono ${expiringSoon ? 'text-rose-600 font-semibold' : 'text-slate-400'}`}>
+            {t.expires}: {formatExpiresAt(refund.expiresAt)}
+          </span>
+        )}
         {!refund.isUsed && (
           <span className={`flex-shrink-0 px-2.5 py-1 rounded-full text-xs font-semibold ${
             isPending ? 'bg-amber-100 text-amber-700' : 'bg-emerald-100 text-emerald-700'

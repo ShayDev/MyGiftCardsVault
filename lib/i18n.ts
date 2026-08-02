@@ -240,6 +240,8 @@ const translations = {
     searchPlaceholder: (category: string) => `Search ${category}…`,
     searchRecent: 'Recent',
     searchNoResults: (query: string) => `No results for "${query}"`,
+    navBadgeHasExpired: 'Includes an expired item',
+    navBadgeExpiringSoon: 'Includes an item expiring soon',
   },
   he: {
     // Header
@@ -477,6 +479,8 @@ const translations = {
     searchPlaceholder: (category: string) => `חיפוש ב${category}…`,
     searchRecent: 'אחרונים',
     searchNoResults: (query: string) => `אין תוצאות עבור "${query}"`,
+    navBadgeHasExpired: 'כולל פריט שפג תוקפו',
+    navBadgeExpiringSoon: 'כולל פריט שעומד לפוג בקרוב',
   },
 } as const
 
