@@ -6,8 +6,8 @@ export function ExpiryDaysBadge({ expiresAt }: { expiresAt: string }) {
 
   return (
     <span
-      className={`inline-flex items-center px-1.5 h-4 rounded-full text-[10px] font-semibold leading-4 flex-shrink-0 ${
-        overdue ? 'bg-rose-100 text-rose-600' : 'bg-amber-100 text-amber-700'
+      className={`inline-flex items-center px-1.5 h-4 rounded-full text-[10px] font-semibold leading-4 flex-shrink-0 text-white ${
+        overdue ? 'bg-rose-500' : 'bg-amber-500'
       }`}
     >
       {days}

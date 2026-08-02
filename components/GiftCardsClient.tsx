@@ -1259,9 +1259,12 @@ export default function GiftCardsClient({
                           <span className="text-xs text-slate-400">{t.oneTime}</span>
                         )}
                         {card.expiresAt && (
-                          <div className={`text-xs mt-0.5 flex items-center gap-1.5 ${isExpiringSoon(card.expiresAt) ? 'text-rose-600 font-semibold' : 'text-slate-400'}`}>
-                            {t.expires}: {formatExpiresAt(card.expiresAt)}
-                            {isExpiringSoon(card.expiresAt) && <ExpiryDaysBadge expiresAt={card.expiresAt} />}
+                          <div className="text-xs mt-0.5">
+                            <div className="text-slate-400">{t.expires}</div>
+                            <div className={`flex items-center justify-end gap-1.5 ${isExpiringSoon(card.expiresAt) ? 'text-rose-600 font-semibold' : 'text-slate-400'}`}>
+                              {formatExpiresAt(card.expiresAt)}
+                              {isExpiringSoon(card.expiresAt) && <ExpiryDaysBadge expiresAt={card.expiresAt} />}
+                            </div>
                           </div>
                         )}
                       </div>
@@ -1408,9 +1411,12 @@ export default function GiftCardsClient({
                         </div>
                         <span className="text-xs text-slate-400">{t.oneTime}</span>
                         {card.expiresAt && (
-                          <div className={`text-xs mt-0.5 flex items-center gap-1.5 ${isExpiringSoon(card.expiresAt) ? 'text-rose-600 font-semibold' : 'text-slate-400'}`}>
-                            {t.expires}: {formatExpiresAt(card.expiresAt)}
-                            {isExpiringSoon(card.expiresAt) && <ExpiryDaysBadge expiresAt={card.expiresAt} />}
+                          <div className="text-xs mt-0.5">
+                            <div className="text-slate-400">{t.expires}</div>
+                            <div className={`flex items-center justify-end gap-1.5 ${isExpiringSoon(card.expiresAt) ? 'text-rose-600 font-semibold' : 'text-slate-400'}`}>
+                              {formatExpiresAt(card.expiresAt)}
+                              {isExpiringSoon(card.expiresAt) && <ExpiryDaysBadge expiresAt={card.expiresAt} />}
+                            </div>
                           </div>
                         )}
                       </div>

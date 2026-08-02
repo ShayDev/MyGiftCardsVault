@@ -905,10 +905,13 @@ function RefundRow({ refund, query, onClick, onDelete }: { refund: RefundItem; q
           )}
         </div>
         {refund.expiresAt && (
-          <span className={`flex-shrink-0 flex items-center gap-1.5 text-xs font-mono ${expiringSoon ? 'text-rose-600 font-semibold' : 'text-slate-400'}`}>
-            {t.expires}: {formatExpiresAt(refund.expiresAt)}
-            {expiringSoon && <ExpiryDaysBadge expiresAt={refund.expiresAt} />}
-          </span>
+          <div className="flex-shrink-0 text-xs font-mono">
+            <div className="text-slate-400">{t.expires}</div>
+            <div className={`flex items-center gap-1.5 ${expiringSoon ? 'text-rose-600 font-semibold' : 'text-slate-400'}`}>
+              {formatExpiresAt(refund.expiresAt)}
+              {expiringSoon && <ExpiryDaysBadge expiresAt={refund.expiresAt} />}
+            </div>
+          </div>
         )}
         {!refund.isUsed && (
           <span className={`flex-shrink-0 px-2.5 py-1 rounded-full text-xs font-semibold ${

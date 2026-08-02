@@ -594,10 +594,13 @@ function VoucherRow({ voucher, query, onClick, onDelete }: { voucher: VoucherIte
           <div className="flex items-center gap-2">
             <span className="text-sm font-medium text-slate-800 truncate"><HighlightMatch text={voucher.name} query={query} /></span>
             {voucher.expiresAt && (
-              <span className={`flex-shrink-0 flex items-center gap-1.5 text-xs font-mono ${expiringSoon ? 'text-rose-600 font-semibold' : 'text-slate-400'}`}>
-                {t.expires}: {formatExpiresAt(voucher.expiresAt!)}
-                {expiringSoon && <ExpiryDaysBadge expiresAt={voucher.expiresAt!} />}
-              </span>
+              <div className="flex-shrink-0 text-xs font-mono">
+                <div className="text-slate-400">{t.expires}</div>
+                <div className={`flex items-center gap-1.5 ${expiringSoon ? 'text-rose-600 font-semibold' : 'text-slate-400'}`}>
+                  {formatExpiresAt(voucher.expiresAt!)}
+                  {expiringSoon && <ExpiryDaysBadge expiresAt={voucher.expiresAt!} />}
+                </div>
+              </div>
             )}
           </div>
         </div>
