@@ -17,6 +17,7 @@ import Spinner from './Spinner'
 import ProviderCombobox from './ProviderCombobox'
 import { extractImage, TextExtractArea, type ExtractedFields } from './ScanButton'
 import { HighlightMatch } from './HighlightMatch'
+import { ExpiryDaysBadge } from './ExpiryDaysBadge'
 
 // ── Helpers ────────────────────────────────────────────────────────────────────
 
@@ -614,8 +615,9 @@ function RefundDetailModal({
         {refund.expiresAt && (
           <div className={isExpiringSoon(refund.expiresAt) ? 'p-2 rounded-xl bg-rose-50 border border-rose-200' : undefined}>
             <p className="text-xs text-slate-400 mb-0.5">{t.expires}</p>
-            <p className={`text-sm font-mono ${isExpiringSoon(refund.expiresAt) ? 'text-rose-600 font-semibold' : 'text-slate-800'}`}>
+            <p className={`text-sm font-mono flex items-center gap-1.5 ${isExpiringSoon(refund.expiresAt) ? 'text-rose-600 font-semibold' : 'text-slate-800'}`}>
               {formatDateSlashFull(refund.expiresAt)}
+              {isExpiringSoon(refund.expiresAt) && <ExpiryDaysBadge expiresAt={refund.expiresAt} />}
             </p>
           </div>
         )}
@@ -903,8 +905,9 @@ function RefundRow({ refund, query, onClick, onDelete }: { refund: RefundItem; q
           )}
         </div>
         {refund.expiresAt && (
-          <span className={`flex-shrink-0 text-xs font-mono ${expiringSoon ? 'text-rose-600 font-semibold' : 'text-slate-400'}`}>
+          <span className={`flex-shrink-0 flex items-center gap-1.5 text-xs font-mono ${expiringSoon ? 'text-rose-600 font-semibold' : 'text-slate-400'}`}>
             {t.expires}: {formatExpiresAt(refund.expiresAt)}
+            {expiringSoon && <ExpiryDaysBadge expiresAt={refund.expiresAt} />}
           </span>
         )}
         {!refund.isUsed && (

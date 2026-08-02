@@ -15,6 +15,7 @@ import Spinner from './Spinner'
 import ProviderCombobox from './ProviderCombobox'
 import ScanButton, { type ExtractedFields } from './ScanButton'
 import { HighlightMatch } from './HighlightMatch'
+import { ExpiryDaysBadge } from './ExpiryDaysBadge'
 
 // ── Helpers ────────────────────────────────────────────────────────────────────
 
@@ -411,7 +412,10 @@ function VoucherDetailModal({
         {voucher.expiresAt && (
           <div className={isExpiringSoon(voucher.expiresAt) ? 'p-2 rounded-xl bg-rose-50 border border-rose-200' : undefined}>
             <p className="text-xs text-slate-400 mb-0.5">{t.expires}</p>
-            <p className={`text-sm font-mono ${isExpiringSoon(voucher.expiresAt) ? 'text-rose-600 font-semibold' : 'text-slate-800'}`}>{formatDateSlashFull(voucher.expiresAt!)}</p>
+            <p className={`text-sm font-mono flex items-center gap-1.5 ${isExpiringSoon(voucher.expiresAt) ? 'text-rose-600 font-semibold' : 'text-slate-800'}`}>
+              {formatDateSlashFull(voucher.expiresAt!)}
+              {isExpiringSoon(voucher.expiresAt) && <ExpiryDaysBadge expiresAt={voucher.expiresAt!} />}
+            </p>
           </div>
         )}
 
@@ -590,8 +594,9 @@ function VoucherRow({ voucher, query, onClick, onDelete }: { voucher: VoucherIte
           <div className="flex items-center gap-2">
             <span className="text-sm font-medium text-slate-800 truncate"><HighlightMatch text={voucher.name} query={query} /></span>
             {voucher.expiresAt && (
-              <span className={`flex-shrink-0 text-xs font-mono ${expiringSoon ? 'text-rose-600 font-semibold' : 'text-slate-400'}`}>
+              <span className={`flex-shrink-0 flex items-center gap-1.5 text-xs font-mono ${expiringSoon ? 'text-rose-600 font-semibold' : 'text-slate-400'}`}>
                 {t.expires}: {formatExpiresAt(voucher.expiresAt!)}
+                {expiringSoon && <ExpiryDaysBadge expiresAt={voucher.expiresAt!} />}
               </span>
             )}
           </div>

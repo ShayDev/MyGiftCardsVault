@@ -24,6 +24,17 @@ export function formatDate(iso: string, localeTag: string): string {
   return d.toLocaleDateString(localeTag, { month: 'short', day: 'numeric', year: 'numeric' })
 }
 
+// Whole-day difference to today, UTC-midnight to UTC-midnight so a same-day
+// expiry reads as 0 regardless of the current time-of-day. Negative = overdue.
+export function daysUntil(expiresAt: string): number {
+  const exp = new Date(expiresAt)
+  const now = new Date()
+  const msPerDay = 24 * 60 * 60 * 1000
+  const expDay = Date.UTC(exp.getFullYear(), exp.getMonth(), exp.getDate())
+  const nowDay = Date.UTC(now.getFullYear(), now.getMonth(), now.getDate())
+  return Math.round((expDay - nowDay) / msPerDay)
+}
+
 // Also true for already-past-due dates, not just the upcoming window — an
 // expired item needs the same (or more) attention as one about to expire, so
 // it shouldn't drop out of the highlight once it's past its date.

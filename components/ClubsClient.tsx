@@ -5,7 +5,7 @@ import { createClub, updateClub, deleteClub, type ClubItem } from '../app/clubs/
 import { useLanguageStore } from '../hooks/useLanguageStore'
 import { getT, localeDir } from '../lib/i18n'
 import { formatCode } from '../lib/formatCode'
-import { formatExpiresAt, formatDateSlashFull } from '../lib/date'
+import { formatExpiresAt, formatDateSlashFull, isExpiringSoon } from '../lib/date'
 import { firstName } from '../lib/formatName'
 import { useFamilyAttribution } from '../hooks/useFamilyAttributionStore'
 import { adjustNavBadgeCount } from '../hooks/useNavBadgeCountsStore'
@@ -14,6 +14,7 @@ import type { ProviderOption } from '../lib/providerTypes'
 import Spinner from './Spinner'
 import ProviderCombobox from './ProviderCombobox'
 import { HighlightMatch } from './HighlightMatch'
+import { ExpiryDaysBadge } from './ExpiryDaysBadge'
 
 // ── Helpers ────────────────────────────────────────────────────────────────────
 
@@ -320,9 +321,12 @@ function ClubDetailModal({
 
         {/* Expiry */}
         {club.expiresAt && (
-          <div>
+          <div className={isExpiringSoon(club.expiresAt) ? 'p-2 rounded-xl bg-rose-50 border border-rose-200' : undefined}>
             <p className="text-xs text-slate-400 mb-0.5">{t.expires}</p>
-            <p className="text-sm font-mono text-slate-800">{formatDateSlashFull(club.expiresAt!)}</p>
+            <p className={`text-sm font-mono flex items-center gap-1.5 ${isExpiringSoon(club.expiresAt) ? 'text-rose-600 font-semibold' : 'text-slate-800'}`}>
+              {formatDateSlashFull(club.expiresAt!)}
+              {isExpiringSoon(club.expiresAt) && <ExpiryDaysBadge expiresAt={club.expiresAt!} />}
+            </p>
           </div>
         )}
 
@@ -452,12 +456,15 @@ function EditClubModal({
 function ClubRow({ club, query, onClick }: { club: ClubItem; query: string; onClick: () => void }) {
   const t = getT(useLanguageStore((s) => s.locale))
   const maskedId = club.memberId ? club.memberId.replace(/.(?=.{4})/g, '•') : null
+  const expiringSoon = isExpiringSoon(club.expiresAt)
 
   return (
     <button
       type="button"
       onClick={onClick}
-      className="w-full text-start bg-white rounded-2xl border border-slate-100 shadow-sm hover:shadow-md hover:border-slate-200 transition-all p-4 flex items-center gap-3"
+      className={`w-full text-start rounded-2xl border shadow-sm hover:shadow-md transition-all p-4 flex items-center gap-3 ${
+        expiringSoon ? 'bg-rose-50/60 border-rose-200 hover:bg-rose-50' : 'bg-white border-slate-100 hover:border-slate-200'
+      }`}
     >
       <span className="text-xs font-mono text-slate-400 flex-shrink-0 w-8 text-center">#{club.seq}</span>
       {club.provider && (
@@ -486,7 +493,10 @@ function ClubRow({ club, query, onClick }: { club: ClubItem; query: string; onCl
         </div>
       </div>
       {club.expiresAt && (
-        <span className="flex-shrink-0 text-xs font-mono text-slate-400">{formatExpiresAt(club.expiresAt!)}</span>
+        <span className={`flex-shrink-0 flex items-center gap-1.5 text-xs font-mono ${expiringSoon ? 'text-rose-600 font-semibold' : 'text-slate-400'}`}>
+          {formatExpiresAt(club.expiresAt!)}
+          {expiringSoon && <ExpiryDaysBadge expiresAt={club.expiresAt!} />}
+        </span>
       )}
     </button>
   )

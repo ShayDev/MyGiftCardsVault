@@ -15,6 +15,7 @@ import Spinner from './Spinner'
 import ProviderCombobox from './ProviderCombobox'
 import ScanButton, { type ExtractedFields } from './ScanButton'
 import { HighlightMatch } from './HighlightMatch'
+import { ExpiryDaysBadge } from './ExpiryDaysBadge'
 
 export type CardWithBalance = {
   id: string
@@ -418,8 +419,9 @@ function CardDetailModal({
           </div>
           <div className={`p-3 rounded-xl border ${isExpiringSoon(card.expiresAt) ? 'border-rose-200 bg-rose-50' : 'border-slate-100 bg-white'}`}>
             <p className="text-xs text-slate-400 mb-1">{t.expires}</p>
-            <p className={`font-mono font-medium ${isExpiringSoon(card.expiresAt) ? 'text-rose-600' : 'text-slate-700'}`}>
+            <p className={`font-mono font-medium flex items-center gap-1.5 ${isExpiringSoon(card.expiresAt) ? 'text-rose-600' : 'text-slate-700'}`}>
               {card.expiresAt ? formatDateSlashFull(card.expiresAt) : '—'}
+              {card.expiresAt && isExpiringSoon(card.expiresAt) && <ExpiryDaysBadge expiresAt={card.expiresAt} />}
             </p>
           </div>
           <div className="p-3 rounded-xl border border-slate-100 bg-white">
@@ -1180,8 +1182,9 @@ export default function GiftCardsClient({
                         <td className="px-4 py-3.5 text-xs whitespace-nowrap">
                           {card.expiresAt ? (
                             isExpiringSoon(card.expiresAt) ? (
-                              <span className="inline-flex items-center px-2 py-0.5 rounded-full font-medium bg-rose-50 text-rose-600 border border-rose-100">
+                              <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full font-medium bg-rose-50 text-rose-600 border border-rose-100">
                                 {formatDateSlashFull(card.expiresAt)}
+                                <ExpiryDaysBadge expiresAt={card.expiresAt} />
                               </span>
                             ) : (
                               <span className="text-slate-400">{formatDateSlashFull(card.expiresAt)}</span>
@@ -1256,8 +1259,9 @@ export default function GiftCardsClient({
                           <span className="text-xs text-slate-400">{t.oneTime}</span>
                         )}
                         {card.expiresAt && (
-                          <div className={`text-xs mt-0.5 ${isExpiringSoon(card.expiresAt) ? 'text-rose-600 font-semibold' : 'text-slate-400'}`}>
+                          <div className={`text-xs mt-0.5 flex items-center gap-1.5 ${isExpiringSoon(card.expiresAt) ? 'text-rose-600 font-semibold' : 'text-slate-400'}`}>
                             {t.expires}: {formatExpiresAt(card.expiresAt)}
+                            {isExpiringSoon(card.expiresAt) && <ExpiryDaysBadge expiresAt={card.expiresAt} />}
                           </div>
                         )}
                       </div>
@@ -1404,8 +1408,9 @@ export default function GiftCardsClient({
                         </div>
                         <span className="text-xs text-slate-400">{t.oneTime}</span>
                         {card.expiresAt && (
-                          <div className={`text-xs mt-0.5 ${isExpiringSoon(card.expiresAt) ? 'text-rose-600 font-semibold' : 'text-slate-400'}`}>
+                          <div className={`text-xs mt-0.5 flex items-center gap-1.5 ${isExpiringSoon(card.expiresAt) ? 'text-rose-600 font-semibold' : 'text-slate-400'}`}>
                             {t.expires}: {formatExpiresAt(card.expiresAt)}
+                            {isExpiringSoon(card.expiresAt) && <ExpiryDaysBadge expiresAt={card.expiresAt} />}
                           </div>
                         )}
                       </div>
