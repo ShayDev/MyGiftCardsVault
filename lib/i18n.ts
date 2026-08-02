@@ -69,6 +69,7 @@ const translations = {
     transactionFailed: 'Transaction failed',
     // Delete dialog
     removeCard: 'Remove Card',
+    remove: 'Remove',
     thisWillHideCard: 'This will hide the card',
     willBeMarkedInactive: 'will be marked inactive. All transaction history is preserved.',
     removing: 'Removing…',
@@ -308,6 +309,7 @@ const translations = {
     transactionFailed: 'העסקה נכשלה',
     // Delete dialog
     removeCard: 'הסר כרטיס',
+    remove: 'הסר',
     thisWillHideCard: 'פעולה זו תסתיר את הכרטיס',
     willBeMarkedInactive: 'יסומן כלא פעיל. כל היסטוריית העסקאות שמורה.',
     removing: 'מסיר...',
