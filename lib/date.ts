@@ -38,7 +38,7 @@ export function daysUntil(expiresAt: string): number {
 // Also true for already-past-due dates, not just the upcoming window — an
 // expired item needs the same (or more) attention as one about to expire, so
 // it shouldn't drop out of the highlight once it's past its date.
-export function isExpiringSoon(expiresAt: string | undefined, days = 90): boolean {
+export function isExpiringSoon(expiresAt: string | undefined, days = 60): boolean {
   if (!expiresAt) return false
   const exp = new Date(expiresAt)
   const threshold = new Date()

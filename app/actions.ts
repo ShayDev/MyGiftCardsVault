@@ -250,7 +250,7 @@ const ENABLE_NAV_BADGES = true
 // based check here (rather than importing that string-based helper) since these
 // rows already carry `expiresAt` as a Date, and this runs once over the whole
 // batch against a single `now`/`soonThreshold` rather than per-row `new Date()`.
-const EXPIRING_SOON_DAYS = 90
+const EXPIRING_SOON_DAYS = 60
 
 function hasExpiredItem(items: { expiresAt: Date | null }[], now: Date): boolean {
   return items.some((i) => i.expiresAt !== null && i.expiresAt < now)
