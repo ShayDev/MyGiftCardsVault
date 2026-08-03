@@ -8,19 +8,22 @@ import prisma from '../lib/prisma'
 import { encrypt } from '../lib/encrypt'
 import { ensureProviderExists } from './providers/actions'
 import { getBalancesForCards } from '../lib/balance'
+import { parseFamilySettings, getExpiringSoonDays } from '../lib/familySettings'
 
-async function getAuthenticatedFamilyId(): Promise<{ familyId: string; userId: string }> {
+async function getAuthenticatedFamilyId(): Promise<{ familyId: string; userId: string; expiringSoonDays: number }> {
   const { userId } = await auth()
   if (!userId) redirect('/sign-in')
 
   const user = await prisma.user.findUnique({
     where: { clerkId: userId },
-    select: { familyId: true },
+    select: { familyId: true, family: { select: { settings: true } } },
   })
 
   if (!user?.familyId) redirect('/onboarding')
 
-  return { familyId: user.familyId, userId }
+  const expiringSoonDays = getExpiringSoonDays(parseFamilySettings(user.family?.settings ?? null))
+
+  return { familyId: user.familyId, userId, expiringSoonDays }
 }
 
 const CreateCardSchema = z.object({
@@ -246,12 +249,6 @@ const EMPTY_NAV_BADGE_CATEGORY: NavBadgeCategory = { count: 0, hasExpired: false
 // no count query runs at all and every badge stays hidden.
 const ENABLE_NAV_BADGES = true
 
-// Same window as isExpiringSoon() in lib/date.ts — kept as a separate, Date-object
-// based check here (rather than importing that string-based helper) since these
-// rows already carry `expiresAt` as a Date, and this runs once over the whole
-// batch against a single `now`/`soonThreshold` rather than per-row `new Date()`.
-const EXPIRING_SOON_DAYS = 60
-
 function hasExpiredItem(items: { expiresAt: Date | null }[], now: Date): boolean {
   return items.some((i) => i.expiresAt !== null && i.expiresAt < now)
 }
@@ -265,10 +262,10 @@ export async function getNavBadgeCounts(): Promise<NavBadgeCounts> {
     return { cards: EMPTY_NAV_BADGE_CATEGORY, vouchers: EMPTY_NAV_BADGE_CATEGORY, clubs: EMPTY_NAV_BADGE_CATEGORY, refunds: EMPTY_NAV_BADGE_CATEGORY }
   }
 
-  const { familyId } = await getAuthenticatedFamilyId()
+  const { familyId, expiringSoonDays } = await getAuthenticatedFamilyId()
   const now = new Date()
   const soonThreshold = new Date(now)
-  soonThreshold.setDate(soonThreshold.getDate() + EXPIRING_SOON_DAYS)
+  soonThreshold.setDate(soonThreshold.getDate() + expiringSoonDays)
 
   const [activeCards, vouchers, clubs, refunds] = await Promise.all([
     prisma.giftCard.findMany({ where: { familyId, isActive: true }, select: { id: true, expiresAt: true } }),

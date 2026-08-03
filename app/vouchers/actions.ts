@@ -7,19 +7,22 @@ import { z } from 'zod'
 import prisma from '../../lib/prisma'
 import { encrypt } from '../../lib/encrypt'
 import { ensureProviderExists } from '../providers/actions'
+import { parseFamilySettings, getExpiringSoonDays } from '../../lib/familySettings'
 
-async function getAuth(): Promise<{ familyId: string; userId: string }> {
+async function getAuth(): Promise<{ familyId: string; userId: string; expiringSoonDays: number }> {
   const { userId } = await auth()
   if (!userId) redirect('/sign-in')
 
   const user = await prisma.user.findUnique({
     where: { clerkId: userId },
-    select: { familyId: true },
+    select: { familyId: true, family: { select: { settings: true } } },
   })
 
   if (!user?.familyId) redirect('/onboarding')
 
-  return { familyId: user.familyId, userId }
+  const expiringSoonDays = getExpiringSoonDays(parseFamilySettings(user.family?.settings ?? null))
+
+  return { familyId: user.familyId, userId, expiringSoonDays }
 }
 
 const CreateVoucherSchema = z.object({

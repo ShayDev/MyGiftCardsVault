@@ -23,6 +23,7 @@ model FamilyGroup {
   vouchers    Voucher[]
   clubMembers ClubMember[]
   refunds     Refund[]
+  settings    String?       // JSON-encoded family preferences — see lib/familySettings.ts
   createdAt   DateTime      @default(now())
 }
 

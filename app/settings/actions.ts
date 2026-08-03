@@ -2,9 +2,11 @@
 
 import { auth } from '@clerk/nextjs/server'
 import { redirect } from 'next/navigation'
+import { revalidatePath } from 'next/cache'
 import { z } from 'zod'
 import prisma from '../../lib/prisma'
 import { generateInviteCode } from '../../lib/inviteCode'
+import { parseFamilySettings } from '../../lib/familySettings'
 
 const switchSchema = z.object({
   familyName: z.string().min(1),
@@ -13,6 +15,10 @@ const switchSchema = z.object({
 
 const createSchema = z.object({
   familyName: z.string().min(1).max(50),
+})
+
+const expiringSoonDaysSchema = z.object({
+  expiringSoonDays: z.coerce.number().int().min(0).max(365),
 })
 
 export async function switchFamily(formData: FormData) {
@@ -89,4 +95,29 @@ export async function switchToOwnFamily() {
   })
 
   redirect('/cards')
+}
+
+export async function updateExpiringSoonDays(formData: FormData) {
+  const { userId } = await auth()
+  if (!userId) redirect('/sign-in')
+
+  const parsed = expiringSoonDaysSchema.safeParse({ expiringSoonDays: formData.get('expiringSoonDays') })
+  if (!parsed.success) return { error: 'Enter a number between 0 and 365.' }
+
+  const dbUser = await prisma.user.findUnique({ where: { clerkId: userId }, select: { familyId: true } })
+  if (!dbUser?.familyId) redirect('/onboarding')
+
+  const family = await prisma.familyGroup.findUnique({ where: { id: dbUser.familyId }, select: { settings: true } })
+  const current = parseFamilySettings(family?.settings ?? null)
+  const updated = {
+    ...current,
+    expiringSoonDays: { ...current.expiringSoonDays, default: parsed.data.expiringSoonDays },
+  }
+
+  await prisma.familyGroup.update({
+    where: { id: dbUser.familyId },
+    data: { settings: JSON.stringify(updated) },
+  })
+
+  revalidatePath('/settings')
 }

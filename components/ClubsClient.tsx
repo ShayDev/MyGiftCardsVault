@@ -183,13 +183,16 @@ function ClubDetailModal({
   onClose,
   onEdit,
   onUpdated,
+  expiringSoonDays,
 }: {
   club: ClubItem
   onClose: () => void
   onEdit: () => void
   onUpdated: () => void
+  expiringSoonDays: number
 }) {
   const t = getT(useLanguageStore((s) => s.locale))
+  const soon = (expiresAt: string | undefined) => isExpiringSoon(expiresAt, expiringSoonDays)
   const [showMemberId, setShowMemberId] = useState(false)
   const [copiedMemberId, setCopiedMemberId] = useState(false)
   const [formattedMemberId, setFormattedMemberId] = useState(true)
@@ -321,11 +324,11 @@ function ClubDetailModal({
 
         {/* Expiry */}
         {club.expiresAt && (
-          <div className={isExpiringSoon(club.expiresAt) ? 'p-2 rounded-xl bg-rose-50 border border-rose-200' : undefined}>
+          <div className={soon(club.expiresAt) ? 'p-2 rounded-xl bg-rose-50 border border-rose-200' : undefined}>
             <p className="text-xs text-slate-400 mb-0.5">{t.expires}</p>
-            <p className={`text-sm font-mono flex items-center gap-1.5 ${isExpiringSoon(club.expiresAt) ? 'text-rose-600 font-semibold' : 'text-slate-800'}`}>
+            <p className={`text-sm font-mono flex items-center gap-1.5 ${soon(club.expiresAt) ? 'text-rose-600 font-semibold' : 'text-slate-800'}`}>
               {formatDateSlashFull(club.expiresAt!)}
-              {isExpiringSoon(club.expiresAt) && <ExpiryDaysBadge expiresAt={club.expiresAt!} />}
+              {soon(club.expiresAt) && <ExpiryDaysBadge expiresAt={club.expiresAt!} />}
             </p>
           </div>
         )}
@@ -462,10 +465,10 @@ function EditClubModal({
 
 // ── Club Row ───────────────────────────────────────────────────────────────────
 
-function ClubRow({ club, query, onClick }: { club: ClubItem; query: string; onClick: () => void }) {
+function ClubRow({ club, query, expiringSoonDays, onClick }: { club: ClubItem; query: string; expiringSoonDays: number; onClick: () => void }) {
   const t = getT(useLanguageStore((s) => s.locale))
   const maskedId = club.memberId ? club.memberId.replace(/.(?=.{4})/g, '•') : null
-  const expiringSoon = isExpiringSoon(club.expiresAt)
+  const expiringSoon = isExpiringSoon(club.expiresAt, expiringSoonDays)
 
   return (
     <button
@@ -516,9 +519,11 @@ function ClubRow({ club, query, onClick }: { club: ClubItem; query: string; onCl
 export default function ClubsClient({
   clubs,
   providerOptions,
+  expiringSoonDays,
 }: {
   clubs: ClubItem[]
   providerOptions: ProviderOption[]
+  expiringSoonDays: number
 }) {
   const locale = useLanguageStore((s) => s.locale)
   const t = getT(locale)
@@ -574,7 +579,7 @@ export default function ClubsClient({
         <section className="clubs-section">
           <div className="space-y-2">
             {visibleClubs.map((c) => (
-              <ClubRow key={c.id} club={c} query={rawQuery} onClick={() => setSelected(c)} />
+              <ClubRow key={c.id} club={c} query={rawQuery} expiringSoonDays={expiringSoonDays} onClick={() => setSelected(c)} />
             ))}
           </div>
         </section>
@@ -589,6 +594,7 @@ export default function ClubsClient({
           onClose={() => setSelected(null)}
           onEdit={() => { setEditTarget(selected); setSelected(null) }}
           onUpdated={() => setSelected(null)}
+          expiringSoonDays={expiringSoonDays}
         />
       )}
       {editTarget && (

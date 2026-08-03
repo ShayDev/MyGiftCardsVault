@@ -187,7 +187,7 @@ Unlike a typed column, writing back requires a read-merge-write — a blind `upd
 
 ```ts
 const expiringSoonDaysSchema = z.object({
-  expiringSoonDays: z.coerce.number().int().min(1).max(365),
+  expiringSoonDays: z.coerce.number().int().min(0).max(365),
 })
 
 export async function updateExpiringSoonDays(formData: FormData) {
@@ -195,7 +195,7 @@ export async function updateExpiringSoonDays(formData: FormData) {
   if (!userId) redirect('/sign-in')
 
   const parsed = expiringSoonDaysSchema.safeParse({ expiringSoonDays: formData.get('expiringSoonDays') })
-  if (!parsed.success) return { error: 'Enter a number between 1 and 365.' }
+  if (!parsed.success) return { error: 'Enter a number between 0 and 365.' }
 
   const dbUser = await prisma.user.findUnique({ where: { clerkId: userId }, select: { familyId: true } })
   if (!dbUser?.familyId) redirect('/onboarding')
@@ -222,7 +222,7 @@ This is the one real cost of the JSON-blob approach vs. a typed column: one extr
 
 ### `SettingsClient.tsx`
 
-Same as before: one number input (1–365) in its own section, save button calling `updateExpiringSoonDays`. No per-category inputs yet — those are Phase 2.
+Same as before: one number input (0–365) in its own section, save button calling `updateExpiringSoonDays`. No per-category inputs yet — those are Phase 2.
 
 ### i18n (new keys)
 
