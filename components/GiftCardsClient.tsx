@@ -1,18 +1,21 @@
 'use client'
 
-import React, { useState, useRef, useTransition } from 'react'
+import React, { useState, useRef, useEffect, useTransition } from 'react'
 import { createCard, updateCard, deactivateCard, createTransaction, getCardTransactions, type TransactionItem } from '../app/actions'
 import { useLanguageStore } from '../hooks/useLanguageStore'
 import { getT } from '../lib/i18n'
 import { formatCode } from '../lib/formatCode'
-import { formatExpiresAt } from '../lib/date'
+import { formatExpiresAt, formatDate, formatDateSlashFull, isExpiringSoon } from '../lib/date'
 import { firstName } from '../lib/formatName'
 import { useFamilyAttribution } from '../hooks/useFamilyAttributionStore'
 import { adjustNavBadgeCount } from '../hooks/useNavBadgeCountsStore'
+import { useSearchQueryStore } from '../hooks/useSearchQueryStore'
 import type { ProviderOption } from '../lib/providerTypes'
 import Spinner from './Spinner'
 import ProviderCombobox from './ProviderCombobox'
 import ScanButton, { type ExtractedFields } from './ScanButton'
+import { HighlightMatch } from './HighlightMatch'
+import { ExpiryDaysBadge } from './ExpiryDaysBadge'
 
 export type CardWithBalance = {
   id: string
@@ -73,26 +76,31 @@ function formatTransactionAmount(amount: number, type: 'RECHARGE' | 'SPEND', cur
   }).format(type === 'SPEND' ? -amount : amount)
 }
 
-function formatDate(iso: string): string {
-  return new Date(iso).toLocaleDateString('en-US', {
-    month: 'short',
-    day: 'numeric',
-    year: 'numeric',
-  })
-}
-
 // ── Modal Shell ────────────────────────────────────────────────────────────────
 
 function Modal({ title, onClose, children }: { title: string; onClose: () => void; children: React.ReactNode }) {
+  const t = getT(useLanguageStore((s) => s.locale))
+  const dialogRef = useRef<HTMLDialogElement>(null)
+
+  useEffect(() => {
+    dialogRef.current?.showModal()
+  }, [])
+
   return (
-    <div className="modal-overlay fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4">
-      <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={onClose} />
+    <dialog
+      ref={dialogRef}
+      onClose={onClose}
+      onClick={(e) => { if (e.target === dialogRef.current) onClose() }}
+      aria-labelledby="modal-title"
+      className="modal-overlay fixed inset-0 z-50 w-full h-full m-0 max-w-none max-h-none border-0 bg-transparent p-0 sm:p-4 flex items-end sm:items-center justify-center backdrop:bg-black/40 backdrop:backdrop-blur-sm"
+    >
       <div className="modal-panel relative w-full sm:max-w-md bg-white rounded-t-3xl sm:rounded-2xl shadow-2xl overflow-hidden max-h-[90dvh] flex flex-col">
         <div className="modal-header flex items-center justify-between px-5 py-4 border-b border-slate-100 flex-shrink-0">
-          <h2 className="font-semibold text-slate-800 text-base">{title}</h2>
+          <h2 id="modal-title" className="font-semibold text-slate-800 text-base">{title}</h2>
           <button
             onClick={onClose}
-            className="w-8 h-8 flex items-center justify-center rounded-full text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-colors"
+            aria-label={t.close}
+            className="w-11 h-11 flex items-center justify-center rounded-full text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-colors"
           >
             <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
@@ -101,7 +109,7 @@ function Modal({ title, onClose, children }: { title: string; onClose: () => voi
         </div>
         <div className="px-5 py-5 overflow-y-auto">{children}</div>
       </div>
-    </div>
+    </dialog>
   )
 }
 
@@ -285,6 +293,9 @@ function AddCardModal({
           </div>
           <button
             type="button"
+            role="switch"
+            aria-checked={isReloadable}
+            aria-label={t.reloadable}
             onClick={() => setIsReloadable(!isReloadable)}
             className={`relative w-11 h-6 rounded-full transition-colors ${isReloadable ? 'bg-emerald-500' : 'bg-slate-200'}`}
           >
@@ -406,16 +417,17 @@ function CardDetailModal({
               </span>
             )}
           </div>
-          <div className="p-3 rounded-xl border border-slate-100 bg-white">
+          <div className={`p-3 rounded-xl border ${isExpiringSoon(card.expiresAt) ? 'border-rose-200 bg-rose-50' : 'border-slate-100 bg-white'}`}>
             <p className="text-xs text-slate-400 mb-1">{t.expires}</p>
-            <p className="font-mono text-slate-700 font-medium">
-              {card.expiresAt ? formatExpiresAt(card.expiresAt) : '—'}
+            <p className={`font-mono font-medium flex items-center gap-1.5 ${isExpiringSoon(card.expiresAt) ? 'text-rose-600' : 'text-slate-700'}`}>
+              {card.expiresAt ? formatDateSlashFull(card.expiresAt) : '—'}
+              {card.expiresAt && isExpiringSoon(card.expiresAt) && <ExpiryDaysBadge expiresAt={card.expiresAt} />}
             </p>
           </div>
           <div className="p-3 rounded-xl border border-slate-100 bg-white">
             <p className="text-xs text-slate-400 mb-1">{t.dateAdded}</p>
             <p className="text-sm text-slate-700">
-              {formatDate(card.createdAt)}
+              {formatDateSlashFull(card.createdAt)}
               {addedByName(card.createdBy) && ` (${addedByName(card.createdBy)})`}
             </p>
           </div>
@@ -550,7 +562,7 @@ function CardDetailModal({
           ) : (
             <ul className="divide-y divide-slate-100 max-h-48 overflow-y-auto">
               {transactions.map((tx) => (
-                <li key={tx.id} className="flex items-center justify-between px-3 py-2.5">
+                <li key={tx.id} className="flex items-start justify-between px-3 py-2.5">
                   <div className="flex items-center gap-2">
                     <span className={`w-2 h-2 rounded-full flex-shrink-0 ${tx.type === 'RECHARGE' ? 'bg-emerald-500' : 'bg-rose-400'}`} />
                     <div>
@@ -560,13 +572,13 @@ function CardDetailModal({
                       {tx.notes && <p className="text-xs text-slate-400">{tx.notes}</p>}
                     </div>
                   </div>
-                  <div className="text-right flex-shrink-0">
+                  <div className="flex flex-col items-end text-right flex-shrink-0">
                     <p className={`font-mono text-sm font-semibold ${tx.type === 'RECHARGE' ? 'text-emerald-600' : 'text-rose-500'}`}>
                       {formatTransactionAmount(tx.amount, tx.type, t.currencyLocale, t.currencyCode)}
                     </p>
-                    <p className="text-xs text-slate-400">
-                      {formatDate(tx.createdAt)}
-                      {addedByName(tx.createdBy) && ` (${addedByName(tx.createdBy)})`}
+                    <p className="text-xs text-slate-400 mt-0.5">
+                      {addedByName(tx.createdBy) && `(${addedByName(tx.createdBy)}) `}
+                      {formatDateSlashFull(tx.createdAt)}
                     </p>
                   </div>
                 </li>
@@ -731,6 +743,9 @@ function EditCardModal({
           </div>
           <button
             type="button"
+            role="switch"
+            aria-checked={isReloadable}
+            aria-label={t.reloadable}
             onClick={() => setIsReloadable(!isReloadable)}
             className={`relative w-11 h-6 rounded-full transition-colors ${isReloadable ? 'bg-emerald-500' : 'bg-slate-200'}`}
           >
@@ -933,10 +948,11 @@ function DeleteDialog({ card, onClose }: { card: CardWithBalance; onClose: () =>
 // ── Stat Card ──────────────────────────────────────────────────────────────────
 
 function StatCard({
-  label, value, icon, iconClass, valueClass,
+  label, value, subValue, icon, iconClass, valueClass,
 }: {
   label: string
   value: string
+  subValue?: string
   icon: React.ReactNode
   iconClass: string
   valueClass?: string
@@ -947,6 +963,7 @@ function StatCard({
         <div>
           <p className="text-xs text-slate-500 font-medium">{label}</p>
           <p className={`text-xl font-bold mt-0.5 ${valueClass ?? 'text-slate-800'}`}>{value}</p>
+          {subValue && <p className="text-xs text-slate-400 font-medium mt-0.5">{subValue}</p>}
         </div>
         <div className={`w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0 ${iconClass}`}>
           {icon}
@@ -980,16 +997,43 @@ export default function GiftCardsClient({
   const active = cards.filter((c) => c.balance > 0 || c.isReloadable)
   const used = cards.filter((c) => c.balance <= 0 && !c.isReloadable)
 
+  const rawQuery = useSearchQueryStore((s) => s.query).trim()
+  const query = rawQuery.toLowerCase()
+  const matchesQuery = (c: CardWithBalance) =>
+    !query ||
+    c.name.toLowerCase().includes(query) ||
+    c.provider.toLowerCase().includes(query) ||
+    (c.notes?.toLowerCase().includes(query) ?? false) ||
+    (c.last4?.includes(query) ?? false) ||
+    (c.fullNumber?.includes(query) ?? false)
+  const visibleActive = active.filter(matchesQuery)
+  const visibleUsed = used.filter(matchesQuery)
+
   const totalBalance = active.reduce((sum, c) => sum + c.balance, 0)
   const reloadableCount = active.filter((c) => c.isReloadable).length
-  const emptyCount = active.filter((c) => c.balance <= 0).length
+
+  const now = new Date()
+  const oneMonthFromNow = new Date()
+  oneMonthFromNow.setMonth(oneMonthFromNow.getMonth() + 1)
+  const expiringSoon = active.filter((c) => {
+    if (!c.expiresAt) return false
+    const exp = new Date(c.expiresAt)
+    return exp >= now && exp <= oneMonthFromNow
+  })
+  const expiringSoonCount = expiringSoon.length
+  const expiringSoonSum = expiringSoon.reduce((sum, c) => sum + c.balance, 0)
 
   const close = () => setModal({ type: 'none' })
 
   return (
     <>
       <div className="cards-page space-y-6">
-        {/* Summary Stats */}
+        {/* Page header */}
+        <div className="cards-page-header flex items-center justify-between">
+          <h1 className="text-xl font-bold text-slate-800">{t.cardsTab}</h1>
+        </div>
+        {/* Summary Stats — hidden while searching, since these are portfolio totals, not search-scoped */}
+        {!rawQuery && (
         <div className="cards-stats grid grid-cols-2 sm:grid-cols-4 gap-3">
           <StatCard
             label={t.totalBalance}
@@ -1023,17 +1067,19 @@ export default function GiftCardsClient({
             }
           />
           <StatCard
-            label={t.emptyCards}
-            value={String(emptyCount)}
-            valueClass={emptyCount > 0 ? 'text-rose-600' : undefined}
+            label={t.expiringSoon}
+            value={String(expiringSoonCount)}
+            subValue={expiringSoonCount > 0 ? formatCurrency(expiringSoonSum, t.currencyLocale, t.currencyCode) : undefined}
+            valueClass={expiringSoonCount > 0 ? 'text-rose-600' : undefined}
             iconClass="bg-rose-50 text-rose-500"
             icon={
               <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M20 12H4" />
+                <path strokeLinecap="round" strokeLinejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
               </svg>
             }
           />
         </div>
+        )}
 
         {/* Table */}
         <div className="cards-table-container bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
@@ -1041,7 +1087,7 @@ export default function GiftCardsClient({
             <div className="flex items-center gap-2">
               <h2 className="font-semibold text-slate-800 text-base">{t.allCards}</h2>
               <span className="text-xs text-slate-400 bg-slate-100 px-2 py-0.5 rounded-full">
-                {t.cards(active.length)}
+                {t.cards(visibleActive.length)}
               </span>
             </div>
             <div className="flex items-center gap-2">
@@ -1073,6 +1119,10 @@ export default function GiftCardsClient({
                 {t.addFirstCard}
               </button>
             </div>
+          ) : visibleActive.length === 0 ? (
+            <div className="py-16 text-center">
+              <p className="text-slate-400 text-sm">{t.searchNoResults(rawQuery)}</p>
+            </div>
           ) : (
             <>
               {/* Desktop Table */}
@@ -1086,13 +1136,13 @@ export default function GiftCardsClient({
                       <th className="text-start font-medium text-slate-500 px-4 py-3">{t.colCardNumber}</th>
                       <th className="text-start font-medium text-slate-500 px-4 py-3">{t.colType}</th>
                       <th className="text-end font-medium text-slate-500 px-4 py-3">{t.colBalance}</th>
-                      <th className="text-start font-medium text-slate-500 px-4 py-3">{t.colAdded}</th>
+                      <th className="text-start font-medium text-slate-500 px-4 py-3">{t.expires}</th>
                       <th className="text-end font-medium text-slate-500 px-5 py-3">{t.colActions}</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-100">
-                    {active.map((card) => (
-                      <tr key={card.id} className="hover:bg-slate-50/70 transition-colors group">
+                    {visibleActive.map((card) => (
+                      <tr key={card.id} className={`transition-colors group ${isExpiringSoon(card.expiresAt) ? 'bg-rose-50/60 hover:bg-rose-50' : 'hover:bg-slate-50/70'}`}>
                         <td className="px-3 py-3.5 text-xs font-mono text-slate-400 text-right">#{card.seq}</td>
                         <td className="px-5 py-3.5">
                           <button
@@ -1102,13 +1152,13 @@ export default function GiftCardsClient({
                             <div className={`w-9 h-9 rounded-lg flex items-center justify-center text-sm font-bold flex-shrink-0 ${providerColor(card.provider)}`}>
                               {(card.provider || card.name).slice(0, 2).toUpperCase()}
                             </div>
-                            <span className="font-medium text-slate-800 truncate underline-offset-2 hover:underline">{card.name}</span>
+                            <span className="font-medium text-slate-800 truncate underline-offset-2 hover:underline"><HighlightMatch text={card.name} query={rawQuery} /></span>
                           </button>
                         </td>
-                        <td className="px-4 py-3.5 text-slate-600">{card.provider}</td>
+                        <td className="px-4 py-3.5 text-slate-600"><HighlightMatch text={card.provider} query={rawQuery} /></td>
                         <td className="px-4 py-3.5">
                           <span className="font-mono text-slate-500 tracking-widest text-xs">
-                            {card.last4 ? `•••• ${card.last4}` : '—'}
+                            {card.last4 ? <>•••• <HighlightMatch text={card.last4} query={rawQuery} /></> : '—'}
                           </span>
                         </td>
                         <td className="px-4 py-3.5">
@@ -1129,15 +1179,26 @@ export default function GiftCardsClient({
                             {formatCurrency(card.balance, t.currencyLocale, t.currencyCode)}
                           </span>
                         </td>
-                        <td className="px-4 py-3.5 text-slate-400 text-xs whitespace-nowrap">
-                          {formatDate(card.createdAt)}
+                        <td className="px-4 py-3.5 text-xs whitespace-nowrap">
+                          {card.expiresAt ? (
+                            isExpiringSoon(card.expiresAt) ? (
+                              <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full font-medium bg-rose-50 text-rose-600 border border-rose-100">
+                                {formatDateSlashFull(card.expiresAt)}
+                                <ExpiryDaysBadge expiresAt={card.expiresAt} />
+                              </span>
+                            ) : (
+                              <span className="text-slate-400">{formatDateSlashFull(card.expiresAt)}</span>
+                            )
+                          ) : (
+                            <span className="text-slate-400">—</span>
+                          )}
                         </td>
                         <td className="px-5 py-3.5">
                           <div className="flex items-center justify-end gap-1.5">
                             {card.isReloadable && (
                               <button
                                 onClick={() => setModal({ type: 'transaction', card, txType: 'RECHARGE' })}
-                                className="h-8 px-2.5 text-xs font-medium rounded-lg border border-emerald-200 text-emerald-600 hover:bg-emerald-50 transition-colors"
+                                className="h-11 px-2.5 text-xs font-medium rounded-lg border border-emerald-200 text-emerald-600 hover:bg-emerald-50 transition-colors"
                               >
                                 {t.recharge}
                               </button>
@@ -1145,13 +1206,14 @@ export default function GiftCardsClient({
                             <button
                               onClick={() => setModal({ type: 'transaction', card, txType: 'SPEND' })}
                               disabled={card.balance <= 0}
-                              className="h-8 px-2.5 text-xs font-medium rounded-lg border border-rose-200 text-rose-600 hover:bg-rose-50 transition-colors disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-transparent"
+                              className="h-11 px-2.5 text-xs font-medium rounded-lg border border-rose-200 text-rose-600 hover:bg-rose-50 transition-colors disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-transparent"
                             >
                               {t.spend}
                             </button>
                             <button
                               onClick={() => setModal({ type: 'delete', card })}
-                              className="h-8 w-8 flex items-center justify-center rounded-lg text-slate-400 hover:text-rose-500 hover:bg-rose-50 transition-colors"
+                              className="h-11 w-11 flex items-center justify-center rounded-lg text-slate-400 hover:text-rose-500 hover:bg-rose-50 transition-colors"
+                              aria-label={t.removeCard}
                               title={t.removeCard}
                             >
                               <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
@@ -1168,8 +1230,8 @@ export default function GiftCardsClient({
 
               {/* Mobile Cards */}
               <div className="cards-list-mobile sm:hidden divide-y divide-slate-100">
-                {active.map((card) => (
-                  <div key={card.id} className="px-4 py-4">
+                {visibleActive.map((card) => (
+                  <div key={card.id} className={`px-4 py-4 ${isExpiringSoon(card.expiresAt) ? 'bg-rose-50/60' : ''}`}>
                     <div className="flex items-center gap-3 mb-3">
                       <span className="text-xs font-mono text-slate-400 flex-shrink-0 w-7 text-right">#{card.seq}</span>
                       <div className={`w-10 h-10 rounded-xl flex items-center justify-center text-sm font-bold flex-shrink-0 ${providerColor(card.provider)}`}>
@@ -1179,11 +1241,11 @@ export default function GiftCardsClient({
                         onClick={() => setModal({ type: 'detail', card })}
                         className="flex-1 min-w-0 text-left"
                       >
-                        <div className="font-medium text-slate-800 truncate">{card.name}</div>
+                        <div className="font-medium text-slate-800 truncate"><HighlightMatch text={card.name} query={rawQuery} /></div>
                         <div className="text-xs text-slate-400">
-                          {card.provider}
+                          <HighlightMatch text={card.provider} query={rawQuery} />
                           {card.last4 && (
-                            <span className="font-mono ml-1.5 tracking-widest">•••• {card.last4}</span>
+                            <span className="font-mono ml-1.5 tracking-widest">•••• <HighlightMatch text={card.last4} query={rawQuery} /></span>
                           )}
                         </div>
                       </button>
@@ -1195,6 +1257,15 @@ export default function GiftCardsClient({
                           <span className="text-xs text-emerald-600">{t.reloadableLabel}</span>
                         ) : (
                           <span className="text-xs text-slate-400">{t.oneTime}</span>
+                        )}
+                        {card.expiresAt && (
+                          <div className="text-xs mt-0.5">
+                            <div className="text-slate-400">{t.expires}</div>
+                            <div className={`flex items-center justify-end gap-1.5 ${isExpiringSoon(card.expiresAt) ? 'text-rose-600 font-semibold' : 'text-slate-400'}`}>
+                              {formatExpiresAt(card.expiresAt)}
+                              {isExpiringSoon(card.expiresAt) && <ExpiryDaysBadge expiresAt={card.expiresAt} />}
+                            </div>
+                          </div>
                         )}
                       </div>
                     </div>
@@ -1216,6 +1287,7 @@ export default function GiftCardsClient({
                       </button>
                       <button
                         onClick={() => setModal({ type: 'delete', card })}
+                        aria-label={t.removeCard}
                         className="min-h-[44px] w-11 flex items-center justify-center rounded-xl border border-slate-200 text-slate-400 hover:text-rose-500 hover:border-rose-200 transition-colors"
                       >
                         <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
@@ -1236,8 +1308,8 @@ export default function GiftCardsClient({
             className="flex items-center gap-2 mb-3 w-full text-left"
           >
             <h2 className="text-sm font-semibold text-slate-500 uppercase tracking-wide">{t.usedCards}</h2>
-            {used.length > 0 && (
-              <span className="text-xs text-slate-400 bg-slate-100 px-2 py-0.5 rounded-full">{t.cards(used.length)}</span>
+            {visibleUsed.length > 0 && (
+              <span className="text-xs text-slate-400 bg-slate-100 px-2 py-0.5 rounded-full">{t.cards(visibleUsed.length)}</span>
             )}
             <svg
               className={`ml-auto w-4 h-4 text-slate-400 transition-transform ${showUsed ? 'rotate-180' : ''}`}
@@ -1250,13 +1322,17 @@ export default function GiftCardsClient({
             <div className="bg-white rounded-2xl border border-slate-100 shadow-sm p-6 text-center">
               <p className="text-slate-400 text-sm">{t.noUsedCards}</p>
             </div>
+          ) : showUsed && visibleUsed.length === 0 ? (
+            <div className="bg-white rounded-2xl border border-slate-100 shadow-sm p-6 text-center">
+              <p className="text-slate-400 text-sm">{t.searchNoResults(rawQuery)}</p>
+            </div>
           ) : showUsed ? (
             <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
               {/* Desktop Table */}
               <div className="cards-used-table-desktop hidden sm:block overflow-x-auto">
                 <table className="w-full text-sm">
                   <tbody className="divide-y divide-slate-100">
-                    {used.map((card) => (
+                    {visibleUsed.map((card) => (
                       <tr key={card.id} className="hover:bg-slate-50/70 transition-colors group">
                         <td className="px-3 py-3.5 text-xs font-mono text-slate-400 text-right w-10">#{card.seq}</td>
                         <td className="px-5 py-3.5 w-[28%]">
@@ -1267,13 +1343,13 @@ export default function GiftCardsClient({
                             <div className={`w-9 h-9 rounded-lg flex items-center justify-center text-sm font-bold flex-shrink-0 ${providerColor(card.provider)}`}>
                               {(card.provider || card.name).slice(0, 2).toUpperCase()}
                             </div>
-                            <span className="font-medium text-slate-800 truncate underline-offset-2 hover:underline">{card.name}</span>
+                            <span className="font-medium text-slate-800 truncate underline-offset-2 hover:underline"><HighlightMatch text={card.name} query={rawQuery} /></span>
                           </button>
                         </td>
-                        <td className="px-4 py-3.5 text-slate-600">{card.provider}</td>
+                        <td className="px-4 py-3.5 text-slate-600"><HighlightMatch text={card.provider} query={rawQuery} /></td>
                         <td className="px-4 py-3.5">
                           <span className="font-mono text-slate-500 tracking-widest text-xs">
-                            {card.last4 ? `•••• ${card.last4}` : '—'}
+                            {card.last4 ? <>•••• <HighlightMatch text={card.last4} query={rawQuery} /></> : '—'}
                           </span>
                         </td>
                         <td className="px-4 py-3.5">
@@ -1288,13 +1364,14 @@ export default function GiftCardsClient({
                           </span>
                         </td>
                         <td className="px-4 py-3.5 text-slate-400 text-xs whitespace-nowrap">
-                          {formatDate(card.createdAt)}
+                          {card.expiresAt ? formatDateSlashFull(card.expiresAt) : '—'}
                         </td>
                         <td className="px-5 py-3.5">
                           <div className="flex items-center justify-end gap-1.5">
                             <button
                               onClick={() => setModal({ type: 'delete', card })}
-                              className="h-8 w-8 flex items-center justify-center rounded-lg text-slate-400 hover:text-rose-500 hover:bg-rose-50 transition-colors"
+                              className="h-11 w-11 flex items-center justify-center rounded-lg text-slate-400 hover:text-rose-500 hover:bg-rose-50 transition-colors"
+                              aria-label={t.removeCard}
                               title={t.removeCard}
                             >
                               <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
@@ -1311,7 +1388,7 @@ export default function GiftCardsClient({
 
               {/* Mobile */}
               <div className="cards-used-list-mobile sm:hidden divide-y divide-slate-100">
-                {used.map((card) => (
+                {visibleUsed.map((card) => (
                   <div key={card.id} className="px-4 py-4">
                     <div className="flex items-center gap-3 mb-3">
                       <span className="text-xs font-mono text-slate-400 flex-shrink-0 w-7 text-right">#{card.seq}</span>
@@ -1322,10 +1399,10 @@ export default function GiftCardsClient({
                         onClick={() => setModal({ type: 'detail', card })}
                         className="flex-1 min-w-0 text-left"
                       >
-                        <div className="font-medium text-slate-800 truncate">{card.name}</div>
+                        <div className="font-medium text-slate-800 truncate"><HighlightMatch text={card.name} query={rawQuery} /></div>
                         <div className="text-xs text-slate-400">
-                          {card.provider}
-                          {card.last4 && <span className="font-mono ml-1.5 tracking-widest">•••• {card.last4}</span>}
+                          <HighlightMatch text={card.provider} query={rawQuery} />
+                          {card.last4 && <span className="font-mono ml-1.5 tracking-widest">•••• <HighlightMatch text={card.last4} query={rawQuery} /></span>}
                         </div>
                       </button>
                       <div className="text-right flex-shrink-0">
@@ -1333,11 +1410,21 @@ export default function GiftCardsClient({
                           {formatCurrency(0, t.currencyLocale, t.currencyCode)}
                         </div>
                         <span className="text-xs text-slate-400">{t.oneTime}</span>
+                        {card.expiresAt && (
+                          <div className="text-xs mt-0.5">
+                            <div className="text-slate-400">{t.expires}</div>
+                            <div className={`flex items-center justify-end gap-1.5 ${isExpiringSoon(card.expiresAt) ? 'text-rose-600 font-semibold' : 'text-slate-400'}`}>
+                              {formatExpiresAt(card.expiresAt)}
+                              {isExpiringSoon(card.expiresAt) && <ExpiryDaysBadge expiresAt={card.expiresAt} />}
+                            </div>
+                          </div>
+                        )}
                       </div>
                     </div>
                     <div className="flex gap-2 justify-end">
                       <button
                         onClick={() => setModal({ type: 'delete', card })}
+                        aria-label={t.removeCard}
                         className="min-h-[44px] w-11 flex items-center justify-center rounded-xl border border-slate-200 text-slate-400 hover:text-rose-500 hover:border-rose-200 transition-colors"
                       >
                         <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>

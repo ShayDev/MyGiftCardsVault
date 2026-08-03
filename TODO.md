@@ -215,6 +215,7 @@ Show a small badge on each bottom-nav tab (Gift Cards, Vouchers, Clubs, Refunds)
 - ✅ `getNavBadgeCounts()` Server Action counting all four entity types in one pass, fetched once per browser session via `hooks/useNavBadgeCountsStore.ts` (same plain-Zustand, no-`persist`, fetch-once shape as `useFamilyAttributionStore.ts`)
 - ✅ Badge UI on `BottomNav` — numeric pill, hidden when count is 0, capped at `MAX_BADGE_COUNT = 9` showing `9+` above that
 - ✅ User actions across all four entities (`GiftCardsClient`/`VouchersClient`/`ClubsClient`/`RefundsClient`) call `adjustNavBadgeCount()` on success (+1/-1) instead of re-querying — no i18n needed, it's just a number
+- ✅ Two-tier expiry alert: each category in `NavBadgeCounts` is `{ count, hasExpired, hasExpiringSoon }` — badge is rose if the category has an already-expired active item, amber if none are expired but one is within the 90-day "expiring soon" window (same window as `isExpiringSoon()` in `lib/date.ts`), else emerald. Both flags are deliberately stale-until-reload: never adjusted locally by `adjustNavBadgeCount()` since they only change by the calendar passing a date, not by a user action — accepted tradeoff to avoid polling
 
 ---
 

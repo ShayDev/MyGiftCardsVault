@@ -19,7 +19,7 @@ export default async function Page() {
 
   const refunds = await prisma.refund.findMany({
     where: { familyId: user.familyId, isActive: true },
-    orderBy: { createdAt: 'desc' },
+    orderBy: { expiresAt: { sort: 'asc', nulls: 'last' } },
   })
 
   function dec(val: string | null): string | undefined {

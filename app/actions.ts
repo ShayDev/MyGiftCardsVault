@@ -237,26 +237,59 @@ export async function getFamilyAttribution(): Promise<{ names: Record<string, st
   return { names, showAddedBy }
 }
 
-export type NavBadgeCounts = { cards: number; vouchers: number; clubs: number; refunds: number }
+export type NavBadgeCategory = { count: number; hasExpired: boolean; hasExpiringSoon: boolean }
+export type NavBadgeCounts = { cards: NavBadgeCategory; vouchers: NavBadgeCategory; clubs: NavBadgeCategory; refunds: NavBadgeCategory }
+
+const EMPTY_NAV_BADGE_CATEGORY: NavBadgeCategory = { count: 0, hasExpired: false, hasExpiringSoon: false }
 
 // On by default; flip to false if this ever proves costly at real family sizes — when off,
 // no count query runs at all and every badge stays hidden.
 const ENABLE_NAV_BADGES = true
 
+// Same window as isExpiringSoon() in lib/date.ts — kept as a separate, Date-object
+// based check here (rather than importing that string-based helper) since these
+// rows already carry `expiresAt` as a Date, and this runs once over the whole
+// batch against a single `now`/`soonThreshold` rather than per-row `new Date()`.
+const EXPIRING_SOON_DAYS = 90
+
+function hasExpiredItem(items: { expiresAt: Date | null }[], now: Date): boolean {
+  return items.some((i) => i.expiresAt !== null && i.expiresAt < now)
+}
+
+function hasExpiringSoonItem(items: { expiresAt: Date | null }[], now: Date, soonThreshold: Date): boolean {
+  return items.some((i) => i.expiresAt !== null && i.expiresAt >= now && i.expiresAt <= soonThreshold)
+}
+
 export async function getNavBadgeCounts(): Promise<NavBadgeCounts> {
-  if (!ENABLE_NAV_BADGES) return { cards: 0, vouchers: 0, clubs: 0, refunds: 0 }
+  if (!ENABLE_NAV_BADGES) {
+    return { cards: EMPTY_NAV_BADGE_CATEGORY, vouchers: EMPTY_NAV_BADGE_CATEGORY, clubs: EMPTY_NAV_BADGE_CATEGORY, refunds: EMPTY_NAV_BADGE_CATEGORY }
+  }
 
   const { familyId } = await getAuthenticatedFamilyId()
+  const now = new Date()
+  const soonThreshold = new Date(now)
+  soonThreshold.setDate(soonThreshold.getDate() + EXPIRING_SOON_DAYS)
 
   const [activeCards, vouchers, clubs, refunds] = await Promise.all([
-    prisma.giftCard.findMany({ where: { familyId, isActive: true }, select: { id: true } }),
-    prisma.voucher.count({ where: { familyId, isActive: true, isUsed: false } }),
-    prisma.clubMember.count({ where: { familyId, isActive: true } }),
-    prisma.refund.count({ where: { familyId, isActive: true, isUsed: false } }),
+    prisma.giftCard.findMany({ where: { familyId, isActive: true }, select: { id: true, expiresAt: true } }),
+    prisma.voucher.findMany({ where: { familyId, isActive: true, isUsed: false }, select: { id: true, expiresAt: true } }),
+    prisma.clubMember.findMany({ where: { familyId, isActive: true }, select: { id: true, expiresAt: true } }),
+    prisma.refund.findMany({ where: { familyId, isActive: true, isUsed: false }, select: { id: true, expiresAt: true } }),
   ])
 
-  const balances = await getBalancesForCards(activeCards.map((c: { id: string }) => c.id))
-  const cards = activeCards.filter((c: { id: string }) => (balances.get(c.id)?.toNumber() ?? 0) > 0).length
+  const balances = await getBalancesForCards(activeCards.map((c) => c.id))
+  const cardsWithBalance = activeCards.filter((c) => (balances.get(c.id)?.toNumber() ?? 0) > 0)
 
-  return { cards, vouchers, clubs, refunds }
+  const category = (items: { expiresAt: Date | null }[]): NavBadgeCategory => ({
+    count: items.length,
+    hasExpired: hasExpiredItem(items, now),
+    hasExpiringSoon: hasExpiringSoonItem(items, now, soonThreshold),
+  })
+
+  return {
+    cards: category(cardsWithBalance),
+    vouchers: category(vouchers),
+    clubs: category(clubs),
+    refunds: category(refunds),
+  }
 }

@@ -3,8 +3,7 @@ import type { Metadata } from "next";
 import "./globals.css";
 import { ClerkProvider } from "@clerk/nextjs";
 import LanguageProvider from "../components/LanguageProvider";
-import LanguageToggle from "../components/LanguageToggle";
-import HeaderNav from "../components/HeaderNav";
+import GlobalSearchHeader from "../components/GlobalSearchHeader";
 import BottomNav from "../components/BottomNav";
 import VisitTracker from "../components/VisitTracker";
 
@@ -39,35 +38,7 @@ export default function RootLayout({
         <LanguageProvider>
           <header className="app-header bg-white border-b border-slate-200 sticky top-0 z-10 shadow-sm">
             <div className="header-inner max-w-6xl mx-auto px-4 sm:px-6 py-3 flex items-center justify-between">
-              <div className="header-brand flex items-center gap-2.5">
-                <div className="header-brand-icon w-9 h-9 bg-gradient-to-br from-emerald-500 to-emerald-700 rounded-xl flex items-center justify-center shadow-sm">
-                  <svg
-                    className="w-5 h-5 text-white"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke="currentColor"
-                    strokeWidth={2}
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"
-                    />
-                  </svg>
-                </div>
-                <div className="header-brand-name">
-                  <span className="font-bold text-slate-900 tracking-tight">
-                    GiftCards
-                  </span>
-                  <span className="font-bold text-emerald-600 tracking-tight">
-                    Vault
-                  </span>
-                </div>
-              </div>
-              <div className="header-actions flex items-center gap-2">
-                <HeaderNav />
-                <LanguageToggle />
-              </div>
+              <GlobalSearchHeader />
             </div>
           </header>
           <main className="app-main max-w-6xl w-full mx-auto px-4 sm:px-6 py-6 flex-1 flex flex-col pb-20">{children}</main>

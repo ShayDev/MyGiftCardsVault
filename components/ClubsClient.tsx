@@ -1,17 +1,20 @@
 'use client'
 
-import React, { useState, useTransition } from 'react'
+import React, { useState, useRef, useEffect, useTransition } from 'react'
 import { createClub, updateClub, deleteClub, type ClubItem } from '../app/clubs/actions'
 import { useLanguageStore } from '../hooks/useLanguageStore'
 import { getT, localeDir } from '../lib/i18n'
 import { formatCode } from '../lib/formatCode'
-import { formatExpiresAt } from '../lib/date'
+import { formatExpiresAt, formatDateSlashFull, isExpiringSoon } from '../lib/date'
 import { firstName } from '../lib/formatName'
 import { useFamilyAttribution } from '../hooks/useFamilyAttributionStore'
 import { adjustNavBadgeCount } from '../hooks/useNavBadgeCountsStore'
+import { useSearchQueryStore } from '../hooks/useSearchQueryStore'
 import type { ProviderOption } from '../lib/providerTypes'
 import Spinner from './Spinner'
 import ProviderCombobox from './ProviderCombobox'
+import { HighlightMatch } from './HighlightMatch'
+import { ExpiryDaysBadge } from './ExpiryDaysBadge'
 
 // ── Helpers ────────────────────────────────────────────────────────────────────
 
@@ -36,26 +39,31 @@ function providerColor(provider: string): string {
   return palette[provider.charCodeAt(0) % palette.length]
 }
 
-function formatDate(iso: string): string {
-  return new Date(iso).toLocaleDateString('en-US', {
-    month: 'short',
-    day: 'numeric',
-    year: 'numeric',
-  })
-}
-
 // ── Modal Shell ────────────────────────────────────────────────────────────────
 
 function Modal({ title, onClose, children }: { title: string; onClose: () => void; children: React.ReactNode }) {
+  const t = getT(useLanguageStore((s) => s.locale))
+  const dialogRef = useRef<HTMLDialogElement>(null)
+
+  useEffect(() => {
+    dialogRef.current?.showModal()
+  }, [])
+
   return (
-    <div className="modal-overlay fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4">
-      <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={onClose} />
+    <dialog
+      ref={dialogRef}
+      onClose={onClose}
+      onClick={(e) => { if (e.target === dialogRef.current) onClose() }}
+      aria-labelledby="modal-title"
+      className="modal-overlay fixed inset-0 z-50 w-full h-full m-0 max-w-none max-h-none border-0 bg-transparent p-0 sm:p-4 flex items-end sm:items-center justify-center backdrop:bg-black/40 backdrop:backdrop-blur-sm"
+    >
       <div className="modal-panel relative w-full sm:max-w-md bg-white rounded-t-3xl sm:rounded-2xl shadow-2xl overflow-hidden max-h-[90dvh] flex flex-col">
         <div className="modal-header flex items-center justify-between px-5 py-4 border-b border-slate-100 flex-shrink-0">
-          <h2 className="font-semibold text-slate-800 text-base">{title}</h2>
+          <h2 id="modal-title" className="font-semibold text-slate-800 text-base">{title}</h2>
           <button
             onClick={onClose}
-            className="w-8 h-8 flex items-center justify-center rounded-full text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-colors"
+            aria-label={t.close}
+            className="w-11 h-11 flex items-center justify-center rounded-full text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-colors"
           >
             <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
@@ -64,7 +72,7 @@ function Modal({ title, onClose, children }: { title: string; onClose: () => voi
         </div>
         <div className="px-5 py-5 overflow-y-auto">{children}</div>
       </div>
-    </div>
+    </dialog>
   )
 }
 
@@ -313,9 +321,12 @@ function ClubDetailModal({
 
         {/* Expiry */}
         {club.expiresAt && (
-          <div>
+          <div className={isExpiringSoon(club.expiresAt) ? 'p-2 rounded-xl bg-rose-50 border border-rose-200' : undefined}>
             <p className="text-xs text-slate-400 mb-0.5">{t.expires}</p>
-            <p className="text-sm font-mono text-slate-800">{formatExpiresAt(club.expiresAt!)}</p>
+            <p className={`text-sm font-mono flex items-center gap-1.5 ${isExpiringSoon(club.expiresAt) ? 'text-rose-600 font-semibold' : 'text-slate-800'}`}>
+              {formatDateSlashFull(club.expiresAt!)}
+              {isExpiringSoon(club.expiresAt) && <ExpiryDaysBadge expiresAt={club.expiresAt!} />}
+            </p>
           </div>
         )}
 
@@ -331,7 +342,7 @@ function ClubDetailModal({
         <div>
           <p className="text-xs text-slate-400 mb-0.5">{t.dateAdded}</p>
           <p className="text-sm text-slate-700">
-            {formatDate(club.createdAt)}
+            {formatDateSlashFull(club.createdAt)}
             {addedByName && ` (${addedByName})`}
           </p>
         </div>
@@ -353,9 +364,18 @@ function ClubDetailModal({
             type="button"
             onClick={handleDelete}
             disabled={isPending}
-            className="flex-1 h-11 rounded-xl border border-rose-200 text-sm font-medium text-rose-600 hover:bg-rose-50 transition-colors disabled:opacity-60"
+            className="flex-1 h-11 rounded-xl border border-rose-200 text-sm font-medium text-rose-600 hover:bg-rose-50 transition-colors disabled:opacity-60 flex items-center justify-center gap-2"
           >
-            {isPending ? <span className="flex items-center justify-center gap-2"><Spinner />{t.removing}</span> : t.removeCard}
+            {isPending ? (
+              <><Spinner />{t.removing}</>
+            ) : (
+              <>
+                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                </svg>
+                {t.remove}
+              </>
+            )}
           </button>
         </div>
       </div>
@@ -442,34 +462,39 @@ function EditClubModal({
 
 // ── Club Row ───────────────────────────────────────────────────────────────────
 
-function ClubRow({ club, onClick }: { club: ClubItem; onClick: () => void }) {
+function ClubRow({ club, query, onClick }: { club: ClubItem; query: string; onClick: () => void }) {
   const t = getT(useLanguageStore((s) => s.locale))
   const maskedId = club.memberId ? club.memberId.replace(/.(?=.{4})/g, '•') : null
+  const expiringSoon = isExpiringSoon(club.expiresAt)
 
   return (
     <button
       type="button"
       onClick={onClick}
-      className="w-full text-start bg-white rounded-2xl border border-slate-100 shadow-sm hover:shadow-md hover:border-slate-200 transition-all p-4 flex items-center gap-3"
+      className={`w-full text-start rounded-2xl border shadow-sm hover:shadow-md transition-all p-4 flex items-center gap-3 ${
+        expiringSoon ? 'bg-rose-50/60 border-rose-200 hover:bg-rose-50' : 'bg-white border-slate-100 hover:border-slate-200'
+      }`}
     >
       <span className="text-xs font-mono text-slate-400 flex-shrink-0 w-8 text-center">#{club.seq}</span>
       {club.provider && (
         <div className="flex-shrink-0">
           <span className={`px-2.5 py-1 rounded-full text-xs font-semibold ${providerColor(club.provider)}`}>
-            {club.provider}
+            <HighlightMatch text={club.provider} query={query} />
           </span>
         </div>
       )}
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-2">
-          <span className="text-sm font-medium text-slate-800 truncate">{club.name}</span>
+          <span className="text-sm font-medium text-slate-800 truncate"><HighlightMatch text={club.name} query={query} /></span>
           {maskedId && (
+            // memberId is filtered against as-typed but rendered masked here — no visible
+            // highlight for a match that came in purely via the hidden digits.
             <span className="text-sm font-mono font-semibold text-slate-600 tracking-wider flex-shrink-0" dir="ltr">{maskedId}</span>
           )}
         </div>
         <div className="flex items-center gap-2 mt-0.5">
           {club.ownerName && (
-            <span className="text-xs text-slate-400 truncate">{club.ownerName}</span>
+            <span className="text-xs text-slate-400 truncate"><HighlightMatch text={club.ownerName} query={query} /></span>
           )}
           {club.idType && (
             <span className="text-xs text-slate-400">{t.idTypes[club.idType]}</span>
@@ -477,7 +502,10 @@ function ClubRow({ club, onClick }: { club: ClubItem; onClick: () => void }) {
         </div>
       </div>
       {club.expiresAt && (
-        <span className="flex-shrink-0 text-xs font-mono text-slate-400">{formatExpiresAt(club.expiresAt!)}</span>
+        <span className={`flex-shrink-0 flex items-center gap-1.5 text-xs font-mono ${expiringSoon ? 'text-rose-600 font-semibold' : 'text-slate-400'}`}>
+          {formatExpiresAt(club.expiresAt!)}
+          {expiringSoon && <ExpiryDaysBadge expiresAt={club.expiresAt!} />}
+        </span>
       )}
     </button>
   )
@@ -498,6 +526,17 @@ export default function ClubsClient({
   const [showAdd, setShowAdd] = useState(false)
   const [selected, setSelected] = useState<ClubItem | null>(null)
   const [editTarget, setEditTarget] = useState<ClubItem | null>(null)
+
+  const rawQuery = useSearchQueryStore((s) => s.query).trim()
+  const query = rawQuery.toLowerCase()
+  const matchesQuery = (c: ClubItem) =>
+    !query ||
+    c.name.toLowerCase().includes(query) ||
+    c.provider.toLowerCase().includes(query) ||
+    (c.notes?.toLowerCase().includes(query) ?? false) ||
+    (c.ownerName?.toLowerCase().includes(query) ?? false) ||
+    (c.memberId?.toLowerCase().includes(query) ?? false)
+  const visibleClubs = clubs.filter(matchesQuery)
 
   return (
     <div className="clubs-page space-y-6" dir={dir}>
@@ -527,11 +566,15 @@ export default function ClubsClient({
             {t.addClub}
           </button>
         </div>
+      ) : visibleClubs.length === 0 ? (
+        <div className="bg-white rounded-2xl border border-slate-100 shadow-sm p-8 text-center">
+          <p className="text-slate-400 text-sm">{t.searchNoResults(rawQuery)}</p>
+        </div>
       ) : (
         <section className="clubs-section">
           <div className="space-y-2">
-            {clubs.map((c) => (
-              <ClubRow key={c.id} club={c} onClick={() => setSelected(c)} />
+            {visibleClubs.map((c) => (
+              <ClubRow key={c.id} club={c} query={rawQuery} onClick={() => setSelected(c)} />
             ))}
           </div>
         </section>

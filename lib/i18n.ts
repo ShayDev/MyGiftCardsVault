@@ -13,6 +13,7 @@ const translations = {
     totalCards: 'Total Cards',
     reloadable: 'Rechargeable',
     emptyCards: 'Empty Cards',
+    expiringSoon: 'Expires in the coming month',
     // Table headers
     allCards: 'All Cards',
     colCard: 'Card',
@@ -68,6 +69,7 @@ const translations = {
     transactionFailed: 'Transaction failed',
     // Delete dialog
     removeCard: 'Remove Card',
+    remove: 'Remove',
     thisWillHideCard: 'This will hide the card',
     willBeMarkedInactive: 'will be marked inactive. All transaction history is preserved.',
     removing: 'Removing…',
@@ -233,6 +235,14 @@ const translations = {
     failedToUpdateClub: 'Failed to update club',
     // Misc
     cards: (n: number) => `${n} card${n !== 1 ? 's' : ''}`,
+    close: 'Close',
+    // Search
+    searchLabel: 'Search',
+    searchPlaceholder: (category: string) => `Search ${category}…`,
+    searchRecent: 'Recent',
+    searchNoResults: (query: string) => `No results for "${query}"`,
+    navBadgeHasExpired: 'Includes an expired item',
+    navBadgeExpiringSoon: 'Includes an item expiring soon',
   },
   he: {
     // Header
@@ -243,6 +253,7 @@ const translations = {
     totalCards: 'סה״כ כרטיסים',
     reloadable: 'ניתן לטעינה',
     emptyCards: 'כרטיסים ריקים',
+    expiringSoon: 'פג תוקף בקרוב',
     // Table headers
     allCards: 'כל הכרטיסים',
     colCard: 'כרטיס',
@@ -298,6 +309,7 @@ const translations = {
     transactionFailed: 'העסקה נכשלה',
     // Delete dialog
     removeCard: 'הסר כרטיס',
+    remove: 'הסר',
     thisWillHideCard: 'פעולה זו תסתיר את הכרטיס',
     willBeMarkedInactive: 'יסומן כלא פעיל. כל היסטוריית העסקאות שמורה.',
     removing: 'מסיר...',
@@ -463,6 +475,14 @@ const translations = {
     failedToUpdateClub: 'עדכון המועדון נכשל',
     // Misc
     cards: (n: number) => n === 1 ? 'כרטיס אחד' : `${n} כרטיסים`,
+    close: 'סגור',
+    // Search
+    searchLabel: 'חיפוש',
+    searchPlaceholder: (category: string) => `חיפוש ב${category}…`,
+    searchRecent: 'אחרונים',
+    searchNoResults: (query: string) => `אין תוצאות עבור "${query}"`,
+    navBadgeHasExpired: 'כולל פריט שפג תוקפו',
+    navBadgeExpiringSoon: 'כולל פריט שעומד לפוג בקרוב',
   },
 } as const
 
