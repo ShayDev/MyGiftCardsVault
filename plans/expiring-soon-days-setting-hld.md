@@ -68,6 +68,9 @@ export type FamilySettings = {
     refunds: number | null
     clubs: number | null
   }
+  // Other future family-wide preferences (theme, defaultCurrency, ...) may also
+  // live as sibling top-level keys — untyped here, but never dropped by the parser.
+  [key: string]: unknown
 }
 
 const DEFAULT_SETTINGS: FamilySettings = {
@@ -76,23 +79,28 @@ const DEFAULT_SETTINGS: FamilySettings = {
 
 // Defensive by necessity — this is raw TEXT, not a DB-validated shape. Malformed
 // or partial JSON (including data saved by an older/newer version of this app)
-// falls back field-by-field rather than discarding the whole blob.
+// falls back field-by-field rather than discarding the whole blob. Also preserves
+// any unrecognized top-level key untouched (`...parsed`), so a save from this
+// feature can never clobber a sibling setting some other feature added later.
 export function parseFamilySettings(raw: string | null): FamilySettings {
-  if (!raw) return DEFAULT_SETTINGS
-  try {
-    const parsed = JSON.parse(raw)
-    const days = parsed?.expiringSoonDays ?? {}
-    return {
-      expiringSoonDays: {
-        default: typeof days.default === 'number' ? days.default : 60,
-        cards: typeof days.cards === 'number' ? days.cards : null,
-        vouchers: typeof days.vouchers === 'number' ? days.vouchers : null,
-        refunds: typeof days.refunds === 'number' ? days.refunds : null,
-        clubs: typeof days.clubs === 'number' ? days.clubs : null,
-      },
+  let parsed: Record<string, unknown> = {}
+  if (raw) {
+    try {
+      parsed = JSON.parse(raw)
+    } catch {
+      parsed = {}
     }
-  } catch {
-    return DEFAULT_SETTINGS
+  }
+  const days = (parsed.expiringSoonDays ?? {}) as Partial<FamilySettings['expiringSoonDays']>
+  return {
+    ...parsed,
+    expiringSoonDays: {
+      default: typeof days.default === 'number' ? days.default : 60,
+      cards: typeof days.cards === 'number' ? days.cards : null,
+      vouchers: typeof days.vouchers === 'number' ? days.vouchers : null,
+      refunds: typeof days.refunds === 'number' ? days.refunds : null,
+      clubs: typeof days.clubs === 'number' ? days.clubs : null,
+    },
   }
 }
 
