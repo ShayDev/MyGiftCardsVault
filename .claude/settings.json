@@ -43,7 +43,11 @@
       "Bash(tail -c 4000 /tmp/nextdev.log 2>&1)",
       "Read(//tmp/**)",
       "Bash(node -e ' *)",
-      "Bash(awk -F'=' '{print \"GEMINI_API_KEY value_length=\" length\\($0\\)-length\\($1\\)-1}')"
+      "Bash(awk -F'=' '{print \"GEMINI_API_KEY value_length=\" length\\($0\\)-length\\($1\\)-1}')",
+      "Bash(git -C /c/Dev/CloudeProjects/MyGiftCardsVault log --oneline -- public/manifest.json)",
+      "Bash(git -C /c/Dev/CloudeProjects/MyGiftCardsVault log --oneline --all -- middleware.ts src/middleware.ts)",
+      "Bash(git -C /c/Dev/CloudeProjects/MyGiftCardsVault ls-files)",
+      "Bash(grep -iE \"layout\\\\.\\(tsx|ts\\)$\")"
     ],
     "additionalDirectories": [
       "\\tmp"
