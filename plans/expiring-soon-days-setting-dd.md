@@ -9,7 +9,7 @@
 | Per-user or per-family? | **Per-family.** Shared highlight on shared data — see HLD's Scope decision. |
 | Storage shape | **`FamilyGroup.settings String?`** — JSON-encoded text, not a typed column and not Prisma's `Json`/`jsonb` type. Chosen so Phase 2 (per-category windows) needs no second migration. |
 | Default window | **60 days** (already live in `lib/date.ts`/`app/actions.ts` as a hardcoded constant — this feature makes it configurable, not new behavior). |
-| Bounds | **1–365 days**, enforced via zod on the settings form. |
+| Bounds | **0–365 days**, enforced via zod on the settings form. |
 | Who can edit it | **Any signed-in family member** — not owner-gated, matching every other family-scoped write in the app. |
 | Live update? | **No.** Takes effect on next page load/navigation, same as the existing nav-badge staleness precedent. |
 
@@ -226,7 +226,7 @@ Call-site count per file (from the current codebase, for tracking during impleme
 import { parseFamilySettings } from '../../lib/familySettings'
 
 const expiringSoonDaysSchema = z.object({
-  expiringSoonDays: z.coerce.number().int().min(1).max(365),
+  expiringSoonDays: z.coerce.number().int().min(0).max(365),
 })
 
 export async function updateExpiringSoonDays(formData: FormData) {
@@ -234,7 +234,7 @@ export async function updateExpiringSoonDays(formData: FormData) {
   if (!userId) redirect('/sign-in')
 
   const parsed = expiringSoonDaysSchema.safeParse({ expiringSoonDays: formData.get('expiringSoonDays') })
-  if (!parsed.success) return { error: 'Enter a number between 1 and 365.' }
+  if (!parsed.success) return { error: 'Enter a number between 0 and 365.' }
 
   const dbUser = await prisma.user.findUnique({ where: { clerkId: userId }, select: { familyId: true } })
   if (!dbUser?.familyId) redirect('/onboarding')
@@ -273,7 +273,7 @@ New section, same form-and-server-action pattern as the existing family name / i
 <form action={updateExpiringSoonDays} className="settings-expiry-section ...">
   <label>{t.expiringSoonDaysLabel}</label>
   <p className="text-xs text-slate-400">{t.expiringSoonDaysHelp}</p>
-  <input type="number" name="expiringSoonDays" min={1} max={365} defaultValue={expiringSoonDays} className={inputClass} />
+  <input type="number" name="expiringSoonDays" min={0} max={365} defaultValue={expiringSoonDays} className={inputClass} />
   <button type="submit">{t.saveChanges}</button>
 </form>
 ```

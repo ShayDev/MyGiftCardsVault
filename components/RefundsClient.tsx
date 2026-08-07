@@ -519,13 +519,16 @@ function RefundDetailModal({
   refund,
   onClose,
   onEdit,
+  expiringSoonDays,
 }: {
   refund: RefundItem
   onClose: () => void
   onEdit: () => void
+  expiringSoonDays: number
 }) {
   const locale = useLanguageStore((s) => s.locale)
   const t = getT(locale)
+  const soon = (expiresAt: string | undefined) => isExpiringSoon(expiresAt, expiringSoonDays)
   const [showCode, setShowCode] = useState(false)
   const [copiedCode, setCopiedCode] = useState(false)
   const [copiedLink, setCopiedLink] = useState(false)
@@ -613,11 +616,11 @@ function RefundDetailModal({
 
         {/* Expires */}
         {refund.expiresAt && (
-          <div className={isExpiringSoon(refund.expiresAt) ? 'p-2 rounded-xl bg-rose-50 border border-rose-200' : undefined}>
+          <div className={soon(refund.expiresAt) ? 'p-2 rounded-xl bg-rose-50 border border-rose-200' : undefined}>
             <p className="text-xs text-slate-400 mb-0.5">{t.expires}</p>
-            <p className={`text-sm font-mono flex items-center gap-1.5 ${isExpiringSoon(refund.expiresAt) ? 'text-rose-600 font-semibold' : 'text-slate-800'}`}>
+            <p className={`text-sm font-mono flex items-center gap-1.5 ${soon(refund.expiresAt) ? 'text-rose-600 font-semibold' : 'text-slate-800'}`}>
               {formatDateSlashFull(refund.expiresAt)}
-              {isExpiringSoon(refund.expiresAt) && <ExpiryDaysBadge expiresAt={refund.expiresAt} />}
+              {soon(refund.expiresAt) && <ExpiryDaysBadge expiresAt={refund.expiresAt} />}
             </p>
           </div>
         )}
@@ -832,7 +835,7 @@ function RefundDetailModal({
 
 // ── Refund Row ─────────────────────────────────────────────────────────────────
 
-function RefundRow({ refund, query, onClick, onDelete }: { refund: RefundItem; query: string; onClick: () => void; onDelete?: () => Promise<void> }) {
+function RefundRow({ refund, query, expiringSoonDays, onClick, onDelete }: { refund: RefundItem; query: string; expiringSoonDays: number; onClick: () => void; onDelete?: () => Promise<void> }) {
   const locale = useLanguageStore((s) => s.locale)
   const t = getT(locale)
   const dir = localeDir[locale]
@@ -852,7 +855,7 @@ function RefundRow({ refund, query, onClick, onDelete }: { refund: RefundItem; q
     })
   }
 
-  const expiringSoon = isExpiringSoon(refund.expiresAt)
+  const expiringSoon = isExpiringSoon(refund.expiresAt, expiringSoonDays)
 
   return (
     <div
@@ -948,9 +951,11 @@ function RefundRow({ refund, query, onClick, onDelete }: { refund: RefundItem; q
 export default function RefundsClient({
   refunds,
   providerOptions,
+  expiringSoonDays,
 }: {
   refunds: RefundItem[]
   providerOptions: ProviderOption[]
+  expiringSoonDays: number
 }) {
   const locale = useLanguageStore((s) => s.locale)
   const t = getT(locale)
@@ -1019,7 +1024,7 @@ export default function RefundsClient({
         ) : (
           <div className="space-y-2">
             {visibleActive.map((r) => (
-              <RefundRow key={r.id} refund={r} query={rawQuery} onClick={() => setSelected(r)} />
+              <RefundRow key={r.id} refund={r} query={rawQuery} expiringSoonDays={expiringSoonDays} onClick={() => setSelected(r)} />
             ))}
           </div>
         )}
@@ -1050,7 +1055,7 @@ export default function RefundsClient({
         {showUsed && visibleUsed.length > 0 && (
           <div className="space-y-2">
             {visibleUsed.map((r) => (
-              <RefundRow key={r.id} refund={r} query={rawQuery} onClick={() => setSelected(r)} onDelete={() => deleteRefund(r.id)} />
+              <RefundRow key={r.id} refund={r} query={rawQuery} expiringSoonDays={expiringSoonDays} onClick={() => setSelected(r)} onDelete={() => deleteRefund(r.id)} />
             ))}
           </div>
         )}
@@ -1065,6 +1070,7 @@ export default function RefundsClient({
           refund={selected}
           onClose={() => setSelected(null)}
           onEdit={() => { setEditTarget(selected); setSelected(null) }}
+          expiringSoonDays={expiringSoonDays}
         />
       )}
       {editTarget && (

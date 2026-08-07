@@ -7,7 +7,7 @@ import { getT, localeDir } from '../../lib/i18n'
 import { UserButton } from '@clerk/nextjs'
 import CopyButton from './CopyButton'
 import Spinner from '../../components/Spinner'
-import { switchFamily, createNewFamily, switchToOwnFamily } from './actions'
+import { switchFamily, createNewFamily, switchToOwnFamily, updateExpiringSoonDays } from './actions'
 
 type Props = {
   familyName: string
@@ -16,6 +16,7 @@ type Props = {
   email: string
   ownedFamilyName: string | null
   ownsCurrentFamily: boolean
+  expiringSoonDays: number
 }
 
 type Mode = 'closed' | 'choose' | 'join' | 'create'
@@ -35,6 +36,7 @@ export default function SettingsClient({
   email,
   ownedFamilyName,
   ownsCurrentFamily,
+  expiringSoonDays,
 }: Props) {
   const locale = useLanguageStore((s) => s.locale)
   const t = getT(locale)
@@ -44,6 +46,24 @@ export default function SettingsClient({
   const [error, setError] = useState<string | null>(null)
   const [pending, setPending] = useState(false)
   const [switchingBack, setSwitchingBack] = useState(false)
+
+  const [expirySaving, setExpirySaving] = useState(false)
+  const [expiryError, setExpiryError] = useState<string | null>(null)
+  const [expirySaved, setExpirySaved] = useState(false)
+
+  async function handleExpirySubmit(formData: FormData) {
+    setExpirySaving(true)
+    setExpiryError(null)
+    setExpirySaved(false)
+    const result = await updateExpiringSoonDays(formData)
+    setExpirySaving(false)
+    if (result?.error) {
+      setExpiryError(result.error)
+    } else {
+      setExpirySaved(true)
+      setTimeout(() => setExpirySaved(false), 2000)
+    }
+  }
 
   function closeForm() {
     setMode('closed')
@@ -228,6 +248,32 @@ export default function SettingsClient({
             </div>
           </form>
         )}
+      </div>
+
+      <div className="bg-white rounded-2xl border border-slate-200 p-5 mb-4">
+        <h2 className="text-sm font-semibold text-slate-500 uppercase tracking-wide mb-4">{t.expiringSoonDaysLabel}</h2>
+        <form action={handleExpirySubmit} className="flex flex-col gap-2">
+          <p className="text-xs text-slate-400">{t.expiringSoonDaysHelp}</p>
+          <div className="flex items-center gap-3">
+            <input
+              name="expiringSoonDays"
+              type="number"
+              min={0}
+              max={365}
+              defaultValue={expiringSoonDays}
+              className="w-24 border border-slate-200 rounded-xl px-3 py-2.5 text-sm font-mono focus:outline-none focus:ring-2 focus:ring-emerald-500"
+            />
+            <button
+              type="submit"
+              disabled={expirySaving}
+              className="min-h-[44px] px-4 bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50 text-white text-sm font-medium rounded-xl transition-colors"
+            >
+              {expirySaving ? <span className="flex items-center justify-center gap-2"><Spinner />{t.saving}</span> : t.saveChanges}
+            </button>
+            {expirySaved && <span className="text-sm text-emerald-600">{t.expiringSoonDaysSaved}</span>}
+          </div>
+          {expiryError && <p className="text-rose-600 text-sm">{expiryError}</p>}
+        </form>
       </div>
 
       <div className="bg-white rounded-2xl border border-slate-200 p-5">

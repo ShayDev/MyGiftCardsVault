@@ -5,6 +5,7 @@ import ClubsClient from '../../components/ClubsClient'
 import type { ClubItem } from './actions'
 import { decrypt, isEncrypted } from '../../lib/encrypt'
 import { getProviderOptions } from '../providers/actions'
+import { parseFamilySettings, getExpiringSoonDays } from '../../lib/familySettings'
 
 export default async function Page() {
   const { userId } = await auth()
@@ -12,10 +13,12 @@ export default async function Page() {
 
   const user = await prisma.user.findUnique({
     where: { clerkId: userId },
-    select: { familyId: true },
+    select: { familyId: true, family: { select: { settings: true } } },
   })
 
   if (!user?.familyId) redirect('/onboarding')
+
+  const expiringSoonDays = getExpiringSoonDays(parseFamilySettings(user.family?.settings ?? null))
 
   const clubs = await prisma.clubMember.findMany({
     where: { familyId: user.familyId, isActive: true },
@@ -43,5 +46,5 @@ export default async function Page() {
 
   const providerOptions = await getProviderOptions('CLUB')
 
-  return <ClubsClient clubs={payload} providerOptions={providerOptions} />
+  return <ClubsClient clubs={payload} providerOptions={providerOptions} expiringSoonDays={expiringSoonDays} />
 }

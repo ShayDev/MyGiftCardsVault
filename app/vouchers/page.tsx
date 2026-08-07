@@ -5,6 +5,7 @@ import VouchersClient from '../../components/VouchersClient'
 import type { VoucherItem } from './actions'
 import { decrypt, isEncrypted } from '../../lib/encrypt'
 import { getProviderOptions } from '../providers/actions'
+import { parseFamilySettings, getExpiringSoonDays } from '../../lib/familySettings'
 
 export default async function Page() {
   const { userId } = await auth()
@@ -12,10 +13,12 @@ export default async function Page() {
 
   const user = await prisma.user.findUnique({
     where: { clerkId: userId },
-    select: { familyId: true },
+    select: { familyId: true, family: { select: { settings: true } } },
   })
 
   if (!user?.familyId) redirect('/onboarding')
+
+  const expiringSoonDays = getExpiringSoonDays(parseFamilySettings(user.family?.settings ?? null))
 
   const vouchers = await prisma.voucher.findMany({
     where: { familyId: user.familyId, isActive: true },
@@ -46,5 +49,5 @@ export default async function Page() {
 
   const providerOptions = await getProviderOptions('VOUCHER')
 
-  return <VouchersClient vouchers={payload} providerOptions={providerOptions} />
+  return <VouchersClient vouchers={payload} providerOptions={providerOptions} expiringSoonDays={expiringSoonDays} />
 }

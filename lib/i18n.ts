@@ -243,6 +243,10 @@ const translations = {
     searchNoResults: (query: string) => `No results for "${query}"`,
     navBadgeHasExpired: 'Includes an expired item',
     navBadgeExpiringSoon: 'Includes an item expiring soon',
+    // Expiring soon setting
+    expiringSoonDaysLabel: '"Expiring soon" window (days)',
+    expiringSoonDaysHelp: 'Cards, vouchers, refunds, and clubs are highlighted this many days before they expire.',
+    expiringSoonDaysSaved: 'Saved',
   },
   he: {
     // Header
@@ -483,6 +487,10 @@ const translations = {
     searchNoResults: (query: string) => `אין תוצאות עבור "${query}"`,
     navBadgeHasExpired: 'כולל פריט שפג תוקפו',
     navBadgeExpiringSoon: 'כולל פריט שעומד לפוג בקרוב',
+    // Expiring soon setting
+    expiringSoonDaysLabel: 'חלון "פג תוקף בקרוב" (בימים)',
+    expiringSoonDaysHelp: 'כרטיסים, שוברים, זיכויים ומועדונים מודגשים במספר הימים הבא לפני שפג תוקפם.',
+    expiringSoonDaysSaved: 'נשמר',
   },
 } as const
 

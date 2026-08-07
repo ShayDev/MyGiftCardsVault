@@ -224,13 +224,16 @@ function VoucherDetailModal({
   onClose,
   onEdit,
   onUpdated,
+  expiringSoonDays,
 }: {
   voucher: VoucherItem
   onClose: () => void
   onEdit: () => void
   onUpdated: () => void
+  expiringSoonDays: number
 }) {
   const t = getT(useLanguageStore((s) => s.locale))
+  const soon = (expiresAt: string | undefined) => isExpiringSoon(expiresAt, expiringSoonDays)
   const [showCode, setShowCode] = useState(false)
   const [copiedCode, setCopiedCode] = useState(false)
   const [copiedLink, setCopiedLink] = useState(false)
@@ -410,11 +413,11 @@ function VoucherDetailModal({
 
         {/* Expiry */}
         {voucher.expiresAt && (
-          <div className={isExpiringSoon(voucher.expiresAt) ? 'p-2 rounded-xl bg-rose-50 border border-rose-200' : undefined}>
+          <div className={soon(voucher.expiresAt) ? 'p-2 rounded-xl bg-rose-50 border border-rose-200' : undefined}>
             <p className="text-xs text-slate-400 mb-0.5">{t.expires}</p>
-            <p className={`text-sm font-mono flex items-center gap-1.5 ${isExpiringSoon(voucher.expiresAt) ? 'text-rose-600 font-semibold' : 'text-slate-800'}`}>
+            <p className={`text-sm font-mono flex items-center gap-1.5 ${soon(voucher.expiresAt) ? 'text-rose-600 font-semibold' : 'text-slate-800'}`}>
               {formatDateSlashFull(voucher.expiresAt!)}
-              {isExpiringSoon(voucher.expiresAt) && <ExpiryDaysBadge expiresAt={voucher.expiresAt!} />}
+              {soon(voucher.expiresAt) && <ExpiryDaysBadge expiresAt={voucher.expiresAt!} />}
             </p>
           </div>
         )}
@@ -567,7 +570,7 @@ function EditVoucherModal({
 
 // ── Voucher Row ────────────────────────────────────────────────────────────────
 
-function VoucherRow({ voucher, query, onClick, onDelete }: { voucher: VoucherItem; query: string; onClick: () => void; onDelete?: () => Promise<void> }) {
+function VoucherRow({ voucher, query, expiringSoonDays, onClick, onDelete }: { voucher: VoucherItem; query: string; expiringSoonDays: number; onClick: () => void; onDelete?: () => Promise<void> }) {
   const t = getT(useLanguageStore((s) => s.locale))
   const [deleting, startDelete] = useTransition()
 
@@ -576,7 +579,7 @@ function VoucherRow({ voucher, query, onClick, onDelete }: { voucher: VoucherIte
     startDelete(async () => { await onDelete?.() })
   }
 
-  const expiringSoon = isExpiringSoon(voucher.expiresAt)
+  const expiringSoon = isExpiringSoon(voucher.expiresAt, expiringSoonDays)
 
   return (
     <div className={`voucher-row w-full rounded-2xl border shadow-sm hover:shadow-md transition-all flex items-center gap-3 pr-2 ${
@@ -650,9 +653,11 @@ function VoucherRow({ voucher, query, onClick, onDelete }: { voucher: VoucherIte
 export default function VouchersClient({
   vouchers,
   providerOptions,
+  expiringSoonDays,
 }: {
   vouchers: VoucherItem[]
   providerOptions: ProviderOption[]
+  expiringSoonDays: number
 }) {
   const t = getT(useLanguageStore((s) => s.locale))
   const [showAdd, setShowAdd] = useState(false)
@@ -718,7 +723,7 @@ export default function VouchersClient({
         ) : (
           <div className="space-y-2">
             {visibleActive.map((v) => (
-              <VoucherRow key={v.id} voucher={v} query={rawQuery} onClick={() => setSelected(v)} />
+              <VoucherRow key={v.id} voucher={v} query={rawQuery} expiringSoonDays={expiringSoonDays} onClick={() => setSelected(v)} />
             ))}
           </div>
         )}
@@ -752,7 +757,7 @@ export default function VouchersClient({
         ) : showUsed ? (
           <div className="space-y-2">
             {visibleUsed.map((v) => (
-              <VoucherRow key={v.id} voucher={v} query={rawQuery} onClick={() => setSelected(v)} onDelete={() => deleteVoucher(v.id)} />
+              <VoucherRow key={v.id} voucher={v} query={rawQuery} expiringSoonDays={expiringSoonDays} onClick={() => setSelected(v)} onDelete={() => deleteVoucher(v.id)} />
             ))}
           </div>
         ) : null}
@@ -768,6 +773,7 @@ export default function VouchersClient({
           onClose={() => setSelected(null)}
           onEdit={() => { setEditTarget(selected); setSelected(null) }}
           onUpdated={() => setSelected(null)}
+          expiringSoonDays={expiringSoonDays}
         />
       )}
       {editTarget && (

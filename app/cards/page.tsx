@@ -5,6 +5,7 @@ import { getBalancesForCards } from '../../lib/balance'
 import GiftCardsClient, { type CardWithBalance } from '../../components/GiftCardsClient'
 import { decrypt, isEncrypted } from '../../lib/encrypt'
 import { getProviderOptions } from '../providers/actions'
+import { parseFamilySettings, getExpiringSoonDays } from '../../lib/familySettings'
 
 export default async function Page() {
   const { userId } = await auth()
@@ -12,12 +13,13 @@ export default async function Page() {
 
   const user = await prisma.user.findUnique({
     where: { clerkId: userId },
-    select: { familyId: true },
+    select: { familyId: true, family: { select: { settings: true } } },
   })
 
   if (!user?.familyId) redirect('/onboarding')
 
   const { familyId } = user
+  const expiringSoonDays = getExpiringSoonDays(parseFamilySettings(user.family?.settings ?? null))
 
   const cards = await prisma.giftCard.findMany({
     where: { familyId, isActive: true },
@@ -49,5 +51,5 @@ export default async function Page() {
     balance: parseFloat(balances.get(c.id)?.toString() ?? '0'),
   }))
 
-  return <GiftCardsClient cards={payload} providerOptions={providerOptions} />
+  return <GiftCardsClient cards={payload} providerOptions={providerOptions} expiringSoonDays={expiringSoonDays} />
 }

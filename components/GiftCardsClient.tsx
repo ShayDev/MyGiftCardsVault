@@ -335,6 +335,7 @@ function CardDetailModal({
   onSpend,
   onRecharge,
   onDelete,
+  expiringSoonDays,
 }: {
   card: CardWithBalance
   onClose: () => void
@@ -342,8 +343,10 @@ function CardDetailModal({
   onSpend: () => void
   onRecharge: () => void
   onDelete: () => void
+  expiringSoonDays: number
 }) {
   const t = getT(useLanguageStore((s) => s.locale))
+  const soon = (expiresAt: string | undefined) => isExpiringSoon(expiresAt, expiringSoonDays)
   const [showFull, setShowFull] = useState(false)
   const [showCvv, setShowCvv] = useState(false)
   const [copiedFull, setCopiedFull] = useState(false)
@@ -417,11 +420,11 @@ function CardDetailModal({
               </span>
             )}
           </div>
-          <div className={`p-3 rounded-xl border ${isExpiringSoon(card.expiresAt) ? 'border-rose-200 bg-rose-50' : 'border-slate-100 bg-white'}`}>
+          <div className={`p-3 rounded-xl border ${soon(card.expiresAt) ? 'border-rose-200 bg-rose-50' : 'border-slate-100 bg-white'}`}>
             <p className="text-xs text-slate-400 mb-1">{t.expires}</p>
-            <p className={`font-mono font-medium flex items-center gap-1.5 ${isExpiringSoon(card.expiresAt) ? 'text-rose-600' : 'text-slate-700'}`}>
+            <p className={`font-mono font-medium flex items-center gap-1.5 ${soon(card.expiresAt) ? 'text-rose-600' : 'text-slate-700'}`}>
               {card.expiresAt ? formatDateSlashFull(card.expiresAt) : '—'}
-              {card.expiresAt && isExpiringSoon(card.expiresAt) && <ExpiryDaysBadge expiresAt={card.expiresAt} />}
+              {card.expiresAt && soon(card.expiresAt) && <ExpiryDaysBadge expiresAt={card.expiresAt} />}
             </p>
           </div>
           <div className="p-3 rounded-xl border border-slate-100 bg-white">
@@ -986,13 +989,16 @@ type ModalState =
 export default function GiftCardsClient({
   cards,
   providerOptions,
+  expiringSoonDays,
 }: {
   cards: CardWithBalance[]
   providerOptions: ProviderOption[]
+  expiringSoonDays: number
 }) {
   const t = getT(useLanguageStore((s) => s.locale))
   const [modal, setModal] = useState<ModalState>({ type: 'none' })
   const [showUsed, setShowUsed] = useState(false)
+  const soon = (expiresAt: string | undefined) => isExpiringSoon(expiresAt, expiringSoonDays)
 
   const active = cards.filter((c) => c.balance > 0 || c.isReloadable)
   const used = cards.filter((c) => c.balance <= 0 && !c.isReloadable)
@@ -1142,7 +1148,7 @@ export default function GiftCardsClient({
                   </thead>
                   <tbody className="divide-y divide-slate-100">
                     {visibleActive.map((card) => (
-                      <tr key={card.id} className={`transition-colors group ${isExpiringSoon(card.expiresAt) ? 'bg-rose-50/60 hover:bg-rose-50' : 'hover:bg-slate-50/70'}`}>
+                      <tr key={card.id} className={`transition-colors group ${soon(card.expiresAt) ? 'bg-rose-50/60 hover:bg-rose-50' : 'hover:bg-slate-50/70'}`}>
                         <td className="px-3 py-3.5 text-xs font-mono text-slate-400 text-right">#{card.seq}</td>
                         <td className="px-5 py-3.5">
                           <button
@@ -1181,7 +1187,7 @@ export default function GiftCardsClient({
                         </td>
                         <td className="px-4 py-3.5 text-xs whitespace-nowrap">
                           {card.expiresAt ? (
-                            isExpiringSoon(card.expiresAt) ? (
+                            soon(card.expiresAt) ? (
                               <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full font-medium bg-rose-50 text-rose-600 border border-rose-100">
                                 {formatDateSlashFull(card.expiresAt)}
                                 <ExpiryDaysBadge expiresAt={card.expiresAt} />
@@ -1231,7 +1237,7 @@ export default function GiftCardsClient({
               {/* Mobile Cards */}
               <div className="cards-list-mobile sm:hidden divide-y divide-slate-100">
                 {visibleActive.map((card) => (
-                  <div key={card.id} className={`px-4 py-4 ${isExpiringSoon(card.expiresAt) ? 'bg-rose-50/60' : ''}`}>
+                  <div key={card.id} className={`px-4 py-4 ${soon(card.expiresAt) ? 'bg-rose-50/60' : ''}`}>
                     <div className="flex items-center gap-3 mb-3">
                       <span className="text-xs font-mono text-slate-400 flex-shrink-0 w-7 text-right">#{card.seq}</span>
                       <div className={`w-10 h-10 rounded-xl flex items-center justify-center text-sm font-bold flex-shrink-0 ${providerColor(card.provider)}`}>
@@ -1261,9 +1267,9 @@ export default function GiftCardsClient({
                         {card.expiresAt && (
                           <div className="text-xs mt-0.5">
                             <div className="text-slate-400">{t.expires}</div>
-                            <div className={`flex items-center justify-end gap-1.5 ${isExpiringSoon(card.expiresAt) ? 'text-rose-600 font-semibold' : 'text-slate-400'}`}>
+                            <div className={`flex items-center justify-end gap-1.5 ${soon(card.expiresAt) ? 'text-rose-600 font-semibold' : 'text-slate-400'}`}>
                               {formatExpiresAt(card.expiresAt)}
-                              {isExpiringSoon(card.expiresAt) && <ExpiryDaysBadge expiresAt={card.expiresAt} />}
+                              {soon(card.expiresAt) && <ExpiryDaysBadge expiresAt={card.expiresAt} />}
                             </div>
                           </div>
                         )}
@@ -1413,9 +1419,9 @@ export default function GiftCardsClient({
                         {card.expiresAt && (
                           <div className="text-xs mt-0.5">
                             <div className="text-slate-400">{t.expires}</div>
-                            <div className={`flex items-center justify-end gap-1.5 ${isExpiringSoon(card.expiresAt) ? 'text-rose-600 font-semibold' : 'text-slate-400'}`}>
+                            <div className={`flex items-center justify-end gap-1.5 ${soon(card.expiresAt) ? 'text-rose-600 font-semibold' : 'text-slate-400'}`}>
                               {formatExpiresAt(card.expiresAt)}
-                              {isExpiringSoon(card.expiresAt) && <ExpiryDaysBadge expiresAt={card.expiresAt} />}
+                              {soon(card.expiresAt) && <ExpiryDaysBadge expiresAt={card.expiresAt} />}
                             </div>
                           </div>
                         )}
@@ -1450,6 +1456,7 @@ export default function GiftCardsClient({
           onSpend={() => setModal({ type: 'transaction', card: modal.card, txType: 'SPEND' })}
           onRecharge={() => setModal({ type: 'transaction', card: modal.card, txType: 'RECHARGE' })}
           onDelete={() => setModal({ type: 'delete', card: modal.card })}
+          expiringSoonDays={expiringSoonDays}
         />
       )}
       {modal.type === 'edit' && (
