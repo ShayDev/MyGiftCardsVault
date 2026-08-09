@@ -252,6 +252,11 @@ const translations = {
     settingsCurrencyHelp: "Choose which currency amounts are shown in. This only changes how numbers are displayed — it doesn't convert balances.",
     settingsCurrencyFollowLanguage: 'Follow language',
     settingsCurrencySaved: 'Saved',
+    // Appearance setting
+    settingsAppearance: 'Appearance',
+    themeLight: 'Light',
+    themeDark: 'Dark',
+    themeSystem: 'System',
   },
   he: {
     // Header
@@ -501,6 +506,11 @@ const translations = {
     settingsCurrencyHelp: 'בחר את המטבע להצגת סכומים. פעולה זו רק משנה את אופן הצגת המספרים — היא אינה ממירה יתרות.',
     settingsCurrencyFollowLanguage: 'בהתאם לשפה',
     settingsCurrencySaved: 'נשמר',
+    // Appearance setting
+    settingsAppearance: 'מראה',
+    themeLight: 'בהיר',
+    themeDark: 'כהה',
+    themeSystem: 'לפי המערכת',
   },
 } as const
 

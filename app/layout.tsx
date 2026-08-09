@@ -3,6 +3,7 @@ import type { Metadata } from "next";
 import "./globals.css";
 import { ClerkProvider } from "@clerk/nextjs";
 import LanguageProvider from "../components/LanguageProvider";
+import ThemeProvider from "../components/ThemeProvider";
 import GlobalSearchHeader from "../components/GlobalSearchHeader";
 import BottomNav from "../components/BottomNav";
 import VisitTracker from "../components/VisitTracker";
@@ -33,10 +34,22 @@ export default function RootLayout({
       <head>
         <meta name="theme-color" content="#0f172a" />
         <link rel="apple-touch-icon" href="/icons/icon-192.png" />
+        {/* Blocking, runs before first paint — avoids a flash of the wrong theme
+            while ThemeProvider's useEffect (which can't run this early) hydrates. */}
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `try {
+              var t = JSON.parse(localStorage.getItem('gcv-theme') || '{}').state?.theme || 'system';
+              var dark = t === 'dark' || (t === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches);
+              document.documentElement.classList.toggle('dark', dark);
+            } catch (e) {}`,
+          }}
+        />
       </head>
-      <body className="app-root min-h-screen bg-slate-50 text-slate-900 antialiased flex flex-col">
+      <body className="app-root min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-50 antialiased flex flex-col">
+        <ThemeProvider>
         <LanguageProvider>
-          <header className="app-header bg-white border-b border-slate-200 sticky top-0 z-10 shadow-sm">
+          <header className="app-header bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-700 sticky top-0 z-10 shadow-sm">
             <div className="header-inner max-w-6xl mx-auto px-4 sm:px-6 py-3 flex items-center justify-between">
               <GlobalSearchHeader />
             </div>
@@ -45,6 +58,7 @@ export default function RootLayout({
           <BottomNav />
           <VisitTracker />
         </LanguageProvider>
+        </ThemeProvider>
       </body>
     </html>
     </ClerkProvider>

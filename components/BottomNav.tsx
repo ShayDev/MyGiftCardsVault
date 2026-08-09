@@ -72,7 +72,7 @@ export default function BottomNav() {
   ]
 
   return (
-    <nav className="bottom-nav fixed bottom-0 left-0 right-0 z-40 bg-white border-t border-slate-200 safe-area-inset-bottom">
+    <nav className="bottom-nav fixed bottom-0 left-0 right-0 z-40 bg-white dark:bg-slate-900 border-t border-slate-200 dark:border-slate-700 safe-area-inset-bottom">
       <div className="bottom-nav-tabs max-w-6xl mx-auto flex">
         {tabs.map((tab) => {
           const { count, hasExpired, hasExpiringSoon } = badgeCounts[tab.badgeKey]
@@ -83,10 +83,10 @@ export default function BottomNav() {
               key={tab.href}
               href={tab.href}
               className={`flex-1 flex flex-col items-center gap-1 py-2.5 text-xs font-medium transition-colors min-h-[56px] justify-center ${
-                tab.active ? 'text-emerald-600' : 'text-slate-400 hover:text-slate-600'
+                tab.active ? 'text-emerald-600 dark:text-emerald-400' : 'text-slate-400 hover:text-slate-600 dark:hover:text-slate-300'
               }`}
             >
-              <span className={`bottom-nav-icon relative ${tab.active ? 'text-emerald-600' : 'text-slate-400'}`}>
+              <span className={`bottom-nav-icon relative ${tab.active ? 'text-emerald-600 dark:text-emerald-400' : 'text-slate-400'}`}>
                 {tab.icon}
                 {count > 0 && (
                   <span
