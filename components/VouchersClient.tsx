@@ -417,9 +417,9 @@ function VoucherDetailModal({
 
         {/* Expiry */}
         {voucher.expiresAt && (
-          <div className={soon(voucher.expiresAt) ? 'p-2 rounded-xl bg-rose-50 border border-rose-200' : undefined}>
+          <div className={soon(voucher.expiresAt) ? 'p-2 rounded-xl bg-rose-50 dark:bg-rose-950 border border-rose-200 dark:border-rose-800' : undefined}>
             <p className="text-xs text-slate-400 mb-0.5">{t.expires}</p>
-            <p className={`text-sm font-mono flex items-center gap-1.5 ${soon(voucher.expiresAt) ? 'text-rose-600 font-semibold' : 'text-slate-800'}`}>
+            <p className={`text-sm font-mono flex items-center gap-1.5 ${soon(voucher.expiresAt) ? 'text-rose-600 dark:text-rose-400 font-semibold' : 'text-slate-800 dark:text-neutral-100'}`}>
               {formatDateSlashFull(voucher.expiresAt!)}
               {soon(voucher.expiresAt) && <ExpiryDaysBadge expiresAt={voucher.expiresAt!} />}
             </p>
@@ -588,7 +588,7 @@ function VoucherRow({ voucher, query, expiringSoonDays, onClick, onDelete, curre
 
   return (
     <div className={`voucher-row w-full rounded-2xl border shadow-sm hover:shadow-md transition-all flex items-center gap-3 pr-2 ${
-      expiringSoon ? 'bg-rose-50/60 border-rose-200 hover:bg-rose-50' : 'bg-white border-slate-100 hover:border-slate-200'
+      expiringSoon ? 'bg-rose-50/60 dark:bg-rose-950/40 border-rose-200 dark:border-rose-800 hover:bg-rose-50 dark:hover:bg-rose-950/60' : 'bg-white dark:bg-neutral-900 border-slate-100 dark:border-neutral-800 hover:border-slate-200 dark:hover:border-neutral-700'
     }`}>
       <button
         type="button"
@@ -603,11 +603,11 @@ function VoucherRow({ voucher, query, expiringSoonDays, onClick, onDelete, curre
         )}
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2">
-            <span className="text-sm font-medium text-slate-800 truncate"><HighlightMatch text={voucher.name} query={query} /></span>
+            <span className="text-sm font-medium text-slate-800 dark:text-neutral-100 truncate"><HighlightMatch text={voucher.name} query={query} /></span>
             {voucher.expiresAt && (
               <div className="flex-shrink-0 text-xs font-mono">
                 <div className="text-slate-400">{t.expires}</div>
-                <div className={`flex items-center gap-1.5 ${expiringSoon ? 'text-rose-600 font-semibold' : 'text-slate-400'}`}>
+                <div className={`flex items-center gap-1.5 ${expiringSoon ? 'text-rose-600 dark:text-rose-400 font-semibold' : 'text-slate-400'}`}>
                   {formatExpiresAt(voucher.expiresAt!)}
                   {expiringSoon && <ExpiryDaysBadge expiresAt={voucher.expiresAt!} />}
                 </div>
