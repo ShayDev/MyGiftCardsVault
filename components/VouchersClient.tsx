@@ -3,6 +3,7 @@
 import React, { useRef, useState, useEffect, useTransition } from 'react'
 import { createVoucher, updateVoucher, markVoucherUsed, deleteVoucher, type VoucherItem } from '../app/vouchers/actions'
 import { useLanguageStore } from '../hooks/useLanguageStore'
+import { useCurrency } from '../hooks/useCurrency'
 import { getT } from '../lib/i18n'
 import { formatCode } from '../lib/formatCode'
 import { formatExpiresAt, formatDate, formatDateSlashFull, isExpiringSoon } from '../lib/date'
@@ -225,14 +226,17 @@ function VoucherDetailModal({
   onEdit,
   onUpdated,
   expiringSoonDays,
+  currency,
 }: {
   voucher: VoucherItem
   onClose: () => void
   onEdit: () => void
   onUpdated: () => void
   expiringSoonDays: number
+  currency: string | null
 }) {
   const t = getT(useLanguageStore((s) => s.locale))
+  const { code: currencyCode } = useCurrency(currency)
   const soon = (expiresAt: string | undefined) => isExpiringSoon(expiresAt, expiringSoonDays)
   const [showCode, setShowCode] = useState(false)
   const [copiedCode, setCopiedCode] = useState(false)
@@ -407,7 +411,7 @@ function VoucherDetailModal({
         {voucher.value !== undefined && (
           <div>
             <p className="text-xs text-slate-400 mb-0.5">{t.voucherValueOptional}</p>
-            <p className="text-sm font-mono font-semibold text-slate-800">{formatCurrency(voucher.value, t.currencyLocale, t.currencyCode)}</p>
+            <p className="text-sm font-mono font-semibold text-slate-800">{formatCurrency(voucher.value, t.currencyLocale, currencyCode)}</p>
           </div>
         )}
 
@@ -570,8 +574,9 @@ function EditVoucherModal({
 
 // ── Voucher Row ────────────────────────────────────────────────────────────────
 
-function VoucherRow({ voucher, query, expiringSoonDays, onClick, onDelete }: { voucher: VoucherItem; query: string; expiringSoonDays: number; onClick: () => void; onDelete?: () => Promise<void> }) {
+function VoucherRow({ voucher, query, expiringSoonDays, onClick, onDelete, currency }: { voucher: VoucherItem; query: string; expiringSoonDays: number; onClick: () => void; onDelete?: () => Promise<void>; currency: string | null }) {
   const t = getT(useLanguageStore((s) => s.locale))
+  const { code: currencyCode } = useCurrency(currency)
   const [deleting, startDelete] = useTransition()
 
   function handleDelete(e: React.MouseEvent) {
@@ -612,7 +617,7 @@ function VoucherRow({ voucher, query, expiringSoonDays, onClick, onDelete }: { v
         </div>
         {voucher.value !== undefined && (
           <span className="flex-shrink-0 text-xs font-mono text-slate-500">
-            {formatCurrency(voucher.value, t.currencyLocale, t.currencyCode)}
+            {formatCurrency(voucher.value, t.currencyLocale, currencyCode)}
           </span>
         )}
         {!onDelete && (
@@ -654,10 +659,12 @@ export default function VouchersClient({
   vouchers,
   providerOptions,
   expiringSoonDays,
+  currency,
 }: {
   vouchers: VoucherItem[]
   providerOptions: ProviderOption[]
   expiringSoonDays: number
+  currency: string | null
 }) {
   const t = getT(useLanguageStore((s) => s.locale))
   const [showAdd, setShowAdd] = useState(false)
@@ -723,7 +730,7 @@ export default function VouchersClient({
         ) : (
           <div className="space-y-2">
             {visibleActive.map((v) => (
-              <VoucherRow key={v.id} voucher={v} query={rawQuery} expiringSoonDays={expiringSoonDays} onClick={() => setSelected(v)} />
+              <VoucherRow key={v.id} voucher={v} query={rawQuery} expiringSoonDays={expiringSoonDays} onClick={() => setSelected(v)} currency={currency} />
             ))}
           </div>
         )}
@@ -757,7 +764,7 @@ export default function VouchersClient({
         ) : showUsed ? (
           <div className="space-y-2">
             {visibleUsed.map((v) => (
-              <VoucherRow key={v.id} voucher={v} query={rawQuery} expiringSoonDays={expiringSoonDays} onClick={() => setSelected(v)} onDelete={() => deleteVoucher(v.id)} />
+              <VoucherRow key={v.id} voucher={v} query={rawQuery} expiringSoonDays={expiringSoonDays} onClick={() => setSelected(v)} onDelete={() => deleteVoucher(v.id)} currency={currency} />
             ))}
           </div>
         ) : null}
@@ -774,6 +781,7 @@ export default function VouchersClient({
           onEdit={() => { setEditTarget(selected); setSelected(null) }}
           onUpdated={() => setSelected(null)}
           expiringSoonDays={expiringSoonDays}
+          currency={currency}
         />
       )}
       {editTarget && (

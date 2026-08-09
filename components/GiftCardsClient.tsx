@@ -3,6 +3,7 @@
 import React, { useState, useRef, useEffect, useTransition } from 'react'
 import { createCard, updateCard, deactivateCard, createTransaction, getCardTransactions, type TransactionItem } from '../app/actions'
 import { useLanguageStore } from '../hooks/useLanguageStore'
+import { useCurrency } from '../hooks/useCurrency'
 import { getT } from '../lib/i18n'
 import { formatCode } from '../lib/formatCode'
 import { formatExpiresAt, formatDate, formatDateSlashFull, isExpiringSoon } from '../lib/date'
@@ -140,11 +141,14 @@ function extractLast4(fullNumber: string): string {
 function AddCardModal({
   onClose,
   providerOptions,
+  currency,
 }: {
   onClose: () => void
   providerOptions: ProviderOption[]
+  currency: string | null
 }) {
   const t = getT(useLanguageStore((s) => s.locale))
+  const { code: currencyCode, symbol } = useCurrency(currency)
   const [isPending, startTransition] = useTransition()
   const [isReloadable, setIsReloadable] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -263,9 +267,9 @@ function AddCardModal({
             className={inputClass}
           />
         </Field>
-        <Field label={t.defaultBalance} required>
+        <Field label={t.defaultBalance(currencyCode)} required>
           <div className="relative">
-            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 font-medium text-sm">{t.currencySymbol}</span>
+            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 font-medium text-sm">{symbol}</span>
             <input
               ref={defaultBalanceRef}
               name="defaultBalance"
@@ -336,6 +340,7 @@ function CardDetailModal({
   onRecharge,
   onDelete,
   expiringSoonDays,
+  currency,
 }: {
   card: CardWithBalance
   onClose: () => void
@@ -344,8 +349,10 @@ function CardDetailModal({
   onRecharge: () => void
   onDelete: () => void
   expiringSoonDays: number
+  currency: string | null
 }) {
   const t = getT(useLanguageStore((s) => s.locale))
+  const { code: currencyCode } = useCurrency(currency)
   const soon = (expiresAt: string | undefined) => isExpiringSoon(expiresAt, expiringSoonDays)
   const [showFull, setShowFull] = useState(false)
   const [showCvv, setShowCvv] = useState(false)
@@ -393,7 +400,7 @@ function CardDetailModal({
           <div className="text-right flex-shrink-0">
             <p className="text-xs text-slate-400">{t.colBalance}</p>
             <p className={`font-mono font-bold text-base ${card.balance > 0 ? 'text-emerald-600' : 'text-rose-500'}`}>
-              {formatCurrency(card.balance, t.currencyLocale, t.currencyCode)}
+              {formatCurrency(card.balance, t.currencyLocale, currencyCode)}
             </p>
           </div>
         </div>
@@ -577,7 +584,7 @@ function CardDetailModal({
                   </div>
                   <div className="flex flex-col items-end text-right flex-shrink-0">
                     <p className={`font-mono text-sm font-semibold ${tx.type === 'RECHARGE' ? 'text-emerald-600' : 'text-rose-500'}`}>
-                      {formatTransactionAmount(tx.amount, tx.type, t.currencyLocale, t.currencyCode)}
+                      {formatTransactionAmount(tx.amount, tx.type, t.currencyLocale, currencyCode)}
                     </p>
                     <p className="text-xs text-slate-400 mt-0.5">
                       {addedByName(tx.createdBy) && `(${addedByName(tx.createdBy)}) `}
@@ -776,13 +783,16 @@ function TransactionModal({
   type,
   currentBalance,
   onClose,
+  currency,
 }: {
   card: CardWithBalance
   type: 'SPEND' | 'RECHARGE'
   currentBalance: number
   onClose: () => void
+  currency: string | null
 }) {
   const t = getT(useLanguageStore((s) => s.locale))
+  const { code: currencyCode, symbol } = useCurrency(currency)
   const [isPending, startTransition] = useTransition()
   const [amount, setAmount] = useState('')
   const [notes, setNotes] = useState('')
@@ -829,7 +839,7 @@ function TransactionModal({
         <div className="text-right">
           <p className="text-xs text-slate-400">{t.colBalance}</p>
           <p className={`font-mono font-semibold text-sm ${currentBalance > 0 ? 'text-emerald-600' : 'text-rose-500'}`}>
-            {formatCurrency(currentBalance, t.currencyLocale, t.currencyCode)}
+            {formatCurrency(currentBalance, t.currencyLocale, currencyCode)}
           </p>
         </div>
       </div>
@@ -837,7 +847,7 @@ function TransactionModal({
       <form onSubmit={handleSubmit} className="space-y-4">
         <Field label={t.amount} required>
           <div className="relative">
-            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 font-medium text-sm">{t.currencySymbol}</span>
+            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 font-medium text-sm">{symbol}</span>
             <input
               type="number"
               min="0.01"
@@ -855,7 +865,7 @@ function TransactionModal({
         {amount && amountNum > 0 && (
           <div className={`flex items-center justify-between text-sm px-3 py-2 rounded-xl ${projected >= 0 ? 'bg-emerald-50 text-emerald-700' : 'bg-rose-50 text-rose-600'}`}>
             <span>{t.newBalance}</span>
-            <span className="font-mono font-semibold">{formatCurrency(projected, t.currencyLocale, t.currencyCode)}</span>
+            <span className="font-mono font-semibold">{formatCurrency(projected, t.currencyLocale, currencyCode)}</span>
           </div>
         )}
 
@@ -990,12 +1000,15 @@ export default function GiftCardsClient({
   cards,
   providerOptions,
   expiringSoonDays,
+  currency,
 }: {
   cards: CardWithBalance[]
   providerOptions: ProviderOption[]
   expiringSoonDays: number
+  currency: string | null
 }) {
   const t = getT(useLanguageStore((s) => s.locale))
+  const { code: currencyCode } = useCurrency(currency)
   const [modal, setModal] = useState<ModalState>({ type: 'none' })
   const [showUsed, setShowUsed] = useState(false)
   const soon = (expiresAt: string | undefined) => isExpiringSoon(expiresAt, expiringSoonDays)
@@ -1043,7 +1056,7 @@ export default function GiftCardsClient({
         <div className="cards-stats grid grid-cols-2 sm:grid-cols-4 gap-3">
           <StatCard
             label={t.totalBalance}
-            value={formatCurrency(totalBalance, t.currencyLocale, t.currencyCode)}
+            value={formatCurrency(totalBalance, t.currencyLocale, currencyCode)}
             valueClass="text-emerald-600"
             iconClass="bg-emerald-50 text-emerald-600"
             icon={
@@ -1075,7 +1088,7 @@ export default function GiftCardsClient({
           <StatCard
             label={t.expiringSoon}
             value={String(expiringSoonCount)}
-            subValue={expiringSoonCount > 0 ? formatCurrency(expiringSoonSum, t.currencyLocale, t.currencyCode) : undefined}
+            subValue={expiringSoonCount > 0 ? formatCurrency(expiringSoonSum, t.currencyLocale, currencyCode) : undefined}
             valueClass={expiringSoonCount > 0 ? 'text-rose-600' : undefined}
             iconClass="bg-rose-50 text-rose-500"
             icon={
@@ -1182,7 +1195,7 @@ export default function GiftCardsClient({
                         </td>
                         <td className="px-4 py-3.5 text-right">
                           <span className={`font-mono font-semibold text-sm ${card.balance > 0 ? 'text-emerald-600' : 'text-rose-500'}`}>
-                            {formatCurrency(card.balance, t.currencyLocale, t.currencyCode)}
+                            {formatCurrency(card.balance, t.currencyLocale, currencyCode)}
                           </span>
                         </td>
                         <td className="px-4 py-3.5 text-xs whitespace-nowrap">
@@ -1257,7 +1270,7 @@ export default function GiftCardsClient({
                       </button>
                       <div className="text-right flex-shrink-0">
                         <div className={`font-mono font-bold text-base ${card.balance > 0 ? 'text-emerald-600' : 'text-rose-500'}`}>
-                          {formatCurrency(card.balance, t.currencyLocale, t.currencyCode)}
+                          {formatCurrency(card.balance, t.currencyLocale, currencyCode)}
                         </div>
                         {card.isReloadable ? (
                           <span className="text-xs text-emerald-600">{t.reloadableLabel}</span>
@@ -1366,7 +1379,7 @@ export default function GiftCardsClient({
                         </td>
                         <td className="px-4 py-3.5 text-right">
                           <span className="font-mono font-semibold text-sm text-rose-500">
-                            {formatCurrency(0, t.currencyLocale, t.currencyCode)}
+                            {formatCurrency(0, t.currencyLocale, currencyCode)}
                           </span>
                         </td>
                         <td className="px-4 py-3.5 text-slate-400 text-xs whitespace-nowrap">
@@ -1413,7 +1426,7 @@ export default function GiftCardsClient({
                       </button>
                       <div className="text-right flex-shrink-0">
                         <div className="font-mono font-bold text-base text-rose-500">
-                          {formatCurrency(0, t.currencyLocale, t.currencyCode)}
+                          {formatCurrency(0, t.currencyLocale, currencyCode)}
                         </div>
                         <span className="text-xs text-slate-400">{t.oneTime}</span>
                         {card.expiresAt && (
@@ -1447,7 +1460,7 @@ export default function GiftCardsClient({
       </div>
 
       {/* Modals */}
-      {modal.type === 'add-card' && <AddCardModal onClose={close} providerOptions={providerOptions} />}
+      {modal.type === 'add-card' && <AddCardModal onClose={close} providerOptions={providerOptions} currency={currency} />}
       {modal.type === 'detail' && (
         <CardDetailModal
           card={modal.card}
@@ -1457,6 +1470,7 @@ export default function GiftCardsClient({
           onRecharge={() => setModal({ type: 'transaction', card: modal.card, txType: 'RECHARGE' })}
           onDelete={() => setModal({ type: 'delete', card: modal.card })}
           expiringSoonDays={expiringSoonDays}
+          currency={currency}
         />
       )}
       {modal.type === 'edit' && (
@@ -1468,6 +1482,7 @@ export default function GiftCardsClient({
           type={modal.txType}
           currentBalance={modal.card.balance}
           onClose={close}
+          currency={currency}
         />
       )}
       {modal.type === 'delete' && <DeleteDialog card={modal.card} onClose={close} />}

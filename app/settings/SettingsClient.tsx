@@ -7,7 +7,8 @@ import { getT, localeDir } from '../../lib/i18n'
 import { UserButton } from '@clerk/nextjs'
 import CopyButton from './CopyButton'
 import Spinner from '../../components/Spinner'
-import { switchFamily, createNewFamily, switchToOwnFamily, updateExpiringSoonDays } from './actions'
+import { switchFamily, createNewFamily, switchToOwnFamily, updateExpiringSoonDays, updateCurrency } from './actions'
+import { SUPPORTED_CURRENCIES } from '../../lib/currency'
 
 type Props = {
   familyName: string
@@ -17,6 +18,7 @@ type Props = {
   ownedFamilyName: string | null
   ownsCurrentFamily: boolean
   expiringSoonDays: number
+  currency: string | null
 }
 
 type Mode = 'closed' | 'choose' | 'join' | 'create'
@@ -37,6 +39,7 @@ export default function SettingsClient({
   ownedFamilyName,
   ownsCurrentFamily,
   expiringSoonDays,
+  currency,
 }: Props) {
   const locale = useLanguageStore((s) => s.locale)
   const t = getT(locale)
@@ -62,6 +65,24 @@ export default function SettingsClient({
     } else {
       setExpirySaved(true)
       setTimeout(() => setExpirySaved(false), 2000)
+    }
+  }
+
+  const [currencySaving, setCurrencySaving] = useState(false)
+  const [currencyError, setCurrencyError] = useState<string | null>(null)
+  const [currencySaved, setCurrencySaved] = useState(false)
+
+  async function handleCurrencySubmit(formData: FormData) {
+    setCurrencySaving(true)
+    setCurrencyError(null)
+    setCurrencySaved(false)
+    const result = await updateCurrency(formData)
+    setCurrencySaving(false)
+    if (result?.error) {
+      setCurrencyError(result.error)
+    } else {
+      setCurrencySaved(true)
+      setTimeout(() => setCurrencySaved(false), 2000)
     }
   }
 
@@ -273,6 +294,34 @@ export default function SettingsClient({
             {expirySaved && <span className="text-sm text-emerald-600">{t.expiringSoonDaysSaved}</span>}
           </div>
           {expiryError && <p className="text-rose-600 text-sm">{expiryError}</p>}
+        </form>
+      </div>
+
+      <div className="bg-white rounded-2xl border border-slate-200 p-5 mb-4">
+        <h2 className="text-sm font-semibold text-slate-500 uppercase tracking-wide mb-4">{t.settingsCurrencyLabel}</h2>
+        <form action={handleCurrencySubmit} className="flex flex-col gap-2">
+          <p className="text-xs text-slate-400">{t.settingsCurrencyHelp}</p>
+          <div className="flex items-center gap-3">
+            <select
+              name="currency"
+              defaultValue={currency ?? ''}
+              className="min-h-[44px] border border-slate-200 rounded-xl px-3 text-sm font-mono focus:outline-none focus:ring-2 focus:ring-emerald-500"
+            >
+              <option value="">{t.settingsCurrencyFollowLanguage}</option>
+              {SUPPORTED_CURRENCIES.map(({ code, symbol }) => (
+                <option key={code} value={code}>{code} ({symbol})</option>
+              ))}
+            </select>
+            <button
+              type="submit"
+              disabled={currencySaving}
+              className="min-h-[44px] px-4 bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50 text-white text-sm font-medium rounded-xl transition-colors"
+            >
+              {currencySaving ? <span className="flex items-center justify-center gap-2"><Spinner />{t.saving}</span> : t.saveChanges}
+            </button>
+            {currencySaved && <span className="text-sm text-emerald-600">{t.settingsCurrencySaved}</span>}
+          </div>
+          {currencyError && <p className="text-rose-600 text-sm">{currencyError}</p>}
         </form>
       </div>
 
