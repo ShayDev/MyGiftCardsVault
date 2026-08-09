@@ -253,10 +253,8 @@ const translations = {
     settingsCurrencyFollowLanguage: 'Follow language',
     settingsCurrencySaved: 'Saved',
     // Appearance setting
-    settingsAppearance: 'Appearance',
     themeLight: 'Light',
     themeDark: 'Dark',
-    themeSystem: 'System',
   },
   he: {
     // Header
@@ -507,10 +505,8 @@ const translations = {
     settingsCurrencyFollowLanguage: 'בהתאם לשפה',
     settingsCurrencySaved: 'נשמר',
     // Appearance setting
-    settingsAppearance: 'מראה',
     themeLight: 'בהיר',
     themeDark: 'כהה',
-    themeSystem: 'לפי המערכת',
   },
 } as const
 

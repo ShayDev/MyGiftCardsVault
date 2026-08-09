@@ -1,9 +1,9 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { useLanguageStore } from '../../hooks/useLanguageStore'
-import { useThemeStore, type ThemeMode } from '../../hooks/useThemeStore'
+import { useThemeStore } from '../../hooks/useThemeStore'
 import { getT, localeDir } from '../../lib/i18n'
 import { UserButton } from '@clerk/nextjs'
 import CopyButton from './CopyButton'
@@ -47,6 +47,17 @@ export default function SettingsClient({
   const dir = localeDir[locale]
   const theme = useThemeStore((s) => s.theme)
   const setTheme = useThemeStore((s) => s.setTheme)
+  // Slider only has two visual positions — 'system' (the initial default, before
+  // anyone has touched the toggle) resolves against the OS preference so the knob
+  // starts on the correct side; any click after that sets an explicit light/dark.
+  const [isDark, setIsDark] = useState(false)
+  useEffect(() => {
+    const mq = window.matchMedia('(prefers-color-scheme: dark)')
+    const resolve = () => setIsDark(theme === 'dark' || (theme === 'system' && mq.matches))
+    resolve()
+    mq.addEventListener('change', resolve)
+    return () => mq.removeEventListener('change', resolve)
+  }, [theme])
 
   const [mode, setMode] = useState<Mode>('closed')
   const [error, setError] = useState<string | null>(null)
@@ -119,7 +130,49 @@ export default function SettingsClient({
           {t.back}
         </Link>
       </div>
-      <h1 className="text-xl font-bold text-slate-900 dark:text-slate-50 mb-6">{t.settingsTitle}</h1>
+      <div className="settings-header-row flex items-center justify-between mb-6">
+        <h1 className="text-xl font-bold text-slate-900 dark:text-slate-50">{t.settingsTitle}</h1>
+        <button
+          type="button"
+          dir="ltr"
+          role="switch"
+          aria-checked={isDark}
+          aria-label={isDark ? t.themeDark : t.themeLight}
+          title={isDark ? t.themeDark : t.themeLight}
+          onClick={() => setTheme(isDark ? 'light' : 'dark')}
+          className={`theme-slider relative w-16 h-9 rounded-full flex items-center px-1.5 transition-colors flex-shrink-0 ${
+            isDark ? 'bg-slate-700' : 'bg-slate-200'
+          }`}
+        >
+          {/* Fixed end icons sit under the knob's two resting positions — the knob
+              (rendered after them, so it paints on top) covers whichever one is
+              currently active and shows its own copy of that same icon instead,
+              while the inactive side's icon stays visible plain on the track. */}
+          <svg className="absolute left-2 w-4 h-4 text-amber-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+            <circle cx="12" cy="12" r="4" strokeLinecap="round" strokeLinejoin="round" />
+            <path strokeLinecap="round" strokeLinejoin="round" d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41" />
+          </svg>
+          <svg className="absolute right-2 w-4 h-4 text-slate-300" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z" />
+          </svg>
+          <span
+            className={`theme-slider-knob w-6 h-6 rounded-full shadow bg-white flex items-center justify-center transition-transform ${
+              isDark ? 'translate-x-7 text-slate-700' : 'translate-x-0 text-amber-500'
+            }`}
+          >
+            {isDark ? (
+              <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z" />
+              </svg>
+            ) : (
+              <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <circle cx="12" cy="12" r="4" strokeLinecap="round" strokeLinejoin="round" />
+                <path strokeLinecap="round" strokeLinejoin="round" d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41" />
+              </svg>
+            )}
+          </span>
+        </button>
+      </div>
 
       <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-700 p-5 mb-4">
         <h2 className="text-sm font-semibold text-slate-500 uppercase tracking-wide mb-4">{t.settingsFamily}</h2>
@@ -144,7 +197,7 @@ export default function SettingsClient({
         <button
           onClick={handleSwitchBack}
           disabled={switchingBack}
-          className="w-full min-h-[44px] flex items-center justify-center gap-2 mb-4 bg-emerald-50 hover:bg-emerald-100 disabled:opacity-50 text-emerald-700 font-medium rounded-xl px-4 py-3 border border-emerald-200 transition-colors"
+          className="w-full min-h-[44px] flex items-center justify-center gap-2 mb-4 bg-emerald-50 dark:bg-emerald-950 hover:bg-emerald-100 dark:hover:bg-emerald-900 disabled:opacity-50 text-emerald-700 dark:text-emerald-400 font-medium rounded-xl px-4 py-3 border border-emerald-200 dark:border-emerald-800 transition-colors"
         >
           {switchingBack ? (
             <span className="flex items-center justify-center gap-2"><Spinner />{t.settingsSwitching}</span>
@@ -214,7 +267,7 @@ export default function SettingsClient({
               />
             </div>
             <p className="text-xs text-slate-400">{t.settingsSwitchFamilyHint}</p>
-            {error && <p className="text-rose-600 text-sm">{error}</p>}
+            {error && <p className="text-rose-600 dark:text-rose-400 text-sm">{error}</p>}
             <div className="flex gap-3">
               <button
                 type="button"
@@ -252,7 +305,7 @@ export default function SettingsClient({
                 className="w-full border border-slate-200 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100 rounded-xl px-3 py-2.5 text-sm uppercase placeholder:normal-case focus:outline-none focus:ring-2 focus:ring-emerald-500"
               />
             </div>
-            {error && <p className="text-rose-600 text-sm">{error}</p>}
+            {error && <p className="text-rose-600 dark:text-rose-400 text-sm">{error}</p>}
             <div className="flex gap-3">
               <button
                 type="button"
@@ -294,9 +347,9 @@ export default function SettingsClient({
             >
               {expirySaving ? <span className="flex items-center justify-center gap-2"><Spinner />{t.saving}</span> : t.saveChanges}
             </button>
-            {expirySaved && <span className="text-sm text-emerald-600">{t.expiringSoonDaysSaved}</span>}
+            {expirySaved && <span className="text-sm text-emerald-600 dark:text-emerald-400">{t.expiringSoonDaysSaved}</span>}
           </div>
-          {expiryError && <p className="text-rose-600 text-sm">{expiryError}</p>}
+          {expiryError && <p className="text-rose-600 dark:text-rose-400 text-sm">{expiryError}</p>}
         </form>
       </div>
 
@@ -322,31 +375,10 @@ export default function SettingsClient({
             >
               {currencySaving ? <span className="flex items-center justify-center gap-2"><Spinner />{t.saving}</span> : t.saveChanges}
             </button>
-            {currencySaved && <span className="text-sm text-emerald-600">{t.settingsCurrencySaved}</span>}
+            {currencySaved && <span className="text-sm text-emerald-600 dark:text-emerald-400">{t.settingsCurrencySaved}</span>}
           </div>
-          {currencyError && <p className="text-rose-600 text-sm">{currencyError}</p>}
+          {currencyError && <p className="text-rose-600 dark:text-rose-400 text-sm">{currencyError}</p>}
         </form>
-      </div>
-
-      <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-700 p-5 mb-4">
-        <h2 className="text-sm font-semibold text-slate-500 uppercase tracking-wide mb-4">{t.settingsAppearance}</h2>
-        <div className="theme-picker flex gap-2">
-          {(['light', 'dark', 'system'] as ThemeMode[]).map((mode) => (
-            <button
-              key={mode}
-              type="button"
-              onClick={() => setTheme(mode)}
-              aria-pressed={theme === mode}
-              className={`flex-1 min-h-[44px] rounded-xl border text-sm font-medium transition-colors ${
-                theme === mode
-                  ? 'bg-emerald-600 border-emerald-600 text-white'
-                  : 'bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-700'
-              }`}
-            >
-              {mode === 'light' ? t.themeLight : mode === 'dark' ? t.themeDark : t.themeSystem}
-            </button>
-          ))}
-        </div>
       </div>
 
       <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-700 p-5">
