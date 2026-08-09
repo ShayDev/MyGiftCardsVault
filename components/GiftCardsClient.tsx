@@ -570,7 +570,7 @@ function CardDetailModal({
           ) : transactions.length === 0 ? (
             <div className="px-3 py-4 text-center text-sm text-slate-400">{t.noTransactions}</div>
           ) : (
-            <ul className="divide-y divide-slate-100 max-h-48 overflow-y-auto">
+            <ul className="divide-y divide-slate-100 dark:divide-neutral-800 max-h-48 overflow-y-auto">
               {transactions.map((tx) => (
                 <li key={tx.id} className="flex items-start justify-between px-3 py-2.5">
                   <div className="flex items-center gap-2">
@@ -971,11 +971,11 @@ function StatCard({
   valueClass?: string
 }) {
   return (
-    <div className="bg-white rounded-2xl border border-slate-200 p-4 shadow-sm">
+    <div className="bg-white dark:bg-neutral-900 rounded-2xl border border-slate-200 dark:border-neutral-700 p-4 shadow-sm">
       <div className="flex items-start justify-between gap-2">
         <div>
           <p className="text-xs text-slate-500 font-medium">{label}</p>
-          <p className={`text-xl font-bold mt-0.5 ${valueClass ?? 'text-slate-800'}`}>{value}</p>
+          <p className={`text-xl font-bold mt-0.5 ${valueClass ?? 'text-slate-800 dark:text-neutral-100'}`}>{value}</p>
           {subValue && <p className="text-xs text-slate-400 font-medium mt-0.5">{subValue}</p>}
         </div>
         <div className={`w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0 ${iconClass}`}>
@@ -1101,10 +1101,10 @@ export default function GiftCardsClient({
         )}
 
         {/* Table */}
-        <div className="cards-table-container bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
-          <div className="cards-table-header px-5 py-4 border-b border-slate-100 flex items-center justify-between">
+        <div className="cards-table-container bg-white dark:bg-neutral-900 rounded-2xl border border-slate-200 dark:border-neutral-700 shadow-sm overflow-hidden">
+          <div className="cards-table-header px-5 py-4 border-b border-slate-100 dark:border-neutral-800 flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <h2 className="font-semibold text-slate-800 text-base">{t.allCards}</h2>
+              <h2 className="font-semibold text-slate-800 dark:text-neutral-100 text-base">{t.allCards}</h2>
               <span className="text-xs text-slate-400 bg-slate-100 px-2 py-0.5 rounded-full">
                 {t.cards(visibleActive.length)}
               </span>
@@ -1148,7 +1148,7 @@ export default function GiftCardsClient({
               <div className="cards-table-desktop hidden sm:block overflow-x-auto">
                 <table className="w-full text-sm">
                   <thead>
-                    <tr className="border-b border-slate-100 bg-slate-50/60">
+                    <tr className="border-b border-slate-100 dark:border-neutral-800 bg-slate-50/60 dark:bg-neutral-800/60">
                       <th className="px-3 py-3 w-10"></th>
                       <th className="text-start font-medium text-slate-500 px-5 py-3 w-[28%]">{t.colCard}</th>
                       <th className="text-start font-medium text-slate-500 px-4 py-3">{t.colProvider}</th>
@@ -1159,9 +1159,9 @@ export default function GiftCardsClient({
                       <th className="text-end font-medium text-slate-500 px-5 py-3">{t.colActions}</th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-slate-100">
+                  <tbody className="divide-y divide-slate-100 dark:divide-neutral-800">
                     {visibleActive.map((card) => (
-                      <tr key={card.id} className={`transition-colors group ${soon(card.expiresAt) ? 'bg-rose-50/60 hover:bg-rose-50' : 'hover:bg-slate-50/70'}`}>
+                      <tr key={card.id} className={`transition-colors group ${soon(card.expiresAt) ? 'bg-rose-50/60 dark:bg-rose-950/40 hover:bg-rose-50 dark:hover:bg-rose-950/60' : 'hover:bg-slate-50/70 dark:hover:bg-neutral-800/70'}`}>
                         <td className="px-3 py-3.5 text-xs font-mono text-slate-400 text-right">#{card.seq}</td>
                         <td className="px-5 py-3.5">
                           <button
@@ -1171,10 +1171,10 @@ export default function GiftCardsClient({
                             <div className={`w-9 h-9 rounded-lg flex items-center justify-center text-sm font-bold flex-shrink-0 ${providerColor(card.provider)}`}>
                               {(card.provider || card.name).slice(0, 2).toUpperCase()}
                             </div>
-                            <span className="font-medium text-slate-800 truncate underline-offset-2 hover:underline"><HighlightMatch text={card.name} query={rawQuery} /></span>
+                            <span className="font-medium text-slate-800 dark:text-neutral-100 truncate underline-offset-2 hover:underline"><HighlightMatch text={card.name} query={rawQuery} /></span>
                           </button>
                         </td>
-                        <td className="px-4 py-3.5 text-slate-600"><HighlightMatch text={card.provider} query={rawQuery} /></td>
+                        <td className="px-4 py-3.5 text-slate-600 dark:text-neutral-300"><HighlightMatch text={card.provider} query={rawQuery} /></td>
                         <td className="px-4 py-3.5">
                           <span className="font-mono text-slate-500 tracking-widest text-xs">
                             {card.last4 ? <>•••• <HighlightMatch text={card.last4} query={rawQuery} /></> : '—'}
@@ -1182,12 +1182,12 @@ export default function GiftCardsClient({
                         </td>
                         <td className="px-4 py-3.5">
                           {card.isReloadable ? (
-                            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-emerald-50 text-emerald-700 border border-emerald-100">
+                            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-emerald-50 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-400 border border-emerald-100 dark:border-emerald-800">
                               <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
                               {t.reloadableLabel}
                             </span>
                           ) : (
-                            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-slate-100 text-slate-600 border border-slate-200">
+                            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-slate-100 dark:bg-neutral-800 text-slate-600 dark:text-neutral-300 border border-slate-200 dark:border-neutral-700">
                               <span className="w-1.5 h-1.5 rounded-full bg-slate-400" />
                               {t.oneTime}
                             </span>
@@ -1248,9 +1248,9 @@ export default function GiftCardsClient({
               </div>
 
               {/* Mobile Cards */}
-              <div className="cards-list-mobile sm:hidden divide-y divide-slate-100">
+              <div className="cards-list-mobile sm:hidden divide-y divide-slate-100 dark:divide-neutral-800">
                 {visibleActive.map((card) => (
-                  <div key={card.id} className={`px-4 py-4 ${soon(card.expiresAt) ? 'bg-rose-50/60' : ''}`}>
+                  <div key={card.id} className={`px-4 py-4 ${soon(card.expiresAt) ? 'bg-rose-50/60 dark:bg-rose-950/40' : ''}`}>
                     <div className="flex items-center gap-3 mb-3">
                       <span className="text-xs font-mono text-slate-400 flex-shrink-0 w-7 text-right">#{card.seq}</span>
                       <div className={`w-10 h-10 rounded-xl flex items-center justify-center text-sm font-bold flex-shrink-0 ${providerColor(card.provider)}`}>
@@ -1260,7 +1260,7 @@ export default function GiftCardsClient({
                         onClick={() => setModal({ type: 'detail', card })}
                         className="flex-1 min-w-0 text-left"
                       >
-                        <div className="font-medium text-slate-800 truncate"><HighlightMatch text={card.name} query={rawQuery} /></div>
+                        <div className="font-medium text-slate-800 dark:text-neutral-100 truncate"><HighlightMatch text={card.name} query={rawQuery} /></div>
                         <div className="text-xs text-slate-400">
                           <HighlightMatch text={card.provider} query={rawQuery} />
                           {card.last4 && (
@@ -1338,21 +1338,21 @@ export default function GiftCardsClient({
             </svg>
           </button>
           {showUsed && used.length === 0 ? (
-            <div className="bg-white rounded-2xl border border-slate-100 shadow-sm p-6 text-center">
+            <div className="bg-white dark:bg-neutral-900 rounded-2xl border border-slate-100 dark:border-neutral-800 shadow-sm p-6 text-center">
               <p className="text-slate-400 text-sm">{t.noUsedCards}</p>
             </div>
           ) : showUsed && visibleUsed.length === 0 ? (
-            <div className="bg-white rounded-2xl border border-slate-100 shadow-sm p-6 text-center">
+            <div className="bg-white dark:bg-neutral-900 rounded-2xl border border-slate-100 dark:border-neutral-800 shadow-sm p-6 text-center">
               <p className="text-slate-400 text-sm">{t.searchNoResults(rawQuery)}</p>
             </div>
           ) : showUsed ? (
-            <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+            <div className="bg-white dark:bg-neutral-900 rounded-2xl border border-slate-200 dark:border-neutral-700 shadow-sm overflow-hidden">
               {/* Desktop Table */}
               <div className="cards-used-table-desktop hidden sm:block overflow-x-auto">
                 <table className="w-full text-sm">
-                  <tbody className="divide-y divide-slate-100">
+                  <tbody className="divide-y divide-slate-100 dark:divide-neutral-800">
                     {visibleUsed.map((card) => (
-                      <tr key={card.id} className="hover:bg-slate-50/70 transition-colors group">
+                      <tr key={card.id} className="hover:bg-slate-50/70 dark:hover:bg-neutral-800/70 transition-colors group">
                         <td className="px-3 py-3.5 text-xs font-mono text-slate-400 text-right w-10">#{card.seq}</td>
                         <td className="px-5 py-3.5 w-[28%]">
                           <button
@@ -1362,10 +1362,10 @@ export default function GiftCardsClient({
                             <div className={`w-9 h-9 rounded-lg flex items-center justify-center text-sm font-bold flex-shrink-0 ${providerColor(card.provider)}`}>
                               {(card.provider || card.name).slice(0, 2).toUpperCase()}
                             </div>
-                            <span className="font-medium text-slate-800 truncate underline-offset-2 hover:underline"><HighlightMatch text={card.name} query={rawQuery} /></span>
+                            <span className="font-medium text-slate-800 dark:text-neutral-100 truncate underline-offset-2 hover:underline"><HighlightMatch text={card.name} query={rawQuery} /></span>
                           </button>
                         </td>
-                        <td className="px-4 py-3.5 text-slate-600"><HighlightMatch text={card.provider} query={rawQuery} /></td>
+                        <td className="px-4 py-3.5 text-slate-600 dark:text-neutral-300"><HighlightMatch text={card.provider} query={rawQuery} /></td>
                         <td className="px-4 py-3.5">
                           <span className="font-mono text-slate-500 tracking-widest text-xs">
                             {card.last4 ? <>•••• <HighlightMatch text={card.last4} query={rawQuery} /></> : '—'}
@@ -1406,7 +1406,7 @@ export default function GiftCardsClient({
               </div>
 
               {/* Mobile */}
-              <div className="cards-used-list-mobile sm:hidden divide-y divide-slate-100">
+              <div className="cards-used-list-mobile sm:hidden divide-y divide-slate-100 dark:divide-neutral-800">
                 {visibleUsed.map((card) => (
                   <div key={card.id} className="px-4 py-4">
                     <div className="flex items-center gap-3 mb-3">
@@ -1418,7 +1418,7 @@ export default function GiftCardsClient({
                         onClick={() => setModal({ type: 'detail', card })}
                         className="flex-1 min-w-0 text-left"
                       >
-                        <div className="font-medium text-slate-800 truncate"><HighlightMatch text={card.name} query={rawQuery} /></div>
+                        <div className="font-medium text-slate-800 dark:text-neutral-100 truncate"><HighlightMatch text={card.name} query={rawQuery} /></div>
                         <div className="text-xs text-slate-400">
                           <HighlightMatch text={card.provider} query={rawQuery} />
                           {card.last4 && <span className="font-mono ml-1.5 tracking-widest">•••• <HighlightMatch text={card.last4} query={rawQuery} /></span>}
