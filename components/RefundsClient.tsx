@@ -996,7 +996,7 @@ export default function RefundsClient({
     <div className="refunds-page space-y-6" dir={dir}>
       {/* Page header */}
       <div className="refunds-page-header flex items-center justify-between">
-        <h1 className="text-xl font-bold text-slate-800">{t.refundsTab}</h1>
+        <h1 className="text-xl font-bold text-slate-800 dark:text-neutral-400">{t.refundsTab}</h1>
         <button
           type="button"
           onClick={() => setShowAdd(true)}

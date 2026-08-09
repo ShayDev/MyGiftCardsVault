@@ -690,7 +690,7 @@ export default function VouchersClient({
     <div className="vouchers-page space-y-6">
       {/* Page header */}
       <div className="vouchers-page-header flex items-center justify-between">
-        <h1 className="text-xl font-bold text-slate-800">{t.vouchersTab}</h1>
+        <h1 className="text-xl font-bold text-slate-800 dark:text-neutral-400">{t.vouchersTab}</h1>
         <button
           type="button"
           onClick={() => setShowAdd(true)}

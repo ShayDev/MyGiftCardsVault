@@ -89,7 +89,7 @@ export default function GlobalSearchHeader() {
                   key={r}
                   type="button"
                   onClick={() => setQuery(r)}
-                  className="h-9 px-3 rounded-full bg-slate-100 dark:bg-neutral-800 hover:bg-slate-200 dark:hover:bg-neutral-700 text-sm text-slate-600 dark:text-neutral-300 transition-colors"
+                  className="h-9 px-3 rounded-full bg-slate-100 dark:bg-neutral-800 hover:bg-slate-200 dark:hover:bg-neutral-700 text-sm text-slate-600 dark:text-neutral-400 transition-colors"
                 >
                   {r}
                 </button>
@@ -114,7 +114,7 @@ export default function GlobalSearchHeader() {
           </svg>
         </div>
         <div className="header-brand-name">
-          <span className="font-bold text-slate-900 dark:text-neutral-50 tracking-tight">GiftCards</span>
+          <span className="font-bold text-slate-900 dark:text-neutral-400 tracking-tight">GiftCards</span>
           <span className="font-bold text-emerald-600 tracking-tight">Vault</span>
         </div>
       </div>

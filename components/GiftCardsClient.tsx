@@ -1049,7 +1049,7 @@ export default function GiftCardsClient({
       <div className="cards-page space-y-6">
         {/* Page header */}
         <div className="cards-page-header flex items-center justify-between">
-          <h1 className="text-xl font-bold text-slate-800">{t.cardsTab}</h1>
+          <h1 className="text-xl font-bold text-slate-800 dark:text-neutral-400">{t.cardsTab}</h1>
         </div>
         {/* Summary Stats — hidden while searching, since these are portfolio totals, not search-scoped */}
         {!rawQuery && (

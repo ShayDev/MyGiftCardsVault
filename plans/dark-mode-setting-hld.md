@@ -112,7 +112,7 @@ Dark surfaces use the `neutral` family, not `slate` — `slate` carries a blue t
 | `bg-white` | `dark:bg-neutral-900` | Cards, modals, header |
 | `bg-slate-50` | `dark:bg-neutral-950` | Page background |
 | `bg-slate-100` | `dark:bg-neutral-800` | Subtle fills, hover rows |
-| `text-slate-900` | `dark:text-neutral-50` | Primary text |
+| `text-slate-900` | `dark:text-neutral-400` | Primary text — kept short of pure white (`neutral-50`/`200`/`300` all read as too bright in practice) |
 | `text-slate-700` | `dark:text-neutral-200` | Secondary text |
 | `text-slate-500` / `text-slate-400` | `dark:text-slate-400` | Muted text — mid grays already read acceptably on both backgrounds, verify per-instance rather than blanket-change |
 | `border-slate-200` | `dark:border-neutral-700` | Card/section borders |
