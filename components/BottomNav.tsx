@@ -72,7 +72,7 @@ export default function BottomNav() {
   ]
 
   return (
-    <nav className="bottom-nav fixed bottom-0 left-0 right-0 z-40 bg-white dark:bg-slate-900 border-t border-slate-200 dark:border-slate-700 safe-area-inset-bottom">
+    <nav className="bottom-nav fixed bottom-0 left-0 right-0 z-40 bg-white dark:bg-neutral-900 border-t border-slate-200 dark:border-neutral-700 safe-area-inset-bottom">
       <div className="bottom-nav-tabs max-w-6xl mx-auto flex">
         {tabs.map((tab) => {
           const { count, hasExpired, hasExpiringSoon } = badgeCounts[tab.badgeKey]

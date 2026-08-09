@@ -66,7 +66,7 @@ export default function GlobalSearchHeader() {
           onKeyDown={(e) => { if (e.key === 'Escape') collapse() }}
           placeholder={t.searchPlaceholder(categoryLabel)}
           aria-label={t.searchLabel}
-          className="global-search-input flex-1 h-11 px-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
+          className="global-search-input flex-1 h-11 px-3 rounded-xl border border-slate-200 dark:border-neutral-700 bg-white dark:bg-neutral-900 text-slate-900 dark:text-neutral-100 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
         />
         {query && (
           <button
@@ -81,7 +81,7 @@ export default function GlobalSearchHeader() {
           </button>
         )}
         {!query && recent.length > 0 && (
-          <div className="global-search-recent absolute top-full left-0 right-0 mt-2 p-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 shadow-lg z-20">
+          <div className="global-search-recent absolute top-full left-0 right-0 mt-2 p-3 rounded-xl border border-slate-200 dark:border-neutral-700 bg-white dark:bg-neutral-900 shadow-lg z-20">
             <p className="text-xs text-slate-400 mb-2">{t.searchRecent}</p>
             <div className="flex flex-wrap gap-2">
               {recent.map((r) => (
@@ -89,7 +89,7 @@ export default function GlobalSearchHeader() {
                   key={r}
                   type="button"
                   onClick={() => setQuery(r)}
-                  className="h-9 px-3 rounded-full bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-sm text-slate-600 dark:text-slate-300 transition-colors"
+                  className="h-9 px-3 rounded-full bg-slate-100 dark:bg-neutral-800 hover:bg-slate-200 dark:hover:bg-neutral-700 text-sm text-slate-600 dark:text-neutral-300 transition-colors"
                 >
                   {r}
                 </button>
@@ -114,7 +114,7 @@ export default function GlobalSearchHeader() {
           </svg>
         </div>
         <div className="header-brand-name">
-          <span className="font-bold text-slate-900 dark:text-slate-50 tracking-tight">GiftCards</span>
+          <span className="font-bold text-slate-900 dark:text-neutral-50 tracking-tight">GiftCards</span>
           <span className="font-bold text-emerald-600 tracking-tight">Vault</span>
         </div>
       </div>

@@ -105,15 +105,17 @@ Mounted in `app/layout.tsx` alongside `<LanguageProvider>`.
 
 Rather than picking `dark:` shades ad hoc per component, fix one mapping table up front and apply it uniformly — keeps the "Finance aesthetic" (Slate/Gray + Emerald recharge + Rose spent) consistent instead of every file inventing its own dark palette.
 
+Dark surfaces use the `neutral` family, not `slate` — `slate` carries a blue tint that read as "washed out" once applied; `neutral` is a true gray and reads noticeably darker/cleaner at the same Tailwind step.
+
 | Light (existing) | Dark (`dark:`) | Used for |
 |---|---|---|
-| `bg-white` | `dark:bg-slate-900` | Cards, modals, header |
-| `bg-slate-50` | `dark:bg-slate-950` | Page background |
-| `bg-slate-100` | `dark:bg-slate-800` | Subtle fills, hover rows |
-| `text-slate-900` | `dark:text-slate-50` | Primary text |
-| `text-slate-700` | `dark:text-slate-200` | Secondary text |
+| `bg-white` | `dark:bg-neutral-900` | Cards, modals, header |
+| `bg-slate-50` | `dark:bg-neutral-950` | Page background |
+| `bg-slate-100` | `dark:bg-neutral-800` | Subtle fills, hover rows |
+| `text-slate-900` | `dark:text-neutral-50` | Primary text |
+| `text-slate-700` | `dark:text-neutral-200` | Secondary text |
 | `text-slate-500` / `text-slate-400` | `dark:text-slate-400` | Muted text — mid grays already read acceptably on both backgrounds, verify per-instance rather than blanket-change |
-| `border-slate-200` | `dark:border-slate-700` | Card/section borders |
+| `border-slate-200` | `dark:border-neutral-700` | Card/section borders |
 | `bg-emerald-50` / `text-emerald-700` (Recharge) | `dark:bg-emerald-950` / `dark:text-emerald-400` | Recharge accents |
 | `bg-rose-50` / `text-rose-700` (Spent) | `dark:bg-rose-950` / `dark:text-rose-400` | Spent accents |
 | `bg-emerald-600` (buttons) | `dark:bg-emerald-500` | Primary CTAs — kept vivid enough against dark backgrounds |

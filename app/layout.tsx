@@ -46,10 +46,10 @@ export default function RootLayout({
           }}
         />
       </head>
-      <body className="app-root min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-50 antialiased flex flex-col">
+      <body className="app-root min-h-screen bg-slate-50 dark:bg-neutral-950 text-slate-900 dark:text-neutral-50 antialiased flex flex-col">
         <ThemeProvider>
         <LanguageProvider>
-          <header className="app-header bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-700 sticky top-0 z-10 shadow-sm">
+          <header className="app-header bg-white dark:bg-neutral-900 border-b border-slate-200 dark:border-neutral-700 sticky top-0 z-10 shadow-sm">
             <div className="header-inner max-w-6xl mx-auto px-4 sm:px-6 py-3 flex items-center justify-between">
               <GlobalSearchHeader />
             </div>

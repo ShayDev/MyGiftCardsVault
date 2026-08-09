@@ -19,7 +19,7 @@ export default function HeaderNav() {
   return (
     <Link
       href="/settings"
-      className="min-h-[44px] flex items-center px-3 text-sm text-slate-500 hover:text-slate-900 dark:hover:text-slate-100 transition-colors"
+      className="min-h-[44px] flex items-center px-3 text-sm text-slate-500 hover:text-slate-900 dark:hover:text-neutral-100 transition-colors"
     >
       {t.settingsLink}
     </Link>
