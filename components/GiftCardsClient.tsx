@@ -95,13 +95,13 @@ function Modal({ title, onClose, children }: { title: string; onClose: () => voi
       aria-labelledby="modal-title"
       className="modal-overlay fixed inset-0 z-50 w-full h-full m-0 max-w-none max-h-none border-0 bg-transparent p-0 sm:p-4 flex items-end sm:items-center justify-center backdrop:bg-black/40 backdrop:backdrop-blur-sm"
     >
-      <div className="modal-panel relative w-full sm:max-w-md bg-white rounded-t-3xl sm:rounded-2xl shadow-2xl overflow-hidden max-h-[90dvh] flex flex-col">
-        <div className="modal-header flex items-center justify-between px-5 py-4 border-b border-slate-100 flex-shrink-0">
-          <h2 id="modal-title" className="font-semibold text-slate-800 text-base">{title}</h2>
+      <div className="modal-panel relative w-full sm:max-w-md bg-white dark:bg-neutral-900 rounded-t-3xl sm:rounded-2xl shadow-2xl overflow-hidden max-h-[90dvh] flex flex-col">
+        <div className="modal-header flex items-center justify-between px-5 py-4 border-b border-slate-100 dark:border-neutral-800 flex-shrink-0">
+          <h2 id="modal-title" className="font-semibold text-slate-800 dark:text-neutral-100 text-base">{title}</h2>
           <button
             onClick={onClose}
             aria-label={t.close}
-            className="w-11 h-11 flex items-center justify-center rounded-full text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-colors"
+            className="w-11 h-11 flex items-center justify-center rounded-full text-slate-400 hover:text-slate-600 dark:hover:text-neutral-300 hover:bg-slate-100 dark:hover:bg-neutral-800 transition-colors"
           >
             <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
@@ -119,7 +119,7 @@ function Modal({ title, onClose, children }: { title: string; onClose: () => voi
 function Field({ label, error, required, children }: { label: string; error?: string; required?: boolean; children: React.ReactNode }) {
   return (
     <div className="space-y-1.5">
-      <label className="text-sm font-medium text-slate-700">
+      <label className="text-sm font-medium text-slate-700 dark:text-neutral-300">
         {label}
         {required && <span className="text-rose-500"> *</span>}
       </label>
@@ -130,7 +130,7 @@ function Field({ label, error, required, children }: { label: string; error?: st
 }
 
 const inputClass =
-  'w-full h-11 px-3 rounded-xl border border-slate-200 text-sm text-slate-800 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition'
+  'w-full h-11 px-3 rounded-xl border border-slate-200 dark:border-neutral-700 dark:bg-neutral-800 text-sm text-slate-800 dark:text-neutral-100 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition'
 
 function extractLast4(fullNumber: string): string {
   return fullNumber.replace(/\D/g, '').slice(-4)
@@ -292,7 +292,7 @@ function AddCardModal({
         </Field>
         <div className="flex items-center justify-between py-1">
           <div>
-            <p className="text-sm font-medium text-slate-700">{t.reloadable}</p>
+            <p className="text-sm font-medium text-slate-700 dark:text-neutral-300">{t.reloadable}</p>
             <p className="text-xs text-slate-400">{t.canFundsBeAdded}</p>
           </div>
           <button
@@ -301,19 +301,19 @@ function AddCardModal({
             aria-checked={isReloadable}
             aria-label={t.reloadable}
             onClick={() => setIsReloadable(!isReloadable)}
-            className={`relative w-11 h-6 rounded-full transition-colors ${isReloadable ? 'bg-emerald-500' : 'bg-slate-200'}`}
+            className={`relative w-11 h-6 rounded-full transition-colors ${isReloadable ? 'bg-emerald-500' : 'bg-slate-200 dark:bg-neutral-700'}`}
           >
             <span
               className={`absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform ${isReloadable ? 'translate-x-5' : 'translate-x-0'}`}
             />
           </button>
         </div>
-        {error && <p className="text-sm text-rose-500 bg-rose-50 px-3 py-2 rounded-lg">{error}</p>}
+        {error && <p className="text-sm text-rose-500 dark:text-rose-400 bg-rose-50 dark:bg-rose-950 px-3 py-2 rounded-lg">{error}</p>}
         <div className="flex gap-3 pt-1">
           <button
             type="button"
             onClick={onClose}
-            className="flex-1 h-11 rounded-xl border border-slate-200 text-sm font-medium text-slate-600 hover:bg-slate-50 transition-colors"
+            className="flex-1 h-11 rounded-xl border border-slate-200 dark:border-neutral-700 text-sm font-medium text-slate-600 dark:text-neutral-300 hover:bg-slate-50 dark:hover:bg-neutral-800 transition-colors"
           >
             {t.cancel}
           </button>
@@ -393,7 +393,7 @@ function CardDetailModal({
             {(card.provider || card.name).slice(0, 2).toUpperCase()}
           </div>
           <div className="flex-1 min-w-0">
-            <p className="font-semibold text-slate-800 truncate">{card.name}</p>
+            <p className="font-semibold text-slate-800 dark:text-neutral-100 truncate">{card.name}</p>
             <p className="text-xs text-slate-400">#{card.seq} · {card.provider}</p>
 
           </div>
@@ -407,36 +407,36 @@ function CardDetailModal({
 
         {/* Details grid */}
         <div className="grid grid-cols-2 gap-3">
-          <div className="p-3 rounded-xl border border-slate-100 bg-white">
+          <div className="p-3 rounded-xl border border-slate-100 dark:border-neutral-800 bg-white dark:bg-neutral-800/60">
             <p className="text-xs text-slate-400 mb-1">{t.last4Label}</p>
-            <p className="font-mono text-slate-700 font-medium tracking-widest">
+            <p className="font-mono text-slate-700 dark:text-neutral-200 font-medium tracking-widest">
               {card.last4 ? `•••• ${card.last4}` : '—'}
             </p>
           </div>
-          <div className="p-3 rounded-xl border border-slate-100 bg-white">
+          <div className="p-3 rounded-xl border border-slate-100 dark:border-neutral-800 bg-white dark:bg-neutral-800/60">
             <p className="text-xs text-slate-400 mb-1">{t.typeLabel}</p>
             {card.isReloadable ? (
-              <span className="inline-flex items-center gap-1 text-xs font-medium text-emerald-700">
+              <span className="inline-flex items-center gap-1 text-xs font-medium text-emerald-700 dark:text-emerald-400">
                 <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
                 {t.reloadableLabel}
               </span>
             ) : (
-              <span className="inline-flex items-center gap-1 text-xs font-medium text-slate-600">
+              <span className="inline-flex items-center gap-1 text-xs font-medium text-slate-600 dark:text-neutral-300">
                 <span className="w-1.5 h-1.5 rounded-full bg-slate-400" />
                 {t.oneTime}
               </span>
             )}
           </div>
-          <div className={`p-3 rounded-xl border ${soon(card.expiresAt) ? 'border-rose-200 bg-rose-50' : 'border-slate-100 bg-white'}`}>
+          <div className={`p-3 rounded-xl border ${soon(card.expiresAt) ? 'border-rose-200 dark:border-rose-800 bg-rose-50 dark:bg-rose-950' : 'border-slate-100 dark:border-neutral-800 bg-white dark:bg-neutral-800/60'}`}>
             <p className="text-xs text-slate-400 mb-1">{t.expires}</p>
-            <p className={`font-mono font-medium flex items-center gap-1.5 ${soon(card.expiresAt) ? 'text-rose-600' : 'text-slate-700'}`}>
+            <p className={`font-mono font-medium flex items-center gap-1.5 ${soon(card.expiresAt) ? 'text-rose-600 dark:text-rose-400' : 'text-slate-700 dark:text-neutral-200'}`}>
               {card.expiresAt ? formatDateSlashFull(card.expiresAt) : '—'}
               {card.expiresAt && soon(card.expiresAt) && <ExpiryDaysBadge expiresAt={card.expiresAt} />}
             </p>
           </div>
-          <div className="p-3 rounded-xl border border-slate-100 bg-white">
+          <div className="p-3 rounded-xl border border-slate-100 dark:border-neutral-800 bg-white dark:bg-neutral-800/60">
             <p className="text-xs text-slate-400 mb-1">{t.dateAdded}</p>
-            <p className="text-sm text-slate-700">
+            <p className="text-sm text-slate-700 dark:text-neutral-200">
               {formatDateSlashFull(card.createdAt)}
               {addedByName(card.createdBy) && ` (${addedByName(card.createdBy)})`}
             </p>
@@ -445,7 +445,7 @@ function CardDetailModal({
 
         {/* Full number */}
         {card.fullNumber && (
-          <div className="card-fullnumber-section rounded-xl border border-slate-100 bg-white overflow-hidden">
+          <div className="card-fullnumber-section rounded-xl border border-slate-100 dark:border-neutral-800 bg-white dark:bg-neutral-800/60 overflow-hidden">
             <div className="flex items-center justify-between px-3 pt-3 pb-1">
               <p className="text-xs text-slate-400">{t.fullCardNumber}</p>
               <button
@@ -458,21 +458,21 @@ function CardDetailModal({
             </div>
             {showFull ? (
               <div className="card-fullnumber-revealed px-3 pb-3 space-y-2">
-                <p className="font-mono text-slate-800 text-xl font-extrabold tracking-widest break-all" dir="ltr">
+                <p className="font-mono text-slate-800 dark:text-neutral-100 text-xl font-extrabold tracking-widest break-all" dir="ltr">
                   {formattedFull ? formatCode(card.fullNumber) : card.fullNumber}
                 </p>
                 <div className="flex items-center gap-2">
                   <button
                     type="button"
                     onClick={() => setFormattedFull(!formattedFull)}
-                    className="card-format-btn flex items-center gap-1 h-8 px-2.5 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-500 text-xs font-medium transition-colors"
+                    className="card-format-btn flex items-center gap-1 h-8 px-2.5 rounded-lg bg-slate-100 dark:bg-neutral-700 hover:bg-slate-200 dark:hover:bg-neutral-600 text-slate-500 dark:text-neutral-300 text-xs font-medium transition-colors"
                   >
                     {formattedFull ? '123...' : '1234-...'}
                   </button>
                 <button
                   type="button"
                   onClick={copyFullNumber}
-                  className="card-copy-btn flex-shrink-0 flex items-center gap-1.5 h-8 px-2.5 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-600 text-xs font-medium transition-colors"
+                  className="card-copy-btn flex-shrink-0 flex items-center gap-1.5 h-8 px-2.5 rounded-lg bg-slate-100 dark:bg-neutral-700 hover:bg-slate-200 dark:hover:bg-neutral-600 text-slate-600 dark:text-neutral-300 text-xs font-medium transition-colors"
                 >
                   {copiedFull ? (
                     <>
@@ -494,7 +494,7 @@ function CardDetailModal({
                 </div>
               </div>
             ) : (
-              <p className="font-mono text-slate-700 text-sm tracking-wider break-all px-3 pb-3" dir="ltr">
+              <p className="font-mono text-slate-700 dark:text-neutral-200 text-sm tracking-wider break-all px-3 pb-3" dir="ltr">
                 {maskedFull}
               </p>
             )}
@@ -503,7 +503,7 @@ function CardDetailModal({
 
         {/* CVV */}
         {card.cvv && (
-          <div className="p-3 rounded-xl border border-slate-100 bg-white">
+          <div className="p-3 rounded-xl border border-slate-100 dark:border-neutral-800 bg-white dark:bg-neutral-800/60">
             <div className="flex items-center justify-between mb-1">
               <p className="text-xs text-slate-400">{t.cvvLabel}</p>
               <button
@@ -514,7 +514,7 @@ function CardDetailModal({
                 {showCvv ? t.hide : t.reveal}
               </button>
             </div>
-            <p className="font-mono text-slate-700 text-sm tracking-wider">
+            <p className="font-mono text-slate-700 dark:text-neutral-200 text-sm tracking-wider">
               {showCvv ? card.cvv : '•••'}
             </p>
           </div>
@@ -522,7 +522,7 @@ function CardDetailModal({
 
         {/* Link */}
         {card.link && (
-          <div className="p-3 rounded-xl border border-slate-100 bg-white">
+          <div className="p-3 rounded-xl border border-slate-100 dark:border-neutral-800 bg-white dark:bg-neutral-800/60">
             <p className="text-xs text-slate-400 mb-2">{t.cardLink}</p>
             <div className="flex items-center gap-2">
               <a
@@ -539,7 +539,7 @@ function CardDetailModal({
               <button
                 type="button"
                 onClick={() => { navigator.clipboard.writeText(card.link!).then(() => { setCopiedLink(true); setTimeout(() => setCopiedLink(false), 2000) }) }}
-                className="flex items-center gap-1.5 h-9 px-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-600 text-xs font-medium transition-colors"
+                className="flex items-center gap-1.5 h-9 px-2.5 rounded-xl bg-slate-100 dark:bg-neutral-700 hover:bg-slate-200 dark:hover:bg-neutral-600 text-slate-600 dark:text-neutral-300 text-xs font-medium transition-colors"
               >
                 {copiedLink ? (
                   <svg className="w-4 h-4 text-emerald-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" /></svg>
@@ -554,15 +554,15 @@ function CardDetailModal({
 
         {/* Notes */}
         {card.notes && (
-          <div className="p-3 rounded-xl border border-slate-100 bg-white">
+          <div className="p-3 rounded-xl border border-slate-100 dark:border-neutral-800 bg-white dark:bg-neutral-800/60">
             <p className="text-xs text-slate-400 mb-1">{t.notesLabel}</p>
-            <p className="text-sm text-slate-700">{card.notes}</p>
+            <p className="text-sm text-slate-700 dark:text-neutral-200">{card.notes}</p>
           </div>
         )}
 
         {/* Transactions */}
-        <div className="border border-slate-100 rounded-xl overflow-hidden">
-          <p className="text-xs font-semibold text-slate-500 uppercase tracking-wide px-3 py-2 bg-slate-50 border-b border-slate-100">
+        <div className="border border-slate-100 dark:border-neutral-800 rounded-xl overflow-hidden">
+          <p className="text-xs font-semibold text-slate-500 uppercase tracking-wide px-3 py-2 bg-slate-50 dark:bg-neutral-800 border-b border-slate-100 dark:border-neutral-800">
             {t.transactionHistory}
           </p>
           {transactions === null ? (
@@ -576,7 +576,7 @@ function CardDetailModal({
                   <div className="flex items-center gap-2">
                     <span className={`w-2 h-2 rounded-full flex-shrink-0 ${tx.type === 'RECHARGE' ? 'bg-emerald-500' : 'bg-rose-400'}`} />
                     <div>
-                      <p className="text-xs font-medium text-slate-700">
+                      <p className="text-xs font-medium text-slate-700 dark:text-neutral-200">
                         {tx.type === 'RECHARGE' ? t.txTypeRecharge : t.txTypeSpend}
                       </p>
                       {tx.notes && <p className="text-xs text-slate-400">{tx.notes}</p>}
@@ -602,7 +602,7 @@ function CardDetailModal({
           {card.isReloadable && (
             <button
               onClick={() => { onClose(); onRecharge() }}
-              className="flex-1 min-h-[44px] text-sm font-medium rounded-xl border border-emerald-200 text-emerald-600 hover:bg-emerald-50 transition-colors"
+              className="flex-1 min-h-[44px] text-sm font-medium rounded-xl border border-emerald-200 dark:border-emerald-800 text-emerald-600 dark:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-950 transition-colors"
             >
               {t.recharge}
             </button>
@@ -610,13 +610,13 @@ function CardDetailModal({
           <button
             onClick={() => { onClose(); onSpend() }}
             disabled={card.balance <= 0}
-            className="flex-1 min-h-[44px] text-sm font-medium rounded-xl border border-rose-200 text-rose-600 hover:bg-rose-50 transition-colors disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-transparent"
+            className="flex-1 min-h-[44px] text-sm font-medium rounded-xl border border-rose-200 dark:border-rose-800 text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950 transition-colors disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-transparent"
           >
             {t.spend}
           </button>
           <button
             onClick={() => { onClose(); onEdit() }}
-            className="min-h-[44px] w-11 flex items-center justify-center rounded-xl border border-slate-200 text-slate-400 hover:text-emerald-600 hover:border-emerald-200 transition-colors"
+            className="min-h-[44px] w-11 flex items-center justify-center rounded-xl border border-slate-200 dark:border-neutral-700 text-slate-400 hover:text-emerald-600 dark:hover:text-emerald-400 hover:border-emerald-200 dark:hover:border-emerald-800 transition-colors"
             title={t.edit}
           >
             <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
@@ -625,7 +625,7 @@ function CardDetailModal({
           </button>
           <button
             onClick={() => { onClose(); onDelete() }}
-            className="min-h-[44px] w-11 flex items-center justify-center rounded-xl border border-slate-200 text-slate-400 hover:text-rose-500 hover:border-rose-200 transition-colors"
+            className="min-h-[44px] w-11 flex items-center justify-center rounded-xl border border-slate-200 dark:border-neutral-700 text-slate-400 hover:text-rose-500 dark:hover:text-rose-400 hover:border-rose-200 dark:hover:border-rose-800 transition-colors"
             title={t.removeCard}
           >
             <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
@@ -748,7 +748,7 @@ function EditCardModal({
         </Field>
         <div className="flex items-center justify-between py-1">
           <div>
-            <p className="text-sm font-medium text-slate-700">{t.reloadable}</p>
+            <p className="text-sm font-medium text-slate-700 dark:text-neutral-300">{t.reloadable}</p>
             <p className="text-xs text-slate-400">{t.canFundsBeAdded}</p>
           </div>
           <button
@@ -757,14 +757,14 @@ function EditCardModal({
             aria-checked={isReloadable}
             aria-label={t.reloadable}
             onClick={() => setIsReloadable(!isReloadable)}
-            className={`relative w-11 h-6 rounded-full transition-colors ${isReloadable ? 'bg-emerald-500' : 'bg-slate-200'}`}
+            className={`relative w-11 h-6 rounded-full transition-colors ${isReloadable ? 'bg-emerald-500' : 'bg-slate-200 dark:bg-neutral-700'}`}
           >
             <span className={`absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform ${isReloadable ? 'translate-x-5' : 'translate-x-0'}`} />
           </button>
         </div>
-        {error && <p className="text-sm text-rose-500 bg-rose-50 px-3 py-2 rounded-lg">{error}</p>}
+        {error && <p className="text-sm text-rose-500 dark:text-rose-400 bg-rose-50 dark:bg-rose-950 px-3 py-2 rounded-lg">{error}</p>}
         <div className="flex gap-3 pt-1">
-          <button type="button" onClick={onClose} className="flex-1 h-11 rounded-xl border border-slate-200 text-sm font-medium text-slate-600 hover:bg-slate-50 transition-colors">
+          <button type="button" onClick={onClose} className="flex-1 h-11 rounded-xl border border-slate-200 dark:border-neutral-700 text-sm font-medium text-slate-600 dark:text-neutral-300 hover:bg-slate-50 dark:hover:bg-neutral-800 transition-colors">
             {t.cancel}
           </button>
           <button type="submit" disabled={isPending} className="flex-1 h-11 rounded-xl bg-emerald-500 hover:bg-emerald-600 disabled:opacity-60 text-white text-sm font-medium transition-colors">
@@ -828,12 +828,12 @@ function TransactionModal({
 
   return (
     <Modal title={isSpend ? t.spendFromCard : t.rechargeCard} onClose={onClose}>
-      <div className="mb-4 p-3 rounded-xl bg-slate-50 border border-slate-100 flex items-center gap-3">
+      <div className="mb-4 p-3 rounded-xl bg-slate-50 dark:bg-neutral-800 border border-slate-100 dark:border-neutral-700 flex items-center gap-3">
         <div className={`w-10 h-10 rounded-xl flex items-center justify-center text-sm font-bold flex-shrink-0 ${providerColor(card.provider)}`}>
           {(card.provider || card.name).slice(0, 2).toUpperCase()}
         </div>
         <div className="flex-1 min-w-0">
-          <p className="font-medium text-slate-800 text-sm truncate">{card.name}</p>
+          <p className="font-medium text-slate-800 dark:text-neutral-100 text-sm truncate">{card.name}</p>
           <p className="text-xs text-slate-400">{card.provider}</p>
         </div>
         <div className="text-right">
@@ -863,7 +863,7 @@ function TransactionModal({
         </Field>
 
         {amount && amountNum > 0 && (
-          <div className={`flex items-center justify-between text-sm px-3 py-2 rounded-xl ${projected >= 0 ? 'bg-emerald-50 text-emerald-700' : 'bg-rose-50 text-rose-600'}`}>
+          <div className={`flex items-center justify-between text-sm px-3 py-2 rounded-xl ${projected >= 0 ? 'bg-emerald-50 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-400' : 'bg-rose-50 dark:bg-rose-950 text-rose-600 dark:text-rose-400'}`}>
             <span>{t.newBalance}</span>
             <span className="font-mono font-semibold">{formatCurrency(projected, t.currencyLocale, currencyCode)}</span>
           </div>
@@ -879,13 +879,13 @@ function TransactionModal({
           />
         </Field>
 
-        {error && <p className="text-sm text-rose-500 bg-rose-50 px-3 py-2 rounded-lg">{error}</p>}
+        {error && <p className="text-sm text-rose-500 dark:text-rose-400 bg-rose-50 dark:bg-rose-950 px-3 py-2 rounded-lg">{error}</p>}
 
         <div className="flex gap-3 pt-1">
           <button
             type="button"
             onClick={onClose}
-            className="flex-1 h-11 rounded-xl border border-slate-200 text-sm font-medium text-slate-600 hover:bg-slate-50 transition-colors"
+            className="flex-1 h-11 rounded-xl border border-slate-200 dark:border-neutral-700 text-sm font-medium text-slate-600 dark:text-neutral-300 hover:bg-slate-50 dark:hover:bg-neutral-800 transition-colors"
           >
             {t.cancel}
           </button>
@@ -924,24 +924,24 @@ function DeleteDialog({ card, onClose }: { card: CardWithBalance; onClose: () =>
   return (
     <Modal title={t.removeCard} onClose={onClose}>
       <div className="space-y-4">
-        <div className="flex items-start gap-3 p-3 rounded-xl bg-rose-50 border border-rose-100">
-          <svg className="w-5 h-5 text-rose-500 flex-shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+        <div className="flex items-start gap-3 p-3 rounded-xl bg-rose-50 dark:bg-rose-950 border border-rose-100 dark:border-rose-800">
+          <svg className="w-5 h-5 text-rose-500 dark:text-rose-400 flex-shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
             <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v2m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z" />
           </svg>
           <div>
-            <p className="text-sm font-medium text-rose-700">{t.thisWillHideCard}</p>
-            <p className="text-xs text-rose-500 mt-0.5">
+            <p className="text-sm font-medium text-rose-700 dark:text-rose-400">{t.thisWillHideCard}</p>
+            <p className="text-xs text-rose-500 dark:text-rose-400 mt-0.5">
               <strong>{card.name}</strong> {t.willBeMarkedInactive}
             </p>
           </div>
         </div>
 
-        {error && <p className="text-sm text-rose-500 bg-rose-50 px-3 py-2 rounded-lg">{error}</p>}
+        {error && <p className="text-sm text-rose-500 dark:text-rose-400 bg-rose-50 dark:bg-rose-950 px-3 py-2 rounded-lg">{error}</p>}
 
         <div className="flex gap-3">
           <button
             onClick={onClose}
-            className="flex-1 h-11 rounded-xl border border-slate-200 text-sm font-medium text-slate-600 hover:bg-slate-50 transition-colors"
+            className="flex-1 h-11 rounded-xl border border-slate-200 dark:border-neutral-700 text-sm font-medium text-slate-600 dark:text-neutral-300 hover:bg-slate-50 dark:hover:bg-neutral-800 transition-colors"
           >
             {t.cancel}
           </button>
