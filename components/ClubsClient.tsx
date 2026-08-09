@@ -76,18 +76,18 @@ function Modal({
       aria-labelledby="modal-title"
       className="modal-overlay fixed inset-0 z-50 w-full h-full m-0 max-w-none max-h-none border-0 bg-transparent p-0 sm:p-4 flex items-end sm:items-center justify-center backdrop:bg-black/40 backdrop:backdrop-blur-sm"
     >
-      <div className="modal-panel relative w-full sm:max-w-md bg-white rounded-t-3xl sm:rounded-2xl shadow-2xl overflow-hidden max-h-[90dvh] flex flex-col">
-        <div className="modal-header flex items-center justify-between px-5 py-4 border-b border-slate-100 flex-shrink-0">
+      <div className="modal-panel relative w-full sm:max-w-md bg-white dark:bg-neutral-900 rounded-t-3xl sm:rounded-2xl shadow-2xl overflow-hidden max-h-[90dvh] flex flex-col">
+        <div className="modal-header flex items-center justify-between px-5 py-4 border-b border-slate-100 dark:border-neutral-800 flex-shrink-0">
           <h2
             id="modal-title"
-            className="font-semibold text-slate-800 text-base"
+            className="font-semibold text-slate-800 dark:text-neutral-100 text-base"
           >
             {title}
           </h2>
           <button
             onClick={onClose}
             aria-label={t.close}
-            className="w-11 h-11 flex items-center justify-center rounded-full text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-colors"
+            className="w-11 h-11 flex items-center justify-center rounded-full text-slate-400 hover:text-slate-600 dark:hover:text-neutral-300 hover:bg-slate-100 dark:hover:bg-neutral-800 transition-colors"
           >
             <svg
               className="w-4 h-4"
@@ -125,7 +125,7 @@ function Field({
 }) {
   return (
     <div className="space-y-1.5">
-      <label className="text-sm font-medium text-slate-700">
+      <label className="text-sm font-medium text-slate-700 dark:text-neutral-300">
         {label}
         {required && <span className="text-rose-500"> *</span>}
       </label>
@@ -136,7 +136,7 @@ function Field({
 }
 
 const inputClass =
-  "w-full h-11 px-3 rounded-xl border border-slate-200 text-sm text-slate-800 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition";
+  "w-full h-11 px-3 rounded-xl border border-slate-200 dark:border-neutral-700 dark:bg-neutral-800 text-sm text-slate-800 dark:text-neutral-100 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition";
 
 // ── Add Club Modal ─────────────────────────────────────────────────────────────
 
@@ -223,7 +223,7 @@ function AddClubModal({
           />
         </Field>
         {error && (
-          <p className="text-sm text-rose-500 bg-rose-50 px-3 py-2 rounded-lg">
+          <p className="text-sm text-rose-500 dark:text-rose-400 bg-rose-50 dark:bg-rose-950 px-3 py-2 rounded-lg">
             {error}
           </p>
         )}
@@ -231,7 +231,7 @@ function AddClubModal({
           <button
             type="button"
             onClick={onClose}
-            className="flex-1 h-11 rounded-xl border border-slate-200 text-sm font-medium text-slate-600 hover:bg-slate-50 transition-colors"
+            className="flex-1 h-11 rounded-xl border border-slate-200 dark:border-neutral-700 text-sm font-medium text-slate-600 dark:text-neutral-300 hover:bg-slate-50 dark:hover:bg-neutral-800 transition-colors"
           >
             {t.cancel}
           </button>
@@ -328,20 +328,20 @@ function ClubDetailModal({
         {/* Name */}
         <div>
           <p className="text-xs text-slate-400 mb-0.5">{t.clubName}</p>
-          <p className="text-sm font-medium text-slate-800">{club.name}</p>
+          <p className="text-sm font-medium text-slate-800 dark:text-neutral-100">{club.name}</p>
         </div>
 
         {/* Owner */}
         {club.ownerName && (
           <div>
             <p className="text-xs text-slate-400 mb-0.5">{t.ownerNameLabel}</p>
-            <p className="text-sm text-slate-800">{club.ownerName}</p>
+            <p className="text-sm text-slate-800 dark:text-neutral-100">{club.ownerName}</p>
           </div>
         )}
 
         {/* Member ID */}
         {club.memberId && (
-          <div className="club-memberid-section rounded-xl border border-slate-100 bg-white overflow-hidden">
+          <div className="club-memberid-section rounded-xl border border-slate-100 dark:border-neutral-800 bg-white dark:bg-neutral-800/60 overflow-hidden">
             <div className="flex items-center justify-between px-3 pt-3 pb-1">
               <p className="text-xs text-slate-400">{t.memberIdLabel}</p>
               <button
@@ -355,7 +355,7 @@ function ClubDetailModal({
             {showMemberId ? (
               <div className="club-memberid-revealed px-3 pb-3 space-y-2">
                 <p
-                  className="font-mono text-slate-800 text-xl font-extrabold tracking-widest break-all"
+                  className="font-mono text-slate-800 dark:text-neutral-100 text-xl font-extrabold tracking-widest break-all"
                   dir="ltr"
                 >
                   {formattedMemberId
@@ -366,14 +366,14 @@ function ClubDetailModal({
                   <button
                     type="button"
                     onClick={() => setFormattedMemberId(!formattedMemberId)}
-                    className="club-format-btn flex items-center gap-1 h-8 px-2.5 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-500 text-xs font-medium transition-colors"
+                    className="club-format-btn flex items-center gap-1 h-8 px-2.5 rounded-lg bg-slate-100 dark:bg-neutral-700 hover:bg-slate-200 dark:hover:bg-neutral-600 text-slate-500 dark:text-neutral-300 text-xs font-medium transition-colors"
                   >
                     {formattedMemberId ? "ABC..." : "ABCD-..."}
                   </button>
                   <button
                     type="button"
                     onClick={copyMemberId}
-                    className="club-copy-btn flex items-center gap-1.5 h-8 px-2.5 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-600 text-xs font-medium transition-colors"
+                    className="club-copy-btn flex items-center gap-1.5 h-8 px-2.5 rounded-lg bg-slate-100 dark:bg-neutral-700 hover:bg-slate-200 dark:hover:bg-neutral-600 text-slate-600 dark:text-neutral-300 text-xs font-medium transition-colors"
                   >
                     {copiedMemberId ? (
                       <>
@@ -419,7 +419,7 @@ function ClubDetailModal({
               </div>
             ) : (
               <p
-                className="font-mono text-slate-700 text-sm tracking-wider break-all px-3 pb-3"
+                className="font-mono text-slate-700 dark:text-neutral-200 text-sm tracking-wider break-all px-3 pb-3"
                 dir="ltr"
               >
                 {maskedMemberId}
@@ -432,7 +432,7 @@ function ClubDetailModal({
         {club.idType && (
           <div>
             <p className="text-xs text-slate-400 mb-0.5">{t.idTypeLabel}</p>
-            <p className="text-sm text-slate-700">{t.idTypes[club.idType]}</p>
+            <p className="text-sm text-slate-700 dark:text-neutral-200">{t.idTypes[club.idType]}</p>
           </div>
         )}
 
@@ -441,13 +441,13 @@ function ClubDetailModal({
           <div
             className={
               soon(club.expiresAt)
-                ? "p-2 rounded-xl bg-rose-50 border border-rose-200"
+                ? "p-2 rounded-xl bg-rose-50 dark:bg-rose-950 border border-rose-200 dark:border-rose-800"
                 : undefined
             }
           >
             <p className="text-xs text-slate-400 mb-0.5">{t.expires}</p>
             <p
-              className={`text-sm font-mono flex items-center gap-1.5 ${soon(club.expiresAt) ? "text-rose-600 font-semibold" : "text-slate-800"}`}
+              className={`text-sm font-mono flex items-center gap-1.5 ${soon(club.expiresAt) ? "text-rose-600 dark:text-rose-400 font-semibold" : "text-slate-800 dark:text-neutral-100"}`}
             >
               {formatDateSlashFull(club.expiresAt!)}
               {soon(club.expiresAt) && (
@@ -461,21 +461,21 @@ function ClubDetailModal({
         {club.notes && (
           <div>
             <p className="text-xs text-slate-400 mb-0.5">{t.notesLabel}</p>
-            <p className="text-sm text-slate-700">{club.notes}</p>
+            <p className="text-sm text-slate-700 dark:text-neutral-200">{club.notes}</p>
           </div>
         )}
 
         {/* Added */}
         <div>
           <p className="text-xs text-slate-400 mb-0.5">{t.dateAdded}</p>
-          <p className="text-sm text-slate-700">
+          <p className="text-sm text-slate-700 dark:text-neutral-200">
             {formatDateSlashFull(club.createdAt)}
             {addedByName && ` (${addedByName})`}
           </p>
         </div>
 
         {error && (
-          <p className="text-sm text-rose-500 bg-rose-50 px-3 py-2 rounded-lg">
+          <p className="text-sm text-rose-500 dark:text-rose-400 bg-rose-50 dark:bg-rose-950 px-3 py-2 rounded-lg">
             {error}
           </p>
         )}
@@ -487,7 +487,7 @@ function ClubDetailModal({
               onClose();
               onEdit();
             }}
-            className="flex-1 h-11 rounded-xl border border-slate-200 text-sm font-medium text-slate-600 hover:text-emerald-600 hover:border-emerald-200 transition-colors flex items-center justify-center gap-2"
+            className="flex-1 h-11 rounded-xl border border-slate-200 dark:border-neutral-700 text-sm font-medium text-slate-600 dark:text-neutral-300 hover:text-emerald-600 dark:hover:text-emerald-400 hover:border-emerald-200 dark:hover:border-emerald-800 transition-colors flex items-center justify-center gap-2"
           >
             <svg
               className="w-4 h-4"
@@ -508,7 +508,7 @@ function ClubDetailModal({
             type="button"
             onClick={handleDelete}
             disabled={isPending}
-            className="flex-1 h-11 rounded-xl border border-rose-200 text-sm font-medium text-rose-600 hover:bg-rose-50 transition-colors disabled:opacity-60 flex items-center justify-center gap-2"
+            className="flex-1 h-11 rounded-xl border border-rose-200 dark:border-rose-800 text-sm font-medium text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950 transition-colors disabled:opacity-60 flex items-center justify-center gap-2"
           >
             {isPending ? (
               <>
@@ -642,7 +642,7 @@ function EditClubModal({
           />
         </Field>
         {error && (
-          <p className="text-sm text-rose-500 bg-rose-50 px-3 py-2 rounded-lg">
+          <p className="text-sm text-rose-500 dark:text-rose-400 bg-rose-50 dark:bg-rose-950 px-3 py-2 rounded-lg">
             {error}
           </p>
         )}
@@ -650,7 +650,7 @@ function EditClubModal({
           <button
             type="button"
             onClick={onClose}
-            className="flex-1 h-11 rounded-xl border border-slate-200 text-sm font-medium text-slate-600 hover:bg-slate-50 transition-colors"
+            className="flex-1 h-11 rounded-xl border border-slate-200 dark:border-neutral-700 text-sm font-medium text-slate-600 dark:text-neutral-300 hover:bg-slate-50 dark:hover:bg-neutral-800 transition-colors"
           >
             {t.cancel}
           </button>
@@ -699,8 +699,8 @@ function ClubRow({
       onClick={onClick}
       className={`w-full text-start rounded-2xl border shadow-sm hover:shadow-md transition-all p-4 flex items-center gap-3 ${
         expiringSoon
-          ? "bg-rose-50/60 border-rose-200 hover:bg-rose-50"
-          : "bg-white border-slate-100 hover:border-slate-200"
+          ? "bg-rose-50/60 dark:bg-rose-950/40 border-rose-200 dark:border-rose-800 hover:bg-rose-50 dark:hover:bg-rose-950/60"
+          : "bg-white dark:bg-neutral-900 border-slate-100 dark:border-neutral-800 hover:border-slate-200 dark:hover:border-neutral-700"
       }`}
     >
       <span className="text-xs font-mono text-slate-400 flex-shrink-0 w-8 text-center">
@@ -717,14 +717,14 @@ function ClubRow({
       )}
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-2">
-          <span className="text-sm font-medium text-slate-800 truncate">
+          <span className="text-sm font-medium text-slate-800 dark:text-neutral-100 truncate">
             <HighlightMatch text={club.name} query={query} />
           </span>
           {maskedId && (
             // memberId is filtered against as-typed but rendered masked here — no visible
             // highlight for a match that came in purely via the hidden digits.
             <span
-              className="text-sm font-mono font-semibold text-slate-600 tracking-wider flex-shrink-0"
+              className="text-sm font-mono font-semibold text-slate-600 dark:text-neutral-300 tracking-wider flex-shrink-0"
               dir="ltr"
             >
               {maskedId}
@@ -746,7 +746,7 @@ function ClubRow({
       </div>
       {club.expiresAt && (
         <span
-          className={`flex-shrink-0 flex items-center gap-1.5 text-xs font-mono ${expiringSoon ? "text-rose-600 font-semibold" : "text-slate-400"}`}
+          className={`flex-shrink-0 flex items-center gap-1.5 text-xs font-mono ${expiringSoon ? "text-rose-600 dark:text-rose-400 font-semibold" : "text-slate-400"}`}
         >
           {formatExpiresAt(club.expiresAt!)}
           {expiringSoon && <ExpiryDaysBadge expiresAt={club.expiresAt!} />}
@@ -814,7 +814,7 @@ export default function ClubsClient({
       </div>
 
       {clubs.length === 0 ? (
-        <div className="bg-white rounded-2xl border border-slate-100 shadow-sm p-8 text-center">
+        <div className="bg-white dark:bg-neutral-900 rounded-2xl border border-slate-100 dark:border-neutral-800 shadow-sm p-8 text-center">
           <p className="text-slate-500 font-medium mb-1">{t.noClubsYet}</p>
           <p className="text-slate-400 text-sm">{t.addFirstClubPrompt}</p>
           <button
@@ -826,7 +826,7 @@ export default function ClubsClient({
           </button>
         </div>
       ) : visibleClubs.length === 0 ? (
-        <div className="bg-white rounded-2xl border border-slate-100 shadow-sm p-8 text-center">
+        <div className="bg-white dark:bg-neutral-900 rounded-2xl border border-slate-100 dark:border-neutral-800 shadow-sm p-8 text-center">
           <p className="text-slate-400 text-sm">
             {t.searchNoResults(rawQuery)}
           </p>

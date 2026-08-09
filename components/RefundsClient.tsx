@@ -108,18 +108,18 @@ function Modal({
       aria-labelledby="modal-title"
       className="modal-overlay fixed inset-0 z-50 w-full h-full m-0 max-w-none max-h-none border-0 bg-transparent p-0 sm:p-4 flex items-end sm:items-center justify-center backdrop:bg-black/40 backdrop:backdrop-blur-sm"
     >
-      <div className="modal-panel relative w-full sm:max-w-md bg-white rounded-t-3xl sm:rounded-2xl shadow-2xl overflow-hidden max-h-[90dvh] flex flex-col">
-        <div className="modal-header flex items-center justify-between px-5 py-4 border-b border-slate-100 flex-shrink-0">
+      <div className="modal-panel relative w-full sm:max-w-md bg-white dark:bg-neutral-900 rounded-t-3xl sm:rounded-2xl shadow-2xl overflow-hidden max-h-[90dvh] flex flex-col">
+        <div className="modal-header flex items-center justify-between px-5 py-4 border-b border-slate-100 dark:border-neutral-800 flex-shrink-0">
           <h2
             id="modal-title"
-            className="font-semibold text-slate-800 text-base"
+            className="font-semibold text-slate-800 dark:text-neutral-100 text-base"
           >
             {title}
           </h2>
           <button
             onClick={onClose}
             aria-label={t.close}
-            className="w-11 h-11 flex items-center justify-center rounded-full text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-colors"
+            className="w-11 h-11 flex items-center justify-center rounded-full text-slate-400 hover:text-slate-600 dark:hover:text-neutral-300 hover:bg-slate-100 dark:hover:bg-neutral-800 transition-colors"
           >
             <svg
               className="w-4 h-4"
@@ -157,7 +157,7 @@ function Field({
 }) {
   return (
     <div className="space-y-1.5">
-      <label className="text-sm font-medium text-slate-700">
+      <label className="text-sm font-medium text-slate-700 dark:text-neutral-300">
         {label}
         {required && <span className="text-rose-500"> *</span>}
       </label>
@@ -168,7 +168,7 @@ function Field({
 }
 
 const inputClass =
-  "w-full h-11 px-3 rounded-xl border border-slate-200 text-sm text-slate-800 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition";
+  "w-full h-11 px-3 rounded-xl border border-slate-200 dark:border-neutral-700 dark:bg-neutral-800 text-sm text-slate-800 dark:text-neutral-100 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition";
 
 // ── Add Refund Modal ───────────────────────────────────────────────────────────
 
@@ -282,14 +282,14 @@ function AddRefundModal({
             <button
               type="button"
               onClick={() => setScanMode("text")}
-              className={`text-xs px-2.5 py-1 rounded-full transition-colors ${scanMode === "text" ? "bg-emerald-100 text-emerald-700" : "text-slate-400 hover:bg-slate-100"}`}
+              className={`text-xs px-2.5 py-1 rounded-full transition-colors ${scanMode === "text" ? "bg-emerald-100 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-400" : "text-slate-400 hover:bg-slate-100 dark:hover:bg-neutral-800"}`}
             >
               {t.scanModeText}
             </button>
             <button
               type="button"
               onClick={() => setScanMode("photo")}
-              className={`text-xs px-2.5 py-1 rounded-full transition-colors ${scanMode === "photo" ? "bg-emerald-100 text-emerald-700" : "text-slate-400 hover:bg-slate-100"}`}
+              className={`text-xs px-2.5 py-1 rounded-full transition-colors ${scanMode === "photo" ? "bg-emerald-100 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-400" : "text-slate-400 hover:bg-slate-100 dark:hover:bg-neutral-800"}`}
             >
               {t.scanModePhoto}
             </button>
@@ -297,7 +297,7 @@ function AddRefundModal({
           {scanMode === "photo" ? (
             <>
               {imagePreview ? (
-                <label className="refund-image-upload flex flex-col items-center justify-center w-full h-28 rounded-xl border-2 border-dashed border-slate-200 hover:border-emerald-400 cursor-pointer transition-colors bg-slate-50 hover:bg-emerald-50 overflow-hidden">
+                <label className="refund-image-upload flex flex-col items-center justify-center w-full h-28 rounded-xl border-2 border-dashed border-slate-200 dark:border-neutral-700 hover:border-emerald-400 dark:hover:border-emerald-600 cursor-pointer transition-colors bg-slate-50 dark:bg-neutral-800 hover:bg-emerald-50 dark:hover:bg-emerald-950 overflow-hidden">
                   <img
                     src={imagePreview}
                     alt="preview"
@@ -312,7 +312,7 @@ function AddRefundModal({
                 </label>
               ) : (
                 <div className="refund-image-triggers flex gap-2">
-                  <label className="refund-image-camera flex-1 flex flex-col items-center justify-center h-20 rounded-xl border-2 border-dashed border-slate-200 hover:border-emerald-400 cursor-pointer transition-colors bg-slate-50 hover:bg-emerald-50 text-slate-400">
+                  <label className="refund-image-camera flex-1 flex flex-col items-center justify-center h-20 rounded-xl border-2 border-dashed border-slate-200 dark:border-neutral-700 hover:border-emerald-400 dark:hover:border-emerald-600 cursor-pointer transition-colors bg-slate-50 dark:bg-neutral-800 hover:bg-emerald-50 dark:hover:bg-emerald-950 text-slate-400">
                     <svg
                       className="w-5 h-5"
                       fill="none"
@@ -340,7 +340,7 @@ function AddRefundModal({
                       onChange={handleFileChange}
                     />
                   </label>
-                  <label className="refund-image-gallery flex-1 flex flex-col items-center justify-center h-20 rounded-xl border-2 border-dashed border-slate-200 hover:border-emerald-400 cursor-pointer transition-colors bg-slate-50 hover:bg-emerald-50 text-slate-400">
+                  <label className="refund-image-gallery flex-1 flex flex-col items-center justify-center h-20 rounded-xl border-2 border-dashed border-slate-200 dark:border-neutral-700 hover:border-emerald-400 dark:hover:border-emerald-600 cursor-pointer transition-colors bg-slate-50 dark:bg-neutral-800 hover:bg-emerald-50 dark:hover:bg-emerald-950 text-slate-400">
                     <svg
                       className="w-5 h-5"
                       fill="none"
@@ -401,7 +401,7 @@ function AddRefundModal({
           {(["received", "pending"] as const).map((s) => (
             <label
               key={s}
-              className="flex-1 flex items-center gap-2 h-11 px-3 rounded-xl border border-slate-200 cursor-pointer has-[:checked]:border-emerald-500 has-[:checked]:bg-emerald-50 transition-colors"
+              className="flex-1 flex items-center gap-2 h-11 px-3 rounded-xl border border-slate-200 dark:border-neutral-700 cursor-pointer has-[:checked]:border-emerald-500 has-[:checked]:bg-emerald-50 dark:has-[:checked]:bg-emerald-950 transition-colors"
             >
               <input
                 type="radio"
@@ -410,7 +410,7 @@ function AddRefundModal({
                 defaultChecked={s === "received"}
                 className="accent-emerald-500"
               />
-              <span className="text-sm text-slate-700">
+              <span className="text-sm text-slate-700 dark:text-neutral-200">
                 {s === "received" ? t.receivedRefunds : t.pendingRefunds}
               </span>
             </label>
@@ -497,7 +497,7 @@ function AddRefundModal({
         </Field>
 
         {error && (
-          <p className="text-sm text-rose-500 bg-rose-50 px-3 py-2 rounded-lg">
+          <p className="text-sm text-rose-500 dark:text-rose-400 bg-rose-50 dark:bg-rose-950 px-3 py-2 rounded-lg">
             {error}
           </p>
         )}
@@ -505,7 +505,7 @@ function AddRefundModal({
           <button
             type="button"
             onClick={onClose}
-            className="flex-1 h-11 rounded-xl border border-slate-200 text-sm font-medium text-slate-600 hover:bg-slate-50 transition-colors"
+            className="flex-1 h-11 rounded-xl border border-slate-200 dark:border-neutral-700 text-sm font-medium text-slate-600 dark:text-neutral-300 hover:bg-slate-50 dark:hover:bg-neutral-800 transition-colors"
           >
             {t.cancel}
           </button>
@@ -566,7 +566,7 @@ function EditRefundModal({
           {(["received", "pending"] as const).map((s) => (
             <label
               key={s}
-              className="flex-1 flex items-center gap-2 h-11 px-3 rounded-xl border border-slate-200 cursor-pointer has-[:checked]:border-emerald-500 has-[:checked]:bg-emerald-50 transition-colors"
+              className="flex-1 flex items-center gap-2 h-11 px-3 rounded-xl border border-slate-200 dark:border-neutral-700 cursor-pointer has-[:checked]:border-emerald-500 has-[:checked]:bg-emerald-50 dark:has-[:checked]:bg-emerald-950 transition-colors"
             >
               <input
                 type="radio"
@@ -575,7 +575,7 @@ function EditRefundModal({
                 defaultChecked={s === refund.status}
                 className="accent-emerald-500"
               />
-              <span className="text-sm text-slate-700">
+              <span className="text-sm text-slate-700 dark:text-neutral-200">
                 {s === "received" ? t.receivedRefunds : t.pendingRefunds}
               </span>
             </label>
@@ -658,7 +658,7 @@ function EditRefundModal({
           />
         </Field>
         {error && (
-          <p className="text-sm text-rose-500 bg-rose-50 px-3 py-2 rounded-lg">
+          <p className="text-sm text-rose-500 dark:text-rose-400 bg-rose-50 dark:bg-rose-950 px-3 py-2 rounded-lg">
             {error}
           </p>
         )}
@@ -666,7 +666,7 @@ function EditRefundModal({
           <button
             type="button"
             onClick={onClose}
-            className="flex-1 h-11 rounded-xl border border-slate-200 text-sm font-medium text-slate-600 hover:bg-slate-50 transition-colors"
+            className="flex-1 h-11 rounded-xl border border-slate-200 dark:border-neutral-700 text-sm font-medium text-slate-600 dark:text-neutral-300 hover:bg-slate-50 dark:hover:bg-neutral-800 transition-colors"
           >
             {t.cancel}
           </button>
@@ -734,10 +734,10 @@ function UseAmountModal({
   return (
     <Modal title={t.useAmount} onClose={onClose}>
       <form onSubmit={handleSubmit} className="space-y-4">
-        <div className="bg-slate-50 rounded-xl px-4 py-3 flex items-center justify-between">
+        <div className="bg-slate-50 dark:bg-neutral-800 rounded-xl px-4 py-3 flex items-center justify-between">
           <span className="text-sm text-slate-500">{t.refundRemaining}</span>
           <span
-            className="text-sm font-mono font-semibold text-slate-800"
+            className="text-sm font-mono font-semibold text-slate-800 dark:text-neutral-100"
             dir="ltr"
           >
             {formatAmount(remaining, currencyCode, t.currencyLocale)}
@@ -757,7 +757,7 @@ function UseAmountModal({
           />
         </Field>
         {error && (
-          <p className="text-sm text-rose-500 bg-rose-50 px-3 py-2 rounded-lg">
+          <p className="text-sm text-rose-500 dark:text-rose-400 bg-rose-50 dark:bg-rose-950 px-3 py-2 rounded-lg">
             {error}
           </p>
         )}
@@ -765,7 +765,7 @@ function UseAmountModal({
           <button
             type="button"
             onClick={onClose}
-            className="flex-1 h-11 rounded-xl border border-slate-200 text-sm font-medium text-slate-600 hover:bg-slate-50 transition-colors"
+            className="flex-1 h-11 rounded-xl border border-slate-200 dark:border-neutral-700 text-sm font-medium text-slate-600 dark:text-neutral-300 hover:bg-slate-50 dark:hover:bg-neutral-800 transition-colors"
           >
             {t.cancel}
           </button>
@@ -875,11 +875,11 @@ function RefundDetailModal({
             #{refund.seq}
           </span>
           {isPending_ ? (
-            <span className="ml-auto px-2.5 py-1 rounded-full text-xs font-semibold bg-amber-100 text-amber-700">
+            <span className="ml-auto px-2.5 py-1 rounded-full text-xs font-semibold bg-amber-100 dark:bg-amber-950 text-amber-700 dark:text-amber-400">
               {t.pendingRefunds}
             </span>
           ) : (
-            <span className="ml-auto px-2.5 py-1 rounded-full text-xs font-semibold bg-emerald-100 text-emerald-700">
+            <span className="ml-auto px-2.5 py-1 rounded-full text-xs font-semibold bg-emerald-100 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-400">
               {t.receivedRefunds}
             </span>
           )}
@@ -888,7 +888,7 @@ function RefundDetailModal({
         {/* Amount */}
         <div>
           <p className="text-xs text-slate-400 mb-0.5">{t.refundAmount}</p>
-          <p className="text-2xl font-mono font-bold text-slate-800" dir="ltr">
+          <p className="text-2xl font-mono font-bold text-slate-800 dark:text-neutral-100" dir="ltr">
             {formatAmount(refund.amount, currencyCode, t.currencyLocale)}
           </p>
         </div>
@@ -897,7 +897,7 @@ function RefundDetailModal({
         {refund.referenceId && (
           <div>
             <p className="text-xs text-slate-400 mb-0.5">{t.refundReference}</p>
-            <p className="text-sm font-mono text-slate-700">
+            <p className="text-sm font-mono text-slate-700 dark:text-neutral-200">
               {refund.referenceId}
             </p>
           </div>
@@ -930,7 +930,7 @@ function RefundDetailModal({
             <p className="text-xs text-slate-400 mb-0.5">
               {t.refundReceivedOn}
             </p>
-            <p className="text-sm text-slate-700">
+            <p className="text-sm text-slate-700 dark:text-neutral-200">
               {formatDate(refund.receivedAt, t.currencyLocale)}
             </p>
           </div>
@@ -938,7 +938,7 @@ function RefundDetailModal({
 
         {/* Code */}
         {refund.code && (
-          <div className="refund-code-section rounded-xl border border-slate-100 bg-white overflow-hidden">
+          <div className="refund-code-section rounded-xl border border-slate-100 dark:border-neutral-800 bg-white dark:bg-neutral-800/60 overflow-hidden">
             <div className="flex items-center justify-between px-3 pt-3 pb-1">
               <p className="text-xs text-slate-400">{t.refundCode}</p>
               <button
@@ -952,7 +952,7 @@ function RefundDetailModal({
             {showCode ? (
               <div className="refund-code-revealed px-3 pb-3 space-y-2">
                 <p
-                  className="font-mono text-slate-800 text-xl font-extrabold tracking-widest break-all"
+                  className="font-mono text-slate-800 dark:text-neutral-100 text-xl font-extrabold tracking-widest break-all"
                   dir="ltr"
                 >
                   {formattedCode ? formatCode(refund.code) : refund.code}
@@ -961,14 +961,14 @@ function RefundDetailModal({
                   <button
                     type="button"
                     onClick={() => setFormattedCode(!formattedCode)}
-                    className="refund-format-btn flex items-center gap-1 h-8 px-2.5 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-500 text-xs font-medium transition-colors"
+                    className="refund-format-btn flex items-center gap-1 h-8 px-2.5 rounded-lg bg-slate-100 dark:bg-neutral-700 hover:bg-slate-200 dark:hover:bg-neutral-600 text-slate-500 dark:text-neutral-300 text-xs font-medium transition-colors"
                   >
                     {formattedCode ? "ABC..." : "ABCD-..."}
                   </button>
                   <button
                     type="button"
                     onClick={copyCode}
-                    className="refund-copy-btn flex items-center gap-1.5 h-8 px-2.5 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-600 text-xs font-medium transition-colors"
+                    className="refund-copy-btn flex items-center gap-1.5 h-8 px-2.5 rounded-lg bg-slate-100 dark:bg-neutral-700 hover:bg-slate-200 dark:hover:bg-neutral-600 text-slate-600 dark:text-neutral-300 text-xs font-medium transition-colors"
                   >
                     {copiedCode ? (
                       <>
@@ -1014,7 +1014,7 @@ function RefundDetailModal({
               </div>
             ) : (
               <p
-                className="font-mono text-slate-700 text-sm tracking-wider break-all px-3 pb-3"
+                className="font-mono text-slate-700 dark:text-neutral-200 text-sm tracking-wider break-all px-3 pb-3"
                 dir="ltr"
               >
                 {maskedCode}
@@ -1057,7 +1057,7 @@ function RefundDetailModal({
                     setTimeout(() => setCopiedLink(false), 2000);
                   });
                 }}
-                className="flex items-center gap-1.5 h-9 px-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-600 text-xs font-medium transition-colors"
+                className="flex items-center gap-1.5 h-9 px-2.5 rounded-xl bg-slate-100 dark:bg-neutral-700 hover:bg-slate-200 dark:hover:bg-neutral-600 text-slate-600 dark:text-neutral-300 text-xs font-medium transition-colors"
               >
                 {copiedLink ? (
                   <svg
@@ -1095,7 +1095,7 @@ function RefundDetailModal({
         {refund.notes && (
           <div>
             <p className="text-xs text-slate-400 mb-0.5">{t.notesLabel}</p>
-            <p className="text-sm text-slate-700">{refund.notes}</p>
+            <p className="text-sm text-slate-700 dark:text-neutral-200">{refund.notes}</p>
           </div>
         )}
 
@@ -1109,7 +1109,7 @@ function RefundDetailModal({
               <img
                 src={refund.imageUrl}
                 alt="refund receipt"
-                className="refund-image-thumbnail w-full max-h-48 object-cover rounded-xl border border-slate-100 hover:opacity-90 transition-opacity"
+                className="refund-image-thumbnail w-full max-h-48 object-cover rounded-xl border border-slate-100 dark:border-neutral-800 hover:opacity-90 transition-opacity"
               />
             </a>
           </div>
@@ -1118,14 +1118,14 @@ function RefundDetailModal({
         {/* Added */}
         <div>
           <p className="text-xs text-slate-400 mb-0.5">{t.dateAdded}</p>
-          <p className="text-sm text-slate-700">
+          <p className="text-sm text-slate-700 dark:text-neutral-200">
             {formatDateSlashFull(refund.createdAt)}
             {addedByName && ` (${addedByName})`}
           </p>
         </div>
 
         {error && (
-          <p className="text-sm text-rose-500 bg-rose-50 px-3 py-2 rounded-lg">
+          <p className="text-sm text-rose-500 dark:text-rose-400 bg-rose-50 dark:bg-rose-950 px-3 py-2 rounded-lg">
             {error}
           </p>
         )}
@@ -1158,7 +1158,7 @@ function RefundDetailModal({
               type="button"
               onClick={() => setShowUseAmount(true)}
               disabled={isPending}
-              className="flex-1 h-11 rounded-xl bg-slate-100 hover:bg-slate-200 text-sm font-medium text-slate-700 transition-colors disabled:opacity-60"
+              className="flex-1 h-11 rounded-xl bg-slate-100 dark:bg-neutral-800 hover:bg-slate-200 dark:hover:bg-neutral-700 text-sm font-medium text-slate-700 dark:text-neutral-200 transition-colors disabled:opacity-60"
             >
               {t.useAmount}
             </button>
@@ -1177,7 +1177,7 @@ function RefundDetailModal({
               });
             }}
             disabled={isPending}
-            className="h-11 px-3 rounded-xl border border-slate-200 text-sm font-medium text-slate-600 hover:bg-slate-50 transition-colors disabled:opacity-60"
+            className="h-11 px-3 rounded-xl border border-slate-200 dark:border-neutral-700 text-sm font-medium text-slate-600 dark:text-neutral-300 hover:bg-slate-50 dark:hover:bg-neutral-800 transition-colors disabled:opacity-60"
           >
             {refund.isUsed ? t.markAsUnused : t.markAsUsed}
           </button>
@@ -1187,7 +1187,7 @@ function RefundDetailModal({
               onClose();
               onEdit();
             }}
-            className="h-11 w-11 flex items-center justify-center rounded-xl border border-slate-200 text-slate-400 hover:text-emerald-600 hover:border-emerald-200 transition-colors"
+            className="h-11 w-11 flex items-center justify-center rounded-xl border border-slate-200 dark:border-neutral-700 text-slate-400 hover:text-emerald-600 dark:hover:text-emerald-400 hover:border-emerald-200 dark:hover:border-emerald-800 transition-colors"
             title={t.edit}
           >
             <svg
@@ -1208,7 +1208,7 @@ function RefundDetailModal({
             type="button"
             onClick={handleDelete}
             disabled={isPending}
-            className="h-11 w-11 flex items-center justify-center rounded-xl border border-rose-200 text-rose-500 hover:bg-rose-50 transition-colors disabled:opacity-60"
+            className="h-11 w-11 flex items-center justify-center rounded-xl border border-rose-200 dark:border-rose-800 text-rose-500 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950 transition-colors disabled:opacity-60"
             title={t.removeCard}
           >
             <svg
@@ -1488,13 +1488,13 @@ export default function RefundsClient({
             {t.activeVouchers}
           </h2>
           {visibleActive.length > 0 && (
-            <span className="text-xs text-slate-400 bg-slate-100 px-2 py-0.5 rounded-full">
+            <span className="text-xs text-slate-400 bg-slate-100 dark:bg-neutral-800 px-2 py-0.5 rounded-full">
               {visibleActive.length}
             </span>
           )}
         </div>
         {active.length === 0 ? (
-          <div className="bg-white rounded-2xl border border-slate-100 shadow-sm p-8 text-center">
+          <div className="bg-white dark:bg-neutral-900 rounded-2xl border border-slate-100 dark:border-neutral-800 shadow-sm p-8 text-center">
             <p className="text-slate-500 font-medium mb-1">{t.noRefundsYet}</p>
             <p className="text-slate-400 text-sm">{t.addFirstRefundPrompt}</p>
             <button
@@ -1506,7 +1506,7 @@ export default function RefundsClient({
             </button>
           </div>
         ) : visibleActive.length === 0 ? (
-          <div className="bg-white rounded-2xl border border-slate-100 shadow-sm p-8 text-center">
+          <div className="bg-white dark:bg-neutral-900 rounded-2xl border border-slate-100 dark:border-neutral-800 shadow-sm p-8 text-center">
             <p className="text-slate-400 text-sm">
               {t.searchNoResults(rawQuery)}
             </p>
@@ -1537,7 +1537,7 @@ export default function RefundsClient({
             {t.usedVouchers}
           </h2>
           {visibleUsed.length > 0 && (
-            <span className="text-xs text-slate-400 bg-slate-100 px-2 py-0.5 rounded-full">
+            <span className="text-xs text-slate-400 bg-slate-100 dark:bg-neutral-800 px-2 py-0.5 rounded-full">
               {visibleUsed.length}
             </span>
           )}
@@ -1556,7 +1556,7 @@ export default function RefundsClient({
           </svg>
         </button>
         {showUsed && used.length > 0 && visibleUsed.length === 0 && (
-          <div className="bg-white rounded-2xl border border-slate-100 shadow-sm p-6 text-center">
+          <div className="bg-white dark:bg-neutral-900 rounded-2xl border border-slate-100 dark:border-neutral-800 shadow-sm p-6 text-center">
             <p className="text-slate-400 text-sm">
               {t.searchNoResults(rawQuery)}
             </p>
