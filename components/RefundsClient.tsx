@@ -3,8 +3,10 @@
 import React, { useRef, useState, useEffect, useTransition } from 'react'
 import { createRefund, updateRefund, markRefundReceived, markRefundUsed, useRefundAmount, deleteRefund, type RefundItem } from '../app/refunds/actions'
 import { useLanguageStore } from '../hooks/useLanguageStore'
+import { useCurrency } from '../hooks/useCurrency'
 import { getT } from '../lib/i18n'
 import { localeDir } from '../lib/i18n'
+import { resolveCurrency } from '../lib/currency'
 import { formatCode } from '../lib/formatCode'
 import { formatExpiresAt, formatDate, formatDateSlashFull, isExpiringSoon } from '../lib/date'
 import { resizeImage } from '../lib/resizeImage'
@@ -113,13 +115,15 @@ const inputClass =
 function AddRefundModal({
   onClose,
   providerOptions,
+  currency,
 }: {
   onClose: () => void
   providerOptions: ProviderOption[]
+  currency: string | null
 }) {
   const locale = useLanguageStore((s) => s.locale)
   const t = getT(locale)
-  const defaultCurrency = locale === 'he' ? 'ILS' : 'USD'
+  const defaultCurrency = resolveCurrency(currency, locale)
   const [isPending, startTransition] = useTransition()
   const [error, setError] = useState<string | null>(null)
   const [imagePreview, setImagePreview] = useState<string | null>(null)
@@ -439,9 +443,10 @@ function EditRefundModal({
 
 // ── Use Amount Modal ───────────────────────────────────────────────────────────
 
-function UseAmountModal({ refund, onClose }: { refund: RefundItem; onClose: () => void }) {
+function UseAmountModal({ refund, onClose, currency }: { refund: RefundItem; onClose: () => void; currency: string | null }) {
   const locale = useLanguageStore((s) => s.locale)
   const t = getT(locale)
+  const { code: currencyCode } = useCurrency(currency)
   const remaining = refund.amount - refund.usedAmount
   const [amount, setAmount] = useState('')
   const [error, setError] = useState<string | null>(null)
@@ -475,7 +480,7 @@ function UseAmountModal({ refund, onClose }: { refund: RefundItem; onClose: () =
         <div className="bg-slate-50 rounded-xl px-4 py-3 flex items-center justify-between">
           <span className="text-sm text-slate-500">{t.refundRemaining}</span>
           <span className="text-sm font-mono font-semibold text-slate-800" dir="ltr">
-            {formatAmount(remaining, refund.currency, t.currencyLocale)}
+            {formatAmount(remaining, currencyCode, t.currencyLocale)}
           </span>
         </div>
         <Field label={t.refundAmount}>
@@ -520,14 +525,17 @@ function RefundDetailModal({
   onClose,
   onEdit,
   expiringSoonDays,
+  currency,
 }: {
   refund: RefundItem
   onClose: () => void
   onEdit: () => void
   expiringSoonDays: number
+  currency: string | null
 }) {
   const locale = useLanguageStore((s) => s.locale)
   const t = getT(locale)
+  const { code: currencyCode } = useCurrency(currency)
   const soon = (expiresAt: string | undefined) => isExpiringSoon(expiresAt, expiringSoonDays)
   const [showCode, setShowCode] = useState(false)
   const [copiedCode, setCopiedCode] = useState(false)
@@ -602,7 +610,7 @@ function RefundDetailModal({
         <div>
           <p className="text-xs text-slate-400 mb-0.5">{t.refundAmount}</p>
           <p className="text-2xl font-mono font-bold text-slate-800" dir="ltr">
-            {formatAmount(refund.amount, refund.currency, t.currencyLocale)}
+            {formatAmount(refund.amount, currencyCode, t.currencyLocale)}
           </p>
         </div>
 
@@ -827,6 +835,7 @@ function RefundDetailModal({
         <UseAmountModal
           refund={refund}
           onClose={() => { setShowUseAmount(false); onClose() }}
+          currency={currency}
         />
       )}
     </Modal>
@@ -835,9 +844,10 @@ function RefundDetailModal({
 
 // ── Refund Row ─────────────────────────────────────────────────────────────────
 
-function RefundRow({ refund, query, expiringSoonDays, onClick, onDelete }: { refund: RefundItem; query: string; expiringSoonDays: number; onClick: () => void; onDelete?: () => Promise<void> }) {
+function RefundRow({ refund, query, expiringSoonDays, onClick, onDelete, currency }: { refund: RefundItem; query: string; expiringSoonDays: number; onClick: () => void; onDelete?: () => Promise<void>; currency: string | null }) {
   const locale = useLanguageStore((s) => s.locale)
   const t = getT(locale)
+  const { code: currencyCode } = useCurrency(currency)
   const dir = localeDir[locale]
   const isPending = refund.status === 'pending'
   const [toggling, startToggle] = useTransition()
@@ -896,11 +906,11 @@ function RefundRow({ refund, query, expiringSoonDays, onClick, onDelete }: { ref
         <div className="flex-1 min-w-0">
           <div className="flex items-baseline gap-2" dir="ltr">
             <p className="text-sm font-mono font-semibold text-slate-800">
-              {formatAmount(refund.amount - refund.usedAmount, refund.currency, t.currencyLocale)}
+              {formatAmount(refund.amount - refund.usedAmount, currencyCode, t.currencyLocale)}
             </p>
             {refund.usedAmount > 0 && (
               <p className="text-xs font-mono text-slate-400 line-through">
-                {formatAmount(refund.amount, refund.currency, t.currencyLocale)}
+                {formatAmount(refund.amount, currencyCode, t.currencyLocale)}
               </p>
             )}
           </div>
@@ -952,10 +962,12 @@ export default function RefundsClient({
   refunds,
   providerOptions,
   expiringSoonDays,
+  currency,
 }: {
   refunds: RefundItem[]
   providerOptions: ProviderOption[]
   expiringSoonDays: number
+  currency: string | null
 }) {
   const locale = useLanguageStore((s) => s.locale)
   const t = getT(locale)
@@ -1024,7 +1036,7 @@ export default function RefundsClient({
         ) : (
           <div className="space-y-2">
             {visibleActive.map((r) => (
-              <RefundRow key={r.id} refund={r} query={rawQuery} expiringSoonDays={expiringSoonDays} onClick={() => setSelected(r)} />
+              <RefundRow key={r.id} refund={r} query={rawQuery} expiringSoonDays={expiringSoonDays} onClick={() => setSelected(r)} currency={currency} />
             ))}
           </div>
         )}
@@ -1055,7 +1067,7 @@ export default function RefundsClient({
         {showUsed && visibleUsed.length > 0 && (
           <div className="space-y-2">
             {visibleUsed.map((r) => (
-              <RefundRow key={r.id} refund={r} query={rawQuery} expiringSoonDays={expiringSoonDays} onClick={() => setSelected(r)} onDelete={() => deleteRefund(r.id)} />
+              <RefundRow key={r.id} refund={r} query={rawQuery} expiringSoonDays={expiringSoonDays} onClick={() => setSelected(r)} onDelete={() => deleteRefund(r.id)} currency={currency} />
             ))}
           </div>
         )}
@@ -1063,7 +1075,7 @@ export default function RefundsClient({
 
       {/* Modals */}
       {showAdd && (
-        <AddRefundModal onClose={() => setShowAdd(false)} providerOptions={providerOptions} />
+        <AddRefundModal onClose={() => setShowAdd(false)} providerOptions={providerOptions} currency={currency} />
       )}
       {selected && (
         <RefundDetailModal
@@ -1071,6 +1083,7 @@ export default function RefundsClient({
           onClose={() => setSelected(null)}
           onEdit={() => { setEditTarget(selected); setSelected(null) }}
           expiringSoonDays={expiringSoonDays}
+          currency={currency}
         />
       )}
       {editTarget && (
