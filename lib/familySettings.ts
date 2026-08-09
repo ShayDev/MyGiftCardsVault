@@ -8,15 +8,19 @@ export type FamilySettings = {
     refunds: number | null
     clubs: number | null
   }
-  // Other keys (e.g. a future `theme`, `defaultCurrency`, ...) may also be present
-  // in the underlying JSON — untyped here, but never dropped. Each new family-wide
-  // preference gets its own top-level key and its own typed accessor, following
-  // this same file's pattern; none of them need to know about the others.
+  // ISO 4217 code (e.g. 'USD'), or null to keep following the UI language's
+  // traditional currency (en → USD, he → ILS) — see lib/currency.ts.
+  currency: string | null
+  // Other keys (e.g. a future `theme`, ...) may also be present in the underlying
+  // JSON — untyped here, but never dropped. Each new family-wide preference gets
+  // its own top-level key and its own typed accessor, following this same file's
+  // pattern; none of them need to know about the others.
   [key: string]: unknown
 }
 
 const DEFAULT_SETTINGS: FamilySettings = {
   expiringSoonDays: { default: 60, cards: null, vouchers: null, refunds: null, clubs: null },
+  currency: null,
 }
 
 // Defensive by necessity — this is raw TEXT, not a DB-validated shape. Malformed
@@ -43,6 +47,7 @@ export function parseFamilySettings(raw: string | null): FamilySettings {
       refunds: typeof days.refunds === 'number' ? days.refunds : null,
       clubs: typeof days.clubs === 'number' ? days.clubs : null,
     },
+    currency: typeof parsed.currency === 'string' ? parsed.currency : null,
   }
 }
 

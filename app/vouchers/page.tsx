@@ -18,7 +18,8 @@ export default async function Page() {
 
   if (!user?.familyId) redirect('/onboarding')
 
-  const expiringSoonDays = getExpiringSoonDays(parseFamilySettings(user.family?.settings ?? null))
+  const familySettings = parseFamilySettings(user.family?.settings ?? null)
+  const expiringSoonDays = getExpiringSoonDays(familySettings)
 
   const vouchers = await prisma.voucher.findMany({
     where: { familyId: user.familyId, isActive: true },
@@ -49,5 +50,12 @@ export default async function Page() {
 
   const providerOptions = await getProviderOptions('VOUCHER')
 
-  return <VouchersClient vouchers={payload} providerOptions={providerOptions} expiringSoonDays={expiringSoonDays} />
+  return (
+    <VouchersClient
+      vouchers={payload}
+      providerOptions={providerOptions}
+      expiringSoonDays={expiringSoonDays}
+      currency={familySettings.currency}
+    />
+  )
 }

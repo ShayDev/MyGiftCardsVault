@@ -20,7 +20,8 @@ export default async function SettingsPage() {
     select: { id: true, name: true },
   })
 
-  const expiringSoonDays = getExpiringSoonDays(parseFamilySettings(user.family.settings))
+  const familySettings = parseFamilySettings(user.family.settings)
+  const expiringSoonDays = getExpiringSoonDays(familySettings)
 
   return (
     <SettingsClient
@@ -31,6 +32,7 @@ export default async function SettingsPage() {
       ownedFamilyName={ownedFamily?.name ?? null}
       ownsCurrentFamily={ownedFamily?.id === user.familyId}
       expiringSoonDays={expiringSoonDays}
+      currency={familySettings.currency}
     />
   )
 }

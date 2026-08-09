@@ -3,6 +3,7 @@
 import React, { useState, useRef, useEffect, useTransition } from 'react'
 import { createCard, updateCard, deactivateCard, createTransaction, getCardTransactions, type TransactionItem } from '../app/actions'
 import { useLanguageStore } from '../hooks/useLanguageStore'
+import { useCurrency } from '../hooks/useCurrency'
 import { getT } from '../lib/i18n'
 import { formatCode } from '../lib/formatCode'
 import { formatExpiresAt, formatDate, formatDateSlashFull, isExpiringSoon } from '../lib/date'
@@ -94,13 +95,13 @@ function Modal({ title, onClose, children }: { title: string; onClose: () => voi
       aria-labelledby="modal-title"
       className="modal-overlay fixed inset-0 z-50 w-full h-full m-0 max-w-none max-h-none border-0 bg-transparent p-0 sm:p-4 flex items-end sm:items-center justify-center backdrop:bg-black/40 backdrop:backdrop-blur-sm"
     >
-      <div className="modal-panel relative w-full sm:max-w-md bg-white rounded-t-3xl sm:rounded-2xl shadow-2xl overflow-hidden max-h-[90dvh] flex flex-col">
-        <div className="modal-header flex items-center justify-between px-5 py-4 border-b border-slate-100 flex-shrink-0">
-          <h2 id="modal-title" className="font-semibold text-slate-800 text-base">{title}</h2>
+      <div className="modal-panel relative w-full sm:max-w-md bg-white dark:bg-neutral-900 rounded-t-3xl sm:rounded-2xl shadow-2xl overflow-hidden max-h-[90dvh] flex flex-col">
+        <div className="modal-header flex items-center justify-between px-5 py-4 border-b border-slate-100 dark:border-neutral-800 flex-shrink-0">
+          <h2 id="modal-title" className="font-semibold text-slate-800 dark:text-neutral-100 text-base">{title}</h2>
           <button
             onClick={onClose}
             aria-label={t.close}
-            className="w-11 h-11 flex items-center justify-center rounded-full text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-colors"
+            className="w-11 h-11 flex items-center justify-center rounded-full text-slate-400 hover:text-slate-600 dark:hover:text-neutral-300 hover:bg-slate-100 dark:hover:bg-neutral-800 transition-colors"
           >
             <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
@@ -118,7 +119,7 @@ function Modal({ title, onClose, children }: { title: string; onClose: () => voi
 function Field({ label, error, required, children }: { label: string; error?: string; required?: boolean; children: React.ReactNode }) {
   return (
     <div className="space-y-1.5">
-      <label className="text-sm font-medium text-slate-700">
+      <label className="text-sm font-medium text-slate-700 dark:text-neutral-300">
         {label}
         {required && <span className="text-rose-500"> *</span>}
       </label>
@@ -129,7 +130,7 @@ function Field({ label, error, required, children }: { label: string; error?: st
 }
 
 const inputClass =
-  'w-full h-11 px-3 rounded-xl border border-slate-200 text-sm text-slate-800 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition'
+  'w-full h-11 px-3 rounded-xl border border-slate-200 dark:border-neutral-700 dark:bg-neutral-800 text-sm text-slate-800 dark:text-neutral-100 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition'
 
 function extractLast4(fullNumber: string): string {
   return fullNumber.replace(/\D/g, '').slice(-4)
@@ -140,11 +141,14 @@ function extractLast4(fullNumber: string): string {
 function AddCardModal({
   onClose,
   providerOptions,
+  currency,
 }: {
   onClose: () => void
   providerOptions: ProviderOption[]
+  currency: string | null
 }) {
   const t = getT(useLanguageStore((s) => s.locale))
+  const { code: currencyCode, symbol } = useCurrency(currency)
   const [isPending, startTransition] = useTransition()
   const [isReloadable, setIsReloadable] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -263,9 +267,9 @@ function AddCardModal({
             className={inputClass}
           />
         </Field>
-        <Field label={t.defaultBalance} required>
+        <Field label={t.defaultBalance(currencyCode)} required>
           <div className="relative">
-            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 font-medium text-sm">{t.currencySymbol}</span>
+            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 font-medium text-sm">{symbol}</span>
             <input
               ref={defaultBalanceRef}
               name="defaultBalance"
@@ -288,7 +292,7 @@ function AddCardModal({
         </Field>
         <div className="flex items-center justify-between py-1">
           <div>
-            <p className="text-sm font-medium text-slate-700">{t.reloadable}</p>
+            <p className="text-sm font-medium text-slate-700 dark:text-neutral-300">{t.reloadable}</p>
             <p className="text-xs text-slate-400">{t.canFundsBeAdded}</p>
           </div>
           <button
@@ -297,19 +301,19 @@ function AddCardModal({
             aria-checked={isReloadable}
             aria-label={t.reloadable}
             onClick={() => setIsReloadable(!isReloadable)}
-            className={`relative w-11 h-6 rounded-full transition-colors ${isReloadable ? 'bg-emerald-500' : 'bg-slate-200'}`}
+            className={`relative w-11 h-6 rounded-full transition-colors ${isReloadable ? 'bg-emerald-500' : 'bg-slate-200 dark:bg-neutral-700'}`}
           >
             <span
               className={`absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform ${isReloadable ? 'translate-x-5' : 'translate-x-0'}`}
             />
           </button>
         </div>
-        {error && <p className="text-sm text-rose-500 bg-rose-50 px-3 py-2 rounded-lg">{error}</p>}
+        {error && <p className="text-sm text-rose-500 dark:text-rose-400 bg-rose-50 dark:bg-rose-950 px-3 py-2 rounded-lg">{error}</p>}
         <div className="flex gap-3 pt-1">
           <button
             type="button"
             onClick={onClose}
-            className="flex-1 h-11 rounded-xl border border-slate-200 text-sm font-medium text-slate-600 hover:bg-slate-50 transition-colors"
+            className="flex-1 h-11 rounded-xl border border-slate-200 dark:border-neutral-700 text-sm font-medium text-slate-600 dark:text-neutral-300 hover:bg-slate-50 dark:hover:bg-neutral-800 transition-colors"
           >
             {t.cancel}
           </button>
@@ -336,6 +340,7 @@ function CardDetailModal({
   onRecharge,
   onDelete,
   expiringSoonDays,
+  currency,
 }: {
   card: CardWithBalance
   onClose: () => void
@@ -344,8 +349,10 @@ function CardDetailModal({
   onRecharge: () => void
   onDelete: () => void
   expiringSoonDays: number
+  currency: string | null
 }) {
   const t = getT(useLanguageStore((s) => s.locale))
+  const { code: currencyCode } = useCurrency(currency)
   const soon = (expiresAt: string | undefined) => isExpiringSoon(expiresAt, expiringSoonDays)
   const [showFull, setShowFull] = useState(false)
   const [showCvv, setShowCvv] = useState(false)
@@ -386,50 +393,50 @@ function CardDetailModal({
             {(card.provider || card.name).slice(0, 2).toUpperCase()}
           </div>
           <div className="flex-1 min-w-0">
-            <p className="font-semibold text-slate-800 truncate">{card.name}</p>
+            <p className="font-semibold text-slate-800 dark:text-neutral-100 truncate">{card.name}</p>
             <p className="text-xs text-slate-400">#{card.seq} · {card.provider}</p>
 
           </div>
           <div className="text-right flex-shrink-0">
             <p className="text-xs text-slate-400">{t.colBalance}</p>
             <p className={`font-mono font-bold text-base ${card.balance > 0 ? 'text-emerald-600' : 'text-rose-500'}`}>
-              {formatCurrency(card.balance, t.currencyLocale, t.currencyCode)}
+              {formatCurrency(card.balance, t.currencyLocale, currencyCode)}
             </p>
           </div>
         </div>
 
         {/* Details grid */}
         <div className="grid grid-cols-2 gap-3">
-          <div className="p-3 rounded-xl border border-slate-100 bg-white">
+          <div className="p-3 rounded-xl border border-slate-100 dark:border-neutral-800 bg-white dark:bg-neutral-800/60">
             <p className="text-xs text-slate-400 mb-1">{t.last4Label}</p>
-            <p className="font-mono text-slate-700 font-medium tracking-widest">
+            <p className="font-mono text-slate-700 dark:text-neutral-200 font-medium tracking-widest">
               {card.last4 ? `•••• ${card.last4}` : '—'}
             </p>
           </div>
-          <div className="p-3 rounded-xl border border-slate-100 bg-white">
+          <div className="p-3 rounded-xl border border-slate-100 dark:border-neutral-800 bg-white dark:bg-neutral-800/60">
             <p className="text-xs text-slate-400 mb-1">{t.typeLabel}</p>
             {card.isReloadable ? (
-              <span className="inline-flex items-center gap-1 text-xs font-medium text-emerald-700">
+              <span className="inline-flex items-center gap-1 text-xs font-medium text-emerald-700 dark:text-emerald-400">
                 <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
                 {t.reloadableLabel}
               </span>
             ) : (
-              <span className="inline-flex items-center gap-1 text-xs font-medium text-slate-600">
+              <span className="inline-flex items-center gap-1 text-xs font-medium text-slate-600 dark:text-neutral-300">
                 <span className="w-1.5 h-1.5 rounded-full bg-slate-400" />
                 {t.oneTime}
               </span>
             )}
           </div>
-          <div className={`p-3 rounded-xl border ${soon(card.expiresAt) ? 'border-rose-200 bg-rose-50' : 'border-slate-100 bg-white'}`}>
+          <div className={`p-3 rounded-xl border ${soon(card.expiresAt) ? 'border-rose-200 dark:border-rose-800 bg-rose-50 dark:bg-rose-950' : 'border-slate-100 dark:border-neutral-800 bg-white dark:bg-neutral-800/60'}`}>
             <p className="text-xs text-slate-400 mb-1">{t.expires}</p>
-            <p className={`font-mono font-medium flex items-center gap-1.5 ${soon(card.expiresAt) ? 'text-rose-600' : 'text-slate-700'}`}>
+            <p className={`font-mono font-medium flex items-center gap-1.5 ${soon(card.expiresAt) ? 'text-rose-600 dark:text-rose-400' : 'text-slate-700 dark:text-neutral-200'}`}>
               {card.expiresAt ? formatDateSlashFull(card.expiresAt) : '—'}
               {card.expiresAt && soon(card.expiresAt) && <ExpiryDaysBadge expiresAt={card.expiresAt} />}
             </p>
           </div>
-          <div className="p-3 rounded-xl border border-slate-100 bg-white">
+          <div className="p-3 rounded-xl border border-slate-100 dark:border-neutral-800 bg-white dark:bg-neutral-800/60">
             <p className="text-xs text-slate-400 mb-1">{t.dateAdded}</p>
-            <p className="text-sm text-slate-700">
+            <p className="text-sm text-slate-700 dark:text-neutral-200">
               {formatDateSlashFull(card.createdAt)}
               {addedByName(card.createdBy) && ` (${addedByName(card.createdBy)})`}
             </p>
@@ -438,7 +445,7 @@ function CardDetailModal({
 
         {/* Full number */}
         {card.fullNumber && (
-          <div className="card-fullnumber-section rounded-xl border border-slate-100 bg-white overflow-hidden">
+          <div className="card-fullnumber-section rounded-xl border border-slate-100 dark:border-neutral-800 bg-white dark:bg-neutral-800/60 overflow-hidden">
             <div className="flex items-center justify-between px-3 pt-3 pb-1">
               <p className="text-xs text-slate-400">{t.fullCardNumber}</p>
               <button
@@ -451,21 +458,21 @@ function CardDetailModal({
             </div>
             {showFull ? (
               <div className="card-fullnumber-revealed px-3 pb-3 space-y-2">
-                <p className="font-mono text-slate-800 text-xl font-extrabold tracking-widest break-all" dir="ltr">
+                <p className="font-mono text-slate-800 dark:text-neutral-100 text-xl font-extrabold tracking-widest break-all" dir="ltr">
                   {formattedFull ? formatCode(card.fullNumber) : card.fullNumber}
                 </p>
                 <div className="flex items-center gap-2">
                   <button
                     type="button"
                     onClick={() => setFormattedFull(!formattedFull)}
-                    className="card-format-btn flex items-center gap-1 h-8 px-2.5 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-500 text-xs font-medium transition-colors"
+                    className="card-format-btn flex items-center gap-1 h-8 px-2.5 rounded-lg bg-slate-100 dark:bg-neutral-700 hover:bg-slate-200 dark:hover:bg-neutral-600 text-slate-500 dark:text-neutral-300 text-xs font-medium transition-colors"
                   >
                     {formattedFull ? '123...' : '1234-...'}
                   </button>
                 <button
                   type="button"
                   onClick={copyFullNumber}
-                  className="card-copy-btn flex-shrink-0 flex items-center gap-1.5 h-8 px-2.5 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-600 text-xs font-medium transition-colors"
+                  className="card-copy-btn flex-shrink-0 flex items-center gap-1.5 h-8 px-2.5 rounded-lg bg-slate-100 dark:bg-neutral-700 hover:bg-slate-200 dark:hover:bg-neutral-600 text-slate-600 dark:text-neutral-300 text-xs font-medium transition-colors"
                 >
                   {copiedFull ? (
                     <>
@@ -487,7 +494,7 @@ function CardDetailModal({
                 </div>
               </div>
             ) : (
-              <p className="font-mono text-slate-700 text-sm tracking-wider break-all px-3 pb-3" dir="ltr">
+              <p className="font-mono text-slate-700 dark:text-neutral-200 text-sm tracking-wider break-all px-3 pb-3" dir="ltr">
                 {maskedFull}
               </p>
             )}
@@ -496,7 +503,7 @@ function CardDetailModal({
 
         {/* CVV */}
         {card.cvv && (
-          <div className="p-3 rounded-xl border border-slate-100 bg-white">
+          <div className="p-3 rounded-xl border border-slate-100 dark:border-neutral-800 bg-white dark:bg-neutral-800/60">
             <div className="flex items-center justify-between mb-1">
               <p className="text-xs text-slate-400">{t.cvvLabel}</p>
               <button
@@ -507,7 +514,7 @@ function CardDetailModal({
                 {showCvv ? t.hide : t.reveal}
               </button>
             </div>
-            <p className="font-mono text-slate-700 text-sm tracking-wider">
+            <p className="font-mono text-slate-700 dark:text-neutral-200 text-sm tracking-wider">
               {showCvv ? card.cvv : '•••'}
             </p>
           </div>
@@ -515,7 +522,7 @@ function CardDetailModal({
 
         {/* Link */}
         {card.link && (
-          <div className="p-3 rounded-xl border border-slate-100 bg-white">
+          <div className="p-3 rounded-xl border border-slate-100 dark:border-neutral-800 bg-white dark:bg-neutral-800/60">
             <p className="text-xs text-slate-400 mb-2">{t.cardLink}</p>
             <div className="flex items-center gap-2">
               <a
@@ -532,7 +539,7 @@ function CardDetailModal({
               <button
                 type="button"
                 onClick={() => { navigator.clipboard.writeText(card.link!).then(() => { setCopiedLink(true); setTimeout(() => setCopiedLink(false), 2000) }) }}
-                className="flex items-center gap-1.5 h-9 px-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-600 text-xs font-medium transition-colors"
+                className="flex items-center gap-1.5 h-9 px-2.5 rounded-xl bg-slate-100 dark:bg-neutral-700 hover:bg-slate-200 dark:hover:bg-neutral-600 text-slate-600 dark:text-neutral-300 text-xs font-medium transition-colors"
               >
                 {copiedLink ? (
                   <svg className="w-4 h-4 text-emerald-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" /></svg>
@@ -547,15 +554,15 @@ function CardDetailModal({
 
         {/* Notes */}
         {card.notes && (
-          <div className="p-3 rounded-xl border border-slate-100 bg-white">
+          <div className="p-3 rounded-xl border border-slate-100 dark:border-neutral-800 bg-white dark:bg-neutral-800/60">
             <p className="text-xs text-slate-400 mb-1">{t.notesLabel}</p>
-            <p className="text-sm text-slate-700">{card.notes}</p>
+            <p className="text-sm text-slate-700 dark:text-neutral-200">{card.notes}</p>
           </div>
         )}
 
         {/* Transactions */}
-        <div className="border border-slate-100 rounded-xl overflow-hidden">
-          <p className="text-xs font-semibold text-slate-500 uppercase tracking-wide px-3 py-2 bg-slate-50 border-b border-slate-100">
+        <div className="border border-slate-100 dark:border-neutral-800 rounded-xl overflow-hidden">
+          <p className="text-xs font-semibold text-slate-500 uppercase tracking-wide px-3 py-2 bg-slate-50 dark:bg-neutral-800 border-b border-slate-100 dark:border-neutral-800">
             {t.transactionHistory}
           </p>
           {transactions === null ? (
@@ -563,13 +570,13 @@ function CardDetailModal({
           ) : transactions.length === 0 ? (
             <div className="px-3 py-4 text-center text-sm text-slate-400">{t.noTransactions}</div>
           ) : (
-            <ul className="divide-y divide-slate-100 max-h-48 overflow-y-auto">
+            <ul className="divide-y divide-slate-100 dark:divide-neutral-800 max-h-48 overflow-y-auto">
               {transactions.map((tx) => (
                 <li key={tx.id} className="flex items-start justify-between px-3 py-2.5">
                   <div className="flex items-center gap-2">
                     <span className={`w-2 h-2 rounded-full flex-shrink-0 ${tx.type === 'RECHARGE' ? 'bg-emerald-500' : 'bg-rose-400'}`} />
                     <div>
-                      <p className="text-xs font-medium text-slate-700">
+                      <p className="text-xs font-medium text-slate-700 dark:text-neutral-200">
                         {tx.type === 'RECHARGE' ? t.txTypeRecharge : t.txTypeSpend}
                       </p>
                       {tx.notes && <p className="text-xs text-slate-400">{tx.notes}</p>}
@@ -577,7 +584,7 @@ function CardDetailModal({
                   </div>
                   <div className="flex flex-col items-end text-right flex-shrink-0">
                     <p className={`font-mono text-sm font-semibold ${tx.type === 'RECHARGE' ? 'text-emerald-600' : 'text-rose-500'}`}>
-                      {formatTransactionAmount(tx.amount, tx.type, t.currencyLocale, t.currencyCode)}
+                      {formatTransactionAmount(tx.amount, tx.type, t.currencyLocale, currencyCode)}
                     </p>
                     <p className="text-xs text-slate-400 mt-0.5">
                       {addedByName(tx.createdBy) && `(${addedByName(tx.createdBy)}) `}
@@ -595,7 +602,7 @@ function CardDetailModal({
           {card.isReloadable && (
             <button
               onClick={() => { onClose(); onRecharge() }}
-              className="flex-1 min-h-[44px] text-sm font-medium rounded-xl border border-emerald-200 text-emerald-600 hover:bg-emerald-50 transition-colors"
+              className="flex-1 min-h-[44px] text-sm font-medium rounded-xl border border-emerald-200 dark:border-emerald-800 text-emerald-600 dark:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-950 transition-colors"
             >
               {t.recharge}
             </button>
@@ -603,13 +610,13 @@ function CardDetailModal({
           <button
             onClick={() => { onClose(); onSpend() }}
             disabled={card.balance <= 0}
-            className="flex-1 min-h-[44px] text-sm font-medium rounded-xl border border-rose-200 text-rose-600 hover:bg-rose-50 transition-colors disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-transparent"
+            className="flex-1 min-h-[44px] text-sm font-medium rounded-xl border border-rose-200 dark:border-rose-800 text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950 transition-colors disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-transparent"
           >
             {t.spend}
           </button>
           <button
             onClick={() => { onClose(); onEdit() }}
-            className="min-h-[44px] w-11 flex items-center justify-center rounded-xl border border-slate-200 text-slate-400 hover:text-emerald-600 hover:border-emerald-200 transition-colors"
+            className="min-h-[44px] w-11 flex items-center justify-center rounded-xl border border-slate-200 dark:border-neutral-700 text-slate-400 hover:text-emerald-600 dark:hover:text-emerald-400 hover:border-emerald-200 dark:hover:border-emerald-800 transition-colors"
             title={t.edit}
           >
             <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
@@ -618,7 +625,7 @@ function CardDetailModal({
           </button>
           <button
             onClick={() => { onClose(); onDelete() }}
-            className="min-h-[44px] w-11 flex items-center justify-center rounded-xl border border-slate-200 text-slate-400 hover:text-rose-500 hover:border-rose-200 transition-colors"
+            className="min-h-[44px] w-11 flex items-center justify-center rounded-xl border border-slate-200 dark:border-neutral-700 text-slate-400 hover:text-rose-500 dark:hover:text-rose-400 hover:border-rose-200 dark:hover:border-rose-800 transition-colors"
             title={t.removeCard}
           >
             <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
@@ -741,7 +748,7 @@ function EditCardModal({
         </Field>
         <div className="flex items-center justify-between py-1">
           <div>
-            <p className="text-sm font-medium text-slate-700">{t.reloadable}</p>
+            <p className="text-sm font-medium text-slate-700 dark:text-neutral-300">{t.reloadable}</p>
             <p className="text-xs text-slate-400">{t.canFundsBeAdded}</p>
           </div>
           <button
@@ -750,14 +757,14 @@ function EditCardModal({
             aria-checked={isReloadable}
             aria-label={t.reloadable}
             onClick={() => setIsReloadable(!isReloadable)}
-            className={`relative w-11 h-6 rounded-full transition-colors ${isReloadable ? 'bg-emerald-500' : 'bg-slate-200'}`}
+            className={`relative w-11 h-6 rounded-full transition-colors ${isReloadable ? 'bg-emerald-500' : 'bg-slate-200 dark:bg-neutral-700'}`}
           >
             <span className={`absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform ${isReloadable ? 'translate-x-5' : 'translate-x-0'}`} />
           </button>
         </div>
-        {error && <p className="text-sm text-rose-500 bg-rose-50 px-3 py-2 rounded-lg">{error}</p>}
+        {error && <p className="text-sm text-rose-500 dark:text-rose-400 bg-rose-50 dark:bg-rose-950 px-3 py-2 rounded-lg">{error}</p>}
         <div className="flex gap-3 pt-1">
-          <button type="button" onClick={onClose} className="flex-1 h-11 rounded-xl border border-slate-200 text-sm font-medium text-slate-600 hover:bg-slate-50 transition-colors">
+          <button type="button" onClick={onClose} className="flex-1 h-11 rounded-xl border border-slate-200 dark:border-neutral-700 text-sm font-medium text-slate-600 dark:text-neutral-300 hover:bg-slate-50 dark:hover:bg-neutral-800 transition-colors">
             {t.cancel}
           </button>
           <button type="submit" disabled={isPending} className="flex-1 h-11 rounded-xl bg-emerald-500 hover:bg-emerald-600 disabled:opacity-60 text-white text-sm font-medium transition-colors">
@@ -776,13 +783,16 @@ function TransactionModal({
   type,
   currentBalance,
   onClose,
+  currency,
 }: {
   card: CardWithBalance
   type: 'SPEND' | 'RECHARGE'
   currentBalance: number
   onClose: () => void
+  currency: string | null
 }) {
   const t = getT(useLanguageStore((s) => s.locale))
+  const { code: currencyCode, symbol } = useCurrency(currency)
   const [isPending, startTransition] = useTransition()
   const [amount, setAmount] = useState('')
   const [notes, setNotes] = useState('')
@@ -818,18 +828,18 @@ function TransactionModal({
 
   return (
     <Modal title={isSpend ? t.spendFromCard : t.rechargeCard} onClose={onClose}>
-      <div className="mb-4 p-3 rounded-xl bg-slate-50 border border-slate-100 flex items-center gap-3">
+      <div className="mb-4 p-3 rounded-xl bg-slate-50 dark:bg-neutral-800 border border-slate-100 dark:border-neutral-700 flex items-center gap-3">
         <div className={`w-10 h-10 rounded-xl flex items-center justify-center text-sm font-bold flex-shrink-0 ${providerColor(card.provider)}`}>
           {(card.provider || card.name).slice(0, 2).toUpperCase()}
         </div>
         <div className="flex-1 min-w-0">
-          <p className="font-medium text-slate-800 text-sm truncate">{card.name}</p>
+          <p className="font-medium text-slate-800 dark:text-neutral-100 text-sm truncate">{card.name}</p>
           <p className="text-xs text-slate-400">{card.provider}</p>
         </div>
         <div className="text-right">
           <p className="text-xs text-slate-400">{t.colBalance}</p>
           <p className={`font-mono font-semibold text-sm ${currentBalance > 0 ? 'text-emerald-600' : 'text-rose-500'}`}>
-            {formatCurrency(currentBalance, t.currencyLocale, t.currencyCode)}
+            {formatCurrency(currentBalance, t.currencyLocale, currencyCode)}
           </p>
         </div>
       </div>
@@ -837,7 +847,7 @@ function TransactionModal({
       <form onSubmit={handleSubmit} className="space-y-4">
         <Field label={t.amount} required>
           <div className="relative">
-            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 font-medium text-sm">{t.currencySymbol}</span>
+            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 font-medium text-sm">{symbol}</span>
             <input
               type="number"
               min="0.01"
@@ -853,9 +863,9 @@ function TransactionModal({
         </Field>
 
         {amount && amountNum > 0 && (
-          <div className={`flex items-center justify-between text-sm px-3 py-2 rounded-xl ${projected >= 0 ? 'bg-emerald-50 text-emerald-700' : 'bg-rose-50 text-rose-600'}`}>
+          <div className={`flex items-center justify-between text-sm px-3 py-2 rounded-xl ${projected >= 0 ? 'bg-emerald-50 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-400' : 'bg-rose-50 dark:bg-rose-950 text-rose-600 dark:text-rose-400'}`}>
             <span>{t.newBalance}</span>
-            <span className="font-mono font-semibold">{formatCurrency(projected, t.currencyLocale, t.currencyCode)}</span>
+            <span className="font-mono font-semibold">{formatCurrency(projected, t.currencyLocale, currencyCode)}</span>
           </div>
         )}
 
@@ -869,13 +879,13 @@ function TransactionModal({
           />
         </Field>
 
-        {error && <p className="text-sm text-rose-500 bg-rose-50 px-3 py-2 rounded-lg">{error}</p>}
+        {error && <p className="text-sm text-rose-500 dark:text-rose-400 bg-rose-50 dark:bg-rose-950 px-3 py-2 rounded-lg">{error}</p>}
 
         <div className="flex gap-3 pt-1">
           <button
             type="button"
             onClick={onClose}
-            className="flex-1 h-11 rounded-xl border border-slate-200 text-sm font-medium text-slate-600 hover:bg-slate-50 transition-colors"
+            className="flex-1 h-11 rounded-xl border border-slate-200 dark:border-neutral-700 text-sm font-medium text-slate-600 dark:text-neutral-300 hover:bg-slate-50 dark:hover:bg-neutral-800 transition-colors"
           >
             {t.cancel}
           </button>
@@ -914,24 +924,24 @@ function DeleteDialog({ card, onClose }: { card: CardWithBalance; onClose: () =>
   return (
     <Modal title={t.removeCard} onClose={onClose}>
       <div className="space-y-4">
-        <div className="flex items-start gap-3 p-3 rounded-xl bg-rose-50 border border-rose-100">
-          <svg className="w-5 h-5 text-rose-500 flex-shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+        <div className="flex items-start gap-3 p-3 rounded-xl bg-rose-50 dark:bg-rose-950 border border-rose-100 dark:border-rose-800">
+          <svg className="w-5 h-5 text-rose-500 dark:text-rose-400 flex-shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
             <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v2m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z" />
           </svg>
           <div>
-            <p className="text-sm font-medium text-rose-700">{t.thisWillHideCard}</p>
-            <p className="text-xs text-rose-500 mt-0.5">
+            <p className="text-sm font-medium text-rose-700 dark:text-rose-400">{t.thisWillHideCard}</p>
+            <p className="text-xs text-rose-500 dark:text-rose-400 mt-0.5">
               <strong>{card.name}</strong> {t.willBeMarkedInactive}
             </p>
           </div>
         </div>
 
-        {error && <p className="text-sm text-rose-500 bg-rose-50 px-3 py-2 rounded-lg">{error}</p>}
+        {error && <p className="text-sm text-rose-500 dark:text-rose-400 bg-rose-50 dark:bg-rose-950 px-3 py-2 rounded-lg">{error}</p>}
 
         <div className="flex gap-3">
           <button
             onClick={onClose}
-            className="flex-1 h-11 rounded-xl border border-slate-200 text-sm font-medium text-slate-600 hover:bg-slate-50 transition-colors"
+            className="flex-1 h-11 rounded-xl border border-slate-200 dark:border-neutral-700 text-sm font-medium text-slate-600 dark:text-neutral-300 hover:bg-slate-50 dark:hover:bg-neutral-800 transition-colors"
           >
             {t.cancel}
           </button>
@@ -961,11 +971,11 @@ function StatCard({
   valueClass?: string
 }) {
   return (
-    <div className="bg-white rounded-2xl border border-slate-200 p-4 shadow-sm">
+    <div className="bg-white dark:bg-neutral-900 rounded-2xl border border-slate-200 dark:border-neutral-700 p-4 shadow-sm">
       <div className="flex items-start justify-between gap-2">
         <div>
           <p className="text-xs text-slate-500 font-medium">{label}</p>
-          <p className={`text-xl font-bold mt-0.5 ${valueClass ?? 'text-slate-800'}`}>{value}</p>
+          <p className={`text-xl font-bold mt-0.5 ${valueClass ?? 'text-slate-800 dark:text-neutral-100'}`}>{value}</p>
           {subValue && <p className="text-xs text-slate-400 font-medium mt-0.5">{subValue}</p>}
         </div>
         <div className={`w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0 ${iconClass}`}>
@@ -990,12 +1000,15 @@ export default function GiftCardsClient({
   cards,
   providerOptions,
   expiringSoonDays,
+  currency,
 }: {
   cards: CardWithBalance[]
   providerOptions: ProviderOption[]
   expiringSoonDays: number
+  currency: string | null
 }) {
   const t = getT(useLanguageStore((s) => s.locale))
+  const { code: currencyCode } = useCurrency(currency)
   const [modal, setModal] = useState<ModalState>({ type: 'none' })
   const [showUsed, setShowUsed] = useState(false)
   const soon = (expiresAt: string | undefined) => isExpiringSoon(expiresAt, expiringSoonDays)
@@ -1036,14 +1049,14 @@ export default function GiftCardsClient({
       <div className="cards-page space-y-6">
         {/* Page header */}
         <div className="cards-page-header flex items-center justify-between">
-          <h1 className="text-xl font-bold text-slate-800">{t.cardsTab}</h1>
+          <h1 className="text-xl font-bold text-slate-800 dark:text-neutral-400">{t.cardsTab}</h1>
         </div>
         {/* Summary Stats — hidden while searching, since these are portfolio totals, not search-scoped */}
         {!rawQuery && (
         <div className="cards-stats grid grid-cols-2 sm:grid-cols-4 gap-3">
           <StatCard
             label={t.totalBalance}
-            value={formatCurrency(totalBalance, t.currencyLocale, t.currencyCode)}
+            value={formatCurrency(totalBalance, t.currencyLocale, currencyCode)}
             valueClass="text-emerald-600"
             iconClass="bg-emerald-50 text-emerald-600"
             icon={
@@ -1075,7 +1088,7 @@ export default function GiftCardsClient({
           <StatCard
             label={t.expiringSoon}
             value={String(expiringSoonCount)}
-            subValue={expiringSoonCount > 0 ? formatCurrency(expiringSoonSum, t.currencyLocale, t.currencyCode) : undefined}
+            subValue={expiringSoonCount > 0 ? formatCurrency(expiringSoonSum, t.currencyLocale, currencyCode) : undefined}
             valueClass={expiringSoonCount > 0 ? 'text-rose-600' : undefined}
             iconClass="bg-rose-50 text-rose-500"
             icon={
@@ -1088,10 +1101,10 @@ export default function GiftCardsClient({
         )}
 
         {/* Table */}
-        <div className="cards-table-container bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
-          <div className="cards-table-header px-5 py-4 border-b border-slate-100 flex items-center justify-between">
+        <div className="cards-table-container bg-white dark:bg-neutral-900 rounded-2xl border border-slate-200 dark:border-neutral-700 shadow-sm overflow-hidden">
+          <div className="cards-table-header px-5 py-4 border-b border-slate-100 dark:border-neutral-800 flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <h2 className="font-semibold text-slate-800 text-base">{t.allCards}</h2>
+              <h2 className="font-semibold text-slate-800 dark:text-neutral-100 text-base">{t.allCards}</h2>
               <span className="text-xs text-slate-400 bg-slate-100 px-2 py-0.5 rounded-full">
                 {t.cards(visibleActive.length)}
               </span>
@@ -1135,7 +1148,7 @@ export default function GiftCardsClient({
               <div className="cards-table-desktop hidden sm:block overflow-x-auto">
                 <table className="w-full text-sm">
                   <thead>
-                    <tr className="border-b border-slate-100 bg-slate-50/60">
+                    <tr className="border-b border-slate-100 dark:border-neutral-800 bg-slate-50/60 dark:bg-neutral-800/60">
                       <th className="px-3 py-3 w-10"></th>
                       <th className="text-start font-medium text-slate-500 px-5 py-3 w-[28%]">{t.colCard}</th>
                       <th className="text-start font-medium text-slate-500 px-4 py-3">{t.colProvider}</th>
@@ -1146,9 +1159,9 @@ export default function GiftCardsClient({
                       <th className="text-end font-medium text-slate-500 px-5 py-3">{t.colActions}</th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-slate-100">
+                  <tbody className="divide-y divide-slate-100 dark:divide-neutral-800">
                     {visibleActive.map((card) => (
-                      <tr key={card.id} className={`transition-colors group ${soon(card.expiresAt) ? 'bg-rose-50/60 hover:bg-rose-50' : 'hover:bg-slate-50/70'}`}>
+                      <tr key={card.id} className={`transition-colors group ${soon(card.expiresAt) ? 'bg-rose-50/60 dark:bg-rose-950/40 hover:bg-rose-50 dark:hover:bg-rose-950/60' : 'hover:bg-slate-50/70 dark:hover:bg-neutral-800/70'}`}>
                         <td className="px-3 py-3.5 text-xs font-mono text-slate-400 text-right">#{card.seq}</td>
                         <td className="px-5 py-3.5">
                           <button
@@ -1158,10 +1171,10 @@ export default function GiftCardsClient({
                             <div className={`w-9 h-9 rounded-lg flex items-center justify-center text-sm font-bold flex-shrink-0 ${providerColor(card.provider)}`}>
                               {(card.provider || card.name).slice(0, 2).toUpperCase()}
                             </div>
-                            <span className="font-medium text-slate-800 truncate underline-offset-2 hover:underline"><HighlightMatch text={card.name} query={rawQuery} /></span>
+                            <span className="font-medium text-slate-800 dark:text-neutral-100 truncate underline-offset-2 hover:underline"><HighlightMatch text={card.name} query={rawQuery} /></span>
                           </button>
                         </td>
-                        <td className="px-4 py-3.5 text-slate-600"><HighlightMatch text={card.provider} query={rawQuery} /></td>
+                        <td className="px-4 py-3.5 text-slate-600 dark:text-neutral-300"><HighlightMatch text={card.provider} query={rawQuery} /></td>
                         <td className="px-4 py-3.5">
                           <span className="font-mono text-slate-500 tracking-widest text-xs">
                             {card.last4 ? <>•••• <HighlightMatch text={card.last4} query={rawQuery} /></> : '—'}
@@ -1169,12 +1182,12 @@ export default function GiftCardsClient({
                         </td>
                         <td className="px-4 py-3.5">
                           {card.isReloadable ? (
-                            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-emerald-50 text-emerald-700 border border-emerald-100">
+                            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-emerald-50 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-400 border border-emerald-100 dark:border-emerald-800">
                               <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
                               {t.reloadableLabel}
                             </span>
                           ) : (
-                            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-slate-100 text-slate-600 border border-slate-200">
+                            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-slate-100 dark:bg-neutral-800 text-slate-600 dark:text-neutral-300 border border-slate-200 dark:border-neutral-700">
                               <span className="w-1.5 h-1.5 rounded-full bg-slate-400" />
                               {t.oneTime}
                             </span>
@@ -1182,7 +1195,7 @@ export default function GiftCardsClient({
                         </td>
                         <td className="px-4 py-3.5 text-right">
                           <span className={`font-mono font-semibold text-sm ${card.balance > 0 ? 'text-emerald-600' : 'text-rose-500'}`}>
-                            {formatCurrency(card.balance, t.currencyLocale, t.currencyCode)}
+                            {formatCurrency(card.balance, t.currencyLocale, currencyCode)}
                           </span>
                         </td>
                         <td className="px-4 py-3.5 text-xs whitespace-nowrap">
@@ -1235,9 +1248,9 @@ export default function GiftCardsClient({
               </div>
 
               {/* Mobile Cards */}
-              <div className="cards-list-mobile sm:hidden divide-y divide-slate-100">
+              <div className="cards-list-mobile sm:hidden divide-y divide-slate-100 dark:divide-neutral-800">
                 {visibleActive.map((card) => (
-                  <div key={card.id} className={`px-4 py-4 ${soon(card.expiresAt) ? 'bg-rose-50/60' : ''}`}>
+                  <div key={card.id} className={`px-4 py-4 ${soon(card.expiresAt) ? 'bg-rose-50/60 dark:bg-rose-950/40' : ''}`}>
                     <div className="flex items-center gap-3 mb-3">
                       <span className="text-xs font-mono text-slate-400 flex-shrink-0 w-7 text-right">#{card.seq}</span>
                       <div className={`w-10 h-10 rounded-xl flex items-center justify-center text-sm font-bold flex-shrink-0 ${providerColor(card.provider)}`}>
@@ -1247,7 +1260,7 @@ export default function GiftCardsClient({
                         onClick={() => setModal({ type: 'detail', card })}
                         className="flex-1 min-w-0 text-left"
                       >
-                        <div className="font-medium text-slate-800 truncate"><HighlightMatch text={card.name} query={rawQuery} /></div>
+                        <div className="font-medium text-slate-800 dark:text-neutral-100 truncate"><HighlightMatch text={card.name} query={rawQuery} /></div>
                         <div className="text-xs text-slate-400">
                           <HighlightMatch text={card.provider} query={rawQuery} />
                           {card.last4 && (
@@ -1257,7 +1270,7 @@ export default function GiftCardsClient({
                       </button>
                       <div className="text-right flex-shrink-0">
                         <div className={`font-mono font-bold text-base ${card.balance > 0 ? 'text-emerald-600' : 'text-rose-500'}`}>
-                          {formatCurrency(card.balance, t.currencyLocale, t.currencyCode)}
+                          {formatCurrency(card.balance, t.currencyLocale, currencyCode)}
                         </div>
                         {card.isReloadable ? (
                           <span className="text-xs text-emerald-600">{t.reloadableLabel}</span>
@@ -1325,21 +1338,21 @@ export default function GiftCardsClient({
             </svg>
           </button>
           {showUsed && used.length === 0 ? (
-            <div className="bg-white rounded-2xl border border-slate-100 shadow-sm p-6 text-center">
+            <div className="bg-white dark:bg-neutral-900 rounded-2xl border border-slate-100 dark:border-neutral-800 shadow-sm p-6 text-center">
               <p className="text-slate-400 text-sm">{t.noUsedCards}</p>
             </div>
           ) : showUsed && visibleUsed.length === 0 ? (
-            <div className="bg-white rounded-2xl border border-slate-100 shadow-sm p-6 text-center">
+            <div className="bg-white dark:bg-neutral-900 rounded-2xl border border-slate-100 dark:border-neutral-800 shadow-sm p-6 text-center">
               <p className="text-slate-400 text-sm">{t.searchNoResults(rawQuery)}</p>
             </div>
           ) : showUsed ? (
-            <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+            <div className="bg-white dark:bg-neutral-900 rounded-2xl border border-slate-200 dark:border-neutral-700 shadow-sm overflow-hidden">
               {/* Desktop Table */}
               <div className="cards-used-table-desktop hidden sm:block overflow-x-auto">
                 <table className="w-full text-sm">
-                  <tbody className="divide-y divide-slate-100">
+                  <tbody className="divide-y divide-slate-100 dark:divide-neutral-800">
                     {visibleUsed.map((card) => (
-                      <tr key={card.id} className="hover:bg-slate-50/70 transition-colors group">
+                      <tr key={card.id} className="hover:bg-slate-50/70 dark:hover:bg-neutral-800/70 transition-colors group">
                         <td className="px-3 py-3.5 text-xs font-mono text-slate-400 text-right w-10">#{card.seq}</td>
                         <td className="px-5 py-3.5 w-[28%]">
                           <button
@@ -1349,10 +1362,10 @@ export default function GiftCardsClient({
                             <div className={`w-9 h-9 rounded-lg flex items-center justify-center text-sm font-bold flex-shrink-0 ${providerColor(card.provider)}`}>
                               {(card.provider || card.name).slice(0, 2).toUpperCase()}
                             </div>
-                            <span className="font-medium text-slate-800 truncate underline-offset-2 hover:underline"><HighlightMatch text={card.name} query={rawQuery} /></span>
+                            <span className="font-medium text-slate-800 dark:text-neutral-100 truncate underline-offset-2 hover:underline"><HighlightMatch text={card.name} query={rawQuery} /></span>
                           </button>
                         </td>
-                        <td className="px-4 py-3.5 text-slate-600"><HighlightMatch text={card.provider} query={rawQuery} /></td>
+                        <td className="px-4 py-3.5 text-slate-600 dark:text-neutral-300"><HighlightMatch text={card.provider} query={rawQuery} /></td>
                         <td className="px-4 py-3.5">
                           <span className="font-mono text-slate-500 tracking-widest text-xs">
                             {card.last4 ? <>•••• <HighlightMatch text={card.last4} query={rawQuery} /></> : '—'}
@@ -1366,7 +1379,7 @@ export default function GiftCardsClient({
                         </td>
                         <td className="px-4 py-3.5 text-right">
                           <span className="font-mono font-semibold text-sm text-rose-500">
-                            {formatCurrency(0, t.currencyLocale, t.currencyCode)}
+                            {formatCurrency(0, t.currencyLocale, currencyCode)}
                           </span>
                         </td>
                         <td className="px-4 py-3.5 text-slate-400 text-xs whitespace-nowrap">
@@ -1393,7 +1406,7 @@ export default function GiftCardsClient({
               </div>
 
               {/* Mobile */}
-              <div className="cards-used-list-mobile sm:hidden divide-y divide-slate-100">
+              <div className="cards-used-list-mobile sm:hidden divide-y divide-slate-100 dark:divide-neutral-800">
                 {visibleUsed.map((card) => (
                   <div key={card.id} className="px-4 py-4">
                     <div className="flex items-center gap-3 mb-3">
@@ -1405,7 +1418,7 @@ export default function GiftCardsClient({
                         onClick={() => setModal({ type: 'detail', card })}
                         className="flex-1 min-w-0 text-left"
                       >
-                        <div className="font-medium text-slate-800 truncate"><HighlightMatch text={card.name} query={rawQuery} /></div>
+                        <div className="font-medium text-slate-800 dark:text-neutral-100 truncate"><HighlightMatch text={card.name} query={rawQuery} /></div>
                         <div className="text-xs text-slate-400">
                           <HighlightMatch text={card.provider} query={rawQuery} />
                           {card.last4 && <span className="font-mono ml-1.5 tracking-widest">•••• <HighlightMatch text={card.last4} query={rawQuery} /></span>}
@@ -1413,7 +1426,7 @@ export default function GiftCardsClient({
                       </button>
                       <div className="text-right flex-shrink-0">
                         <div className="font-mono font-bold text-base text-rose-500">
-                          {formatCurrency(0, t.currencyLocale, t.currencyCode)}
+                          {formatCurrency(0, t.currencyLocale, currencyCode)}
                         </div>
                         <span className="text-xs text-slate-400">{t.oneTime}</span>
                         {card.expiresAt && (
@@ -1447,7 +1460,7 @@ export default function GiftCardsClient({
       </div>
 
       {/* Modals */}
-      {modal.type === 'add-card' && <AddCardModal onClose={close} providerOptions={providerOptions} />}
+      {modal.type === 'add-card' && <AddCardModal onClose={close} providerOptions={providerOptions} currency={currency} />}
       {modal.type === 'detail' && (
         <CardDetailModal
           card={modal.card}
@@ -1457,6 +1470,7 @@ export default function GiftCardsClient({
           onRecharge={() => setModal({ type: 'transaction', card: modal.card, txType: 'RECHARGE' })}
           onDelete={() => setModal({ type: 'delete', card: modal.card })}
           expiringSoonDays={expiringSoonDays}
+          currency={currency}
         />
       )}
       {modal.type === 'edit' && (
@@ -1468,6 +1482,7 @@ export default function GiftCardsClient({
           type={modal.txType}
           currentBalance={modal.card.balance}
           onClose={close}
+          currency={currency}
         />
       )}
       {modal.type === 'delete' && <DeleteDialog card={modal.card} onClose={close} />}

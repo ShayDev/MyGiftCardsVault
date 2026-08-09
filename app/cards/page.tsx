@@ -19,7 +19,8 @@ export default async function Page() {
   if (!user?.familyId) redirect('/onboarding')
 
   const { familyId } = user
-  const expiringSoonDays = getExpiringSoonDays(parseFamilySettings(user.family?.settings ?? null))
+  const familySettings = parseFamilySettings(user.family?.settings ?? null)
+  const expiringSoonDays = getExpiringSoonDays(familySettings)
 
   const cards = await prisma.giftCard.findMany({
     where: { familyId, isActive: true },
@@ -51,5 +52,12 @@ export default async function Page() {
     balance: parseFloat(balances.get(c.id)?.toString() ?? '0'),
   }))
 
-  return <GiftCardsClient cards={payload} providerOptions={providerOptions} expiringSoonDays={expiringSoonDays} />
+  return (
+    <GiftCardsClient
+      cards={payload}
+      providerOptions={providerOptions}
+      expiringSoonDays={expiringSoonDays}
+      currency={familySettings.currency}
+    />
+  )
 }

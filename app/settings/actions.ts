@@ -7,6 +7,7 @@ import { z } from 'zod'
 import prisma from '../../lib/prisma'
 import { generateInviteCode } from '../../lib/inviteCode'
 import { parseFamilySettings } from '../../lib/familySettings'
+import { isSupportedCurrency } from '../../lib/currency'
 
 const switchSchema = z.object({
   familyName: z.string().min(1),
@@ -19,6 +20,11 @@ const createSchema = z.object({
 
 const expiringSoonDaysSchema = z.object({
   expiringSoonDays: z.coerce.number().int().min(0).max(365),
+})
+
+const currencySchema = z.object({
+  // '' selects "follow language" — clears the family's override.
+  currency: z.string().refine((v) => v === '' || isSupportedCurrency(v), 'Unsupported currency'),
 })
 
 export async function switchFamily(formData: FormData) {
@@ -113,6 +119,28 @@ export async function updateExpiringSoonDays(formData: FormData) {
     ...current,
     expiringSoonDays: { ...current.expiringSoonDays, default: parsed.data.expiringSoonDays },
   }
+
+  await prisma.familyGroup.update({
+    where: { id: dbUser.familyId },
+    data: { settings: JSON.stringify(updated) },
+  })
+
+  revalidatePath('/settings')
+}
+
+export async function updateCurrency(formData: FormData) {
+  const { userId } = await auth()
+  if (!userId) redirect('/sign-in')
+
+  const parsed = currencySchema.safeParse({ currency: formData.get('currency') })
+  if (!parsed.success) return { error: 'Choose a valid currency.' }
+
+  const dbUser = await prisma.user.findUnique({ where: { clerkId: userId }, select: { familyId: true } })
+  if (!dbUser?.familyId) redirect('/onboarding')
+
+  const family = await prisma.familyGroup.findUnique({ where: { id: dbUser.familyId }, select: { settings: true } })
+  const current = parseFamilySettings(family?.settings ?? null)
+  const updated = { ...current, currency: parsed.data.currency || null }
 
   await prisma.familyGroup.update({
     where: { id: dbUser.familyId },

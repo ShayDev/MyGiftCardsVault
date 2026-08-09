@@ -49,7 +49,7 @@ const translations = {
     cvvPlaceholder: '123',
     cvvLabel: 'CVV',
     expirationOptional: 'Expiration (optional)',
-    defaultBalance: 'Default Balance (USD)',
+    defaultBalance: (code: string) => `Default Balance (${code})`,
     notesOptional: 'Notes (optional)',
     notesPlaceholder: 'e.g. Birthday gift from mom',
     canFundsBeAdded: 'Can funds be added to this card?',
@@ -247,6 +247,14 @@ const translations = {
     expiringSoonDaysLabel: '"Expiring soon" window (days)',
     expiringSoonDaysHelp: 'Cards, vouchers, refunds, and clubs are highlighted this many days before they expire.',
     expiringSoonDaysSaved: 'Saved',
+    // Currency setting
+    settingsCurrencyLabel: 'Display currency',
+    settingsCurrencyHelp: "Choose which currency amounts are shown in. This only changes how numbers are displayed — it doesn't convert balances.",
+    settingsCurrencyFollowLanguage: 'Follow language',
+    settingsCurrencySaved: 'Saved',
+    // Appearance setting
+    themeLight: 'Light',
+    themeDark: 'Dark',
   },
   he: {
     // Header
@@ -293,7 +301,7 @@ const translations = {
     cvvPlaceholder: '123',
     cvvLabel: 'CVV',
     expirationOptional: 'תאריך תפוגה (אופציונלי)',
-    defaultBalance: 'יתרה התחלתית (ILS)',
+    defaultBalance: (code: string) => `יתרה התחלתית (${code})`,
     notesOptional: 'הערות (אופציונלי)',
     notesPlaceholder: 'למשל: מתנת יום הולדת מאמא',
     canFundsBeAdded: 'ניתן להוסיף כספים לכרטיס זה?',
@@ -491,6 +499,14 @@ const translations = {
     expiringSoonDaysLabel: 'חלון "פג תוקף בקרוב" (בימים)',
     expiringSoonDaysHelp: 'כרטיסים, שוברים, זיכויים ומועדונים מודגשים במספר הימים הבא לפני שפג תוקפם.',
     expiringSoonDaysSaved: 'נשמר',
+    // Currency setting
+    settingsCurrencyLabel: 'מטבע תצוגה',
+    settingsCurrencyHelp: 'בחר את המטבע להצגת סכומים. פעולה זו רק משנה את אופן הצגת המספרים — היא אינה ממירה יתרות.',
+    settingsCurrencyFollowLanguage: 'בהתאם לשפה',
+    settingsCurrencySaved: 'נשמר',
+    // Appearance setting
+    themeLight: 'בהיר',
+    themeDark: 'כהה',
   },
 } as const
 
