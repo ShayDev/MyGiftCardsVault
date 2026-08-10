@@ -3,8 +3,8 @@ import type { Locale } from './i18n'
 export type CurrencyCode = 'USD' | 'ILS' | 'EUR' | 'GBP'
 
 export const SUPPORTED_CURRENCIES: { code: CurrencyCode; symbol: string }[] = [
-  { code: 'USD', symbol: '$' },
   { code: 'ILS', symbol: '₪' },
+  { code: 'USD', symbol: '$' },
   { code: 'EUR', symbol: '€' },
   { code: 'GBP', symbol: '£' },
 ]
