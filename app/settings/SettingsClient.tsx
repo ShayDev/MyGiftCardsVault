@@ -8,6 +8,7 @@ import { getT, localeDir } from '../../lib/i18n'
 import { UserButton } from '@clerk/nextjs'
 import CopyButton from './CopyButton'
 import Spinner from '../../components/Spinner'
+import CurrencyToggle from '../../components/CurrencyToggle'
 import { switchFamily, createNewFamily, switchToOwnFamily, updateExpiringSoonDays, updateCurrency } from './actions'
 import { SUPPORTED_CURRENCIES } from '../../lib/currency'
 
@@ -130,8 +131,10 @@ export default function SettingsClient({
           {t.back}
         </Link>
       </div>
-      <div className="settings-header-row flex items-center justify-between mb-6">
+      <div className="settings-header-row flex items-center justify-between mb-6 gap-2">
         <h1 className="text-xl font-bold text-slate-900 dark:text-neutral-400">{t.settingsTitle}</h1>
+        <div className="settings-header-controls flex items-center gap-2">
+        <CurrencyToggle currency={currency} />
         <button
           type="button"
           dir="ltr"
@@ -172,6 +175,7 @@ export default function SettingsClient({
             )}
           </span>
         </button>
+        </div>
       </div>
 
       <div className="bg-white dark:bg-neutral-900 rounded-2xl border border-slate-200 dark:border-neutral-700 p-5 mb-4">
@@ -353,12 +357,15 @@ export default function SettingsClient({
         </form>
       </div>
 
+      {/* Full currency dropdown — superseded by the quick USD/ILS CurrencyToggle next to
+          the title above. Commented out, not deleted, in case the toggle doesn't stick.
       <div className="bg-white dark:bg-neutral-900 rounded-2xl border border-slate-200 dark:border-neutral-700 p-5 mb-4">
         <h2 className="text-sm font-semibold text-slate-500 uppercase tracking-wide mb-4">{t.settingsCurrencyLabel}</h2>
         <form action={handleCurrencySubmit} className="flex flex-col gap-2">
           <p className="text-xs text-slate-400">{t.settingsCurrencyHelp}</p>
           <div className="flex items-center gap-3">
             <select
+              key={currency ?? 'auto'}
               name="currency"
               defaultValue={currency ?? ''}
               className="min-h-[44px] border border-slate-200 dark:border-neutral-700 dark:bg-neutral-800 dark:text-neutral-100 rounded-xl px-3 text-sm font-mono focus:outline-none focus:ring-2 focus:ring-emerald-500"
@@ -380,6 +387,7 @@ export default function SettingsClient({
           {currencyError && <p className="text-rose-600 dark:text-rose-400 text-sm">{currencyError}</p>}
         </form>
       </div>
+      */}
 
       <div className="bg-white dark:bg-neutral-900 rounded-2xl border border-slate-200 dark:border-neutral-700 p-5">
         <h2 className="text-sm font-semibold text-slate-500 uppercase tracking-wide mb-4">{t.settingsAccount}</h2>
