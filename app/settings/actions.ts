@@ -126,6 +126,13 @@ export async function updateExpiringSoonDays(formData: FormData) {
   })
 
   revalidatePath('/settings')
+  // Also shown on these — without this, a same-session tab switch right after
+  // saving can still serve the pre-change value from the Router Cache until it
+  // naturally expires; only a hard reload was guaranteed to pick it up.
+  revalidatePath('/cards')
+  revalidatePath('/vouchers')
+  revalidatePath('/refunds')
+  revalidatePath('/clubs')
 }
 
 export async function updateCurrency(formData: FormData) {
@@ -148,4 +155,9 @@ export async function updateCurrency(formData: FormData) {
   })
 
   revalidatePath('/settings')
+  // Currency is displayed on these three too — same Router Cache staleness reasoning
+  // as updateExpiringSoonDays above. Clubs shows no money, so it's skipped here.
+  revalidatePath('/cards')
+  revalidatePath('/vouchers')
+  revalidatePath('/refunds')
 }
