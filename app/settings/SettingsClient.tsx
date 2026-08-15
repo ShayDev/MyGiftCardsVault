@@ -11,6 +11,8 @@ import Spinner from '../../components/Spinner'
 import CurrencyToggle from '../../components/CurrencyToggle'
 import { switchFamily, createNewFamily, switchToOwnFamily, updateExpiringSoonDays, updateCurrency } from './actions'
 import { SUPPORTED_CURRENCIES } from '../../lib/currency'
+import { isAndroid, isIOS, isStandalone } from '../../lib/platform'
+import { useInstallPromptStore } from '../../hooks/useInstallPromptStore'
 
 type Props = {
   familyName: string
@@ -82,6 +84,22 @@ export default function SettingsClient({
       setTimeout(() => setExpirySaved(false), 2000)
     }
   }
+
+  // Device/browser detection only resolves client-side; default to "nothing detected" so
+  // the server-rendered markup and the pre-hydration client render stay identical, same
+  // pattern as the isDark resolution above.
+  const [platform, setPlatform] = useState({ android: false, ios: false, standalone: false })
+  useEffect(() => {
+    // TEMP: force the iOS branch on so the install card is visible on desktop web for a
+    // quick visual check. Revert to the real detection below before committing.
+    setPlatform({ android: isAndroid(), ios: true, standalone: isStandalone() })
+    // setPlatform({ android: isAndroid(), ios: isIOS(), standalone: isStandalone() })
+  }, [])
+  const [showIosSteps, setShowIosSteps] = useState(false)
+  const canInstallAndroid = useInstallPromptStore((s) => !!s.deferred)
+  const promptInstall = useInstallPromptStore((s) => s.promptInstall)
+  const storeInstalled = useInstallPromptStore((s) => s.installed)
+  const isPwaInstalled = platform.standalone || storeInstalled
 
   const [currencySaving, setCurrencySaving] = useState(false)
   const [currencyError, setCurrencyError] = useState<string | null>(null)
@@ -356,6 +374,33 @@ export default function SettingsClient({
           {expiryError && <p className="text-rose-600 dark:text-rose-400 text-sm">{expiryError}</p>}
         </form>
       </div>
+
+      {(isPwaInstalled || (platform.android && canInstallAndroid) || platform.ios) && (
+        <div className="settings-install-section bg-white dark:bg-neutral-900 rounded-2xl border border-slate-200 dark:border-neutral-700 p-5 mb-4">
+          <h2 className="text-sm font-semibold text-slate-500 uppercase tracking-wide mb-4">{t.settingsInstallTitle}</h2>
+          {isPwaInstalled ? (
+            <p className="text-sm text-emerald-600 dark:text-emerald-400">{t.settingsInstallInstalled}</p>
+          ) : platform.android ? (
+            <button
+              onClick={promptInstall}
+              className="w-full min-h-[44px] flex items-center justify-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white font-medium rounded-xl px-4 py-3 transition-colors"
+            >
+              {t.settingsInstallAndroidButton}
+            </button>
+          ) : (
+            <div className="install-ios-steps flex flex-col gap-2">
+              <button
+                type="button"
+                onClick={() => setShowIosSteps((v) => !v)}
+                className="w-full min-h-[44px] flex items-center justify-center gap-2 bg-white dark:bg-neutral-800 hover:bg-slate-50 dark:hover:bg-neutral-700 text-slate-700 dark:text-neutral-400 font-medium rounded-xl px-4 py-3 border border-slate-200 dark:border-neutral-700 transition-colors"
+              >
+                {t.settingsInstallIOSButton}
+              </button>
+              {showIosSteps && <p className="text-xs text-slate-400">{t.settingsInstallIOSSteps}</p>}
+            </div>
+          )}
+        </div>
+      )}
 
       {/* Full currency dropdown — superseded by the quick USD/ILS CurrencyToggle next to
           the title above. Commented out, not deleted, in case the toggle doesn't stick.

@@ -1,5 +1,7 @@
 # Android Install Prompt + Install Tracking — HLD
 
+**Status: implemented, with two adjustments from the design below** — (1) the `beforeinstallprompt`/`appinstalled` listener is mounted globally (`components/InstallPromptListener.tsx` in `app/layout.tsx`, backed by `hooks/useInstallPromptStore.ts`), not scoped inside `SettingsClient`, since the event can fire before Settings is ever opened and `preventDefault()` must be called synchronously to suppress Chrome's own UI. (2) `UserLoginStat` ended up with simpler columns than §3 below: `os` (`'android' | 'ios' | 'web'`, refreshed on every visit via `/api/track-visit`) and `pwaInstalled` (`Boolean`, forward-only) — same rationale (per-user, forward-only, no uninstall detection), just leaner. See `SettingsClient.tsx`'s install card for the shipped UI.
+
 ## Overview
 
 Add a custom "Install app" control for Android/Chrome that captures the browser's native install eligibility signal, plus persist to the DB when a user actually completes an install (not just when they're *eligible* to). Also scopes the **future service worker** this depends on — its minimal responsibilities, not a full implementation.

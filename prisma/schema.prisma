@@ -114,11 +114,13 @@ model Refund {
 }
 
 model UserLoginStat {
-  clerkId     String   @id
-  loginCount  Int      @default(1)
-  visitCount  Int      @default(0)
-  lastLoginAt DateTime @default(now())
-  lastVisitAt DateTime @default(now())
+  clerkId      String   @id
+  loginCount   Int      @default(1)
+  visitCount   Int      @default(0)
+  lastLoginAt  DateTime @default(now())
+  lastVisitAt  DateTime @default(now())
+  os           String?  // 'android' | 'ios' | 'web' — detected client-side, refreshed on every visit
+  pwaInstalled Boolean  @default(false) // forward-only: no browser event exists for uninstall, so this only ever flips true, never back
 }
 
 model Voucher {

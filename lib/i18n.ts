@@ -127,6 +127,11 @@ const translations = {
     settingsCreateFamilySubtitle: 'Choose a name for your new family vault.',
     settingsCreateButton: 'Create family',
     settingsCreating: 'Creating…',
+    settingsInstallTitle: 'App',
+    settingsInstallAndroidButton: 'Install app',
+    settingsInstallIOSButton: 'Add to Home Screen',
+    settingsInstallIOSSteps: 'Tap the Share icon, then "Add to Home Screen".',
+    settingsInstallInstalled: 'Installed ✓',
     // Onboarding
     onboardingWelcome: 'Welcome!',
     onboardingSubtitle: 'Set up your family vault to get started.',
@@ -379,6 +384,11 @@ const translations = {
     settingsCreateFamilySubtitle: 'בחר שם למשפחה החדשה שלך.',
     settingsCreateButton: 'צור משפחה',
     settingsCreating: 'יוצר...',
+    settingsInstallTitle: 'אפליקציה',
+    settingsInstallAndroidButton: 'התקן אפליקציה',
+    settingsInstallIOSButton: 'הוסף למסך הבית',
+    settingsInstallIOSSteps: 'הקש על סמל השיתוף, ואז על "הוסף למסך הבית".',
+    settingsInstallInstalled: 'מותקן ✓',
     // Onboarding
     onboardingWelcome: '!ברוכים הבאים',
     onboardingSubtitle: 'הגדר את כספת המשפחה שלך כדי להתחיל.',
