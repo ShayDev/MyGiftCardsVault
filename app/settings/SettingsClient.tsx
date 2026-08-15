@@ -90,16 +90,19 @@ export default function SettingsClient({
   // pattern as the isDark resolution above.
   const [platform, setPlatform] = useState({ android: false, ios: false, standalone: false })
   useEffect(() => {
-    // TEMP: force the iOS branch on so the install card is visible on desktop web for a
-    // quick visual check. Revert to the real detection below before committing.
-    setPlatform({ android: isAndroid(), ios: true, standalone: isStandalone() })
-    // setPlatform({ android: isAndroid(), ios: isIOS(), standalone: isStandalone() })
+    setPlatform({ android: isAndroid(), ios: isIOS(), standalone: isStandalone() })
   }, [])
   const [showIosSteps, setShowIosSteps] = useState(false)
   const canInstallAndroid = useInstallPromptStore((s) => !!s.deferred)
   const promptInstall = useInstallPromptStore((s) => s.promptInstall)
   const storeInstalled = useInstallPromptStore((s) => s.installed)
   const isPwaInstalled = platform.standalone || storeInstalled
+  const isAndroidReady = platform.android && canInstallAndroid
+  // Dev-only fallback: on a desktop/other browser where nothing real was detected, still
+  // show the card (disabled) so the UI is visible/stylable without an actual device —
+  // never in production, and never once a real platform/installed state is detected.
+  const isPreview =
+    process.env.NODE_ENV !== 'production' && !isPwaInstalled && !isAndroidReady && !platform.ios
 
   const [currencySaving, setCurrencySaving] = useState(false)
   const [currencyError, setCurrencyError] = useState<string | null>(null)
@@ -375,25 +378,32 @@ export default function SettingsClient({
         </form>
       </div>
 
-      {(isPwaInstalled || (platform.android && canInstallAndroid) || platform.ios) && (
+      {(isPwaInstalled || isAndroidReady || platform.ios || isPreview) && (
         <div className="settings-install-section bg-white dark:bg-neutral-900 rounded-2xl border border-slate-200 dark:border-neutral-700 p-5 mb-4">
           <h2 className="text-sm font-semibold text-slate-500 uppercase tracking-wide mb-4">{t.settingsInstallTitle}</h2>
           {isPwaInstalled ? (
             <p className="text-sm text-emerald-600 dark:text-emerald-400">{t.settingsInstallInstalled}</p>
-          ) : platform.android ? (
+          ) : isAndroidReady ? (
             <button
               onClick={promptInstall}
               className="w-full min-h-[44px] flex items-center justify-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white font-medium rounded-xl px-4 py-3 transition-colors"
             >
+              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5M16.5 12 12 16.5m0 0L7.5 12m4.5 4.5V3" />
+              </svg>
               {t.settingsInstallAndroidButton}
             </button>
           ) : (
             <div className="install-ios-steps flex flex-col gap-2">
               <button
                 type="button"
+                disabled={isPreview}
                 onClick={() => setShowIosSteps((v) => !v)}
-                className="w-full min-h-[44px] flex items-center justify-center gap-2 bg-white dark:bg-neutral-800 hover:bg-slate-50 dark:hover:bg-neutral-700 text-slate-700 dark:text-neutral-400 font-medium rounded-xl px-4 py-3 border border-slate-200 dark:border-neutral-700 transition-colors"
+                className="w-full min-h-[44px] flex items-center justify-center gap-2 bg-white dark:bg-neutral-800 hover:bg-slate-50 dark:hover:bg-neutral-700 disabled:opacity-50 disabled:hover:bg-white dark:disabled:hover:bg-neutral-800 disabled:cursor-not-allowed text-slate-700 dark:text-neutral-400 font-medium rounded-xl px-4 py-3 border border-slate-200 dark:border-neutral-700 transition-colors"
               >
+                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5m-13.5-9L12 3m0 0 4.5 4.5M12 3v13.5" />
+                </svg>
                 {t.settingsInstallIOSButton}
               </button>
               {showIosSteps && <p className="text-xs text-slate-400">{t.settingsInstallIOSSteps}</p>}
