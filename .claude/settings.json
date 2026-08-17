@@ -47,10 +47,22 @@
       "Bash(git -C /c/Dev/CloudeProjects/MyGiftCardsVault log --oneline -- public/manifest.json)",
       "Bash(git -C /c/Dev/CloudeProjects/MyGiftCardsVault log --oneline --all -- middleware.ts src/middleware.ts)",
       "Bash(git -C /c/Dev/CloudeProjects/MyGiftCardsVault ls-files)",
-      "Bash(grep -iE \"layout\\\\.\\(tsx|ts\\)$\")"
+      "Bash(grep -iE \"layout\\\\.\\(tsx|ts\\)$\")",
+      "WebFetch(domain:www.prisma.io)",
+      "Bash(echo \"exit:$?\")",
+      "Read(//c/Users/User/AppData/Local/Temp/claude/**)",
+      "Bash(grep -n \"shadow\\\\|CREATE DATABASE\\\\|createDatabase\\\\|DROP DATABASE\\\\|applyMigrations\\\\|connector\\\\|url=\" /c/Users/User/AppData/Local/Temp/claude/migrate_debug.log | grep -v \"migrationDirectories\" | cut -c1-300)",
+      "Bash(npx prisma *)",
+      "WebFetch(domain:raw.githubusercontent.com)",
+      "Bash(git log *)",
+      "Bash(git mv *)",
+      "Bash(git checkout *)",
+      "WebFetch(domain:github.com)",
+      "Bash(npm view *)"
     ],
     "additionalDirectories": [
-      "\\tmp"
+      "\\tmp",
+      "C:\\Users\\User\\AppData\\Local\\Temp\\claude"
     ]
   }
 }

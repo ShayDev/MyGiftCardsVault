@@ -219,34 +219,34 @@ Show a small badge on each bottom-nav tab (Gift Cards, Vouchers, Clubs, Refunds)
 
 ---
 
-### ⬜ PWA Install Prompt + Tracking (Android)
+### ✅ PWA Install Prompt + Tracking (Android)
 
 Custom "Install app" control for Android/Chrome (captures `beforeinstallprompt`, shows our own button in Settings instead of relying purely on Chrome's own banner), plus persist to the DB when a user actually completes an install (`appinstalled` event) — not just when they're eligible to.
 
-**What's needed:**
+**Shipped as:**
 
-- ⬜ `hooks/useInstallPrompt.ts` — capture `beforeinstallprompt`, expose `canInstall`/`installed`/`promptInstall()`
-- ⬜ Extend `UserLoginStat` with `pwaInstalledAt DateTime?` + `pwaInstallPlatform String?` (dev + prod migration)
-- ⬜ `app/api/track-install/route.ts` — upsert on confirmed install, mirrors `track-visit`'s shape
-- ⬜ Settings UI entry (button, hidden once installed) + i18n keys
+- ✅ `hooks/useInstallPromptStore.ts` + `components/InstallPromptListener.tsx` (mounted app-wide in `app/layout.tsx`, not Settings-scoped — see HLD status note) — capture `beforeinstallprompt`, expose `canInstall`/`installed`/`promptInstall()`
+- ✅ Extended `UserLoginStat` with `os String?` + `pwaInstalled Boolean` (leaner than the HLD's original `pwaInstalledAt`/`pwaInstallPlatform` — dev + prod migration)
+- ✅ `app/api/track-install/route.ts` — upsert on confirmed install, mirrors `track-visit`'s shape
+- ✅ Settings UI entry (button, hidden once installed) + i18n keys
 - ⬜ **Future, not v1:** a real service worker (`public/sw.js`) — static app-shell caching only (never card/voucher/refund data), versioned cache + `skipWaiting`/`clients.claim` for updates, no push/background-sync yet
 
-**See:** `plans/pwa-install-android-hld.md` for full design.
+**See:** `plans/pwa-install-android-hld.md` for full design (status note at the top covers what changed).
 
 ---
 
-### ⬜ PWA Add to Home Screen Guidance (iOS)
+### ✅ PWA Add to Home Screen Guidance (iOS)
 
-iOS Safari has no `beforeinstallprompt`/`appinstalled` equivalent — everything is a manual Share → Add to Home Screen gesture nothing in Safari's UI hints at. Needs its own instructional banner, plus an indirect way to confirm installation after the fact (detecting standalone mode on a later visit, since there's no install event to hook).
+iOS Safari has no `beforeinstallprompt`/`appinstalled` equivalent — everything is a manual Share → Add to Home Screen gesture nothing in Safari's UI hints at. Needs its own instructional guidance, plus an indirect way to confirm installation after the fact (detecting standalone mode on a later visit, since there's no install event to hook).
 
-**What's needed:**
+**Shipped as:**
 
-- ⬜ `lib/platform.ts` — `isIOS()` / `isStandalone()` detection
-- ⬜ Dismissible instructional banner (`IosInstallBanner` + `useIosInstallBannerStore`) shown to iOS Safari visitors not already standalone
-- ⬜ `InstallStandaloneTracker` — reports to the same `/api/track-install` route (above) with `platform: 'ios'` the first time standalone mode is detected; also works as a fallback path for Android
-- ⬜ i18n keys (en/he) for the banner copy
+- ✅ `lib/platform.ts` — `isIOS()` / `isAndroid()` / `isStandalone()` / `detectOS()` detection
+- ✅ Settings-page disclosure (expand/collapse Share → Add to Home Screen steps), not an app-wide banner — lives next to the Android install button in the same Settings card
+- ✅ Standalone-mode detection folded into `VisitTracker.tsx` (posts to `/api/track-install` once per session) instead of a separate `InstallStandaloneTracker` component
+- ✅ i18n keys (en/he) for the instructional copy
 
-**See:** `plans/pwa-install-ios-hld.md` for full design. Depends on the Android task above for the shared `UserLoginStat` columns + `/api/track-install` route.
+**See:** `plans/pwa-install-ios-hld.md` for full design (status note at the top covers what changed). Shares the Android task's `UserLoginStat` columns + `/api/track-install` route.
 
 ---
 

@@ -7,6 +7,7 @@ import ThemeProvider from "../components/ThemeProvider";
 import GlobalSearchHeader from "../components/GlobalSearchHeader";
 import BottomNav from "../components/BottomNav";
 import VisitTracker from "../components/VisitTracker";
+import InstallPromptListener from "../components/InstallPromptListener";
 
 export const metadata: Metadata = {
   title: "MyGiftCardsVault",
@@ -57,6 +58,7 @@ export default function RootLayout({
           <main className="app-main max-w-6xl w-full mx-auto px-4 sm:px-6 py-6 flex-1 flex flex-col pb-20">{children}</main>
           <BottomNav />
           <VisitTracker />
+          <InstallPromptListener />
         </LanguageProvider>
         </ThemeProvider>
       </body>

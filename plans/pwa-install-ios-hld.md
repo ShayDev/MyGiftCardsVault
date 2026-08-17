@@ -1,6 +1,8 @@
 # iOS Add to Home Screen Guidance — HLD
 
-**Status:** Companion to [pwa-install-android-hld.md](./pwa-install-android-hld.md) — reuses that HLD's DB shape (`UserLoginStat.pwaInstalledAt` / `pwaInstallPlatform`) rather than defining its own. Read that doc first for the shared schema.
+**Status: implemented, with two adjustments from the design below.** Companion to [pwa-install-android-hld.md](./pwa-install-android-hld.md) — reuses that HLD's DB shape, which shipped as `UserLoginStat.os` / `pwaInstalled` rather than the `pwaInstalledAt` / `pwaInstallPlatform` pair originally sketched here (see that doc's status note). Read that doc first for the shared schema.
+
+(1) The instructional UI in §2 below shipped as a **Settings-page disclosure** (a button that expands the Share → Add to Home Screen steps inline, next to the Android install button), not an app-wide dismissible banner — both platforms' install affordance now live in one place. (2) §3's `InstallStandaloneTracker` component was folded into the existing `VisitTracker.tsx` (already mounted app-wide) rather than shipped as a separate component — same "detect standalone, POST once per session" logic, one fewer always-on component.
 
 ## Overview
 
