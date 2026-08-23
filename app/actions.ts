@@ -241,7 +241,7 @@ export async function getFamilyAttribution(): Promise<{ names: Record<string, st
 }
 
 export type NavBadgeCategory = { count: number; hasExpired: boolean; hasExpiringSoon: boolean }
-export type NavBadgeCounts = { cards: NavBadgeCategory; vouchers: NavBadgeCategory; clubs: NavBadgeCategory; refunds: NavBadgeCategory }
+export type NavBadgeCounts = { cards: NavBadgeCategory; vouchers: NavBadgeCategory; clubs: NavBadgeCategory; refunds: NavBadgeCategory; warranties: NavBadgeCategory }
 
 const EMPTY_NAV_BADGE_CATEGORY: NavBadgeCategory = { count: 0, hasExpired: false, hasExpiringSoon: false }
 
@@ -259,7 +259,13 @@ function hasExpiringSoonItem(items: { expiresAt: Date | null }[], now: Date, soo
 
 export async function getNavBadgeCounts(): Promise<NavBadgeCounts> {
   if (!ENABLE_NAV_BADGES) {
-    return { cards: EMPTY_NAV_BADGE_CATEGORY, vouchers: EMPTY_NAV_BADGE_CATEGORY, clubs: EMPTY_NAV_BADGE_CATEGORY, refunds: EMPTY_NAV_BADGE_CATEGORY }
+    return {
+      cards: EMPTY_NAV_BADGE_CATEGORY,
+      vouchers: EMPTY_NAV_BADGE_CATEGORY,
+      clubs: EMPTY_NAV_BADGE_CATEGORY,
+      refunds: EMPTY_NAV_BADGE_CATEGORY,
+      warranties: EMPTY_NAV_BADGE_CATEGORY,
+    }
   }
 
   const { familyId, expiringSoonDays } = await getAuthenticatedFamilyId()
@@ -267,11 +273,12 @@ export async function getNavBadgeCounts(): Promise<NavBadgeCounts> {
   const soonThreshold = new Date(now)
   soonThreshold.setDate(soonThreshold.getDate() + expiringSoonDays)
 
-  const [activeCards, vouchers, clubs, refunds] = await Promise.all([
+  const [activeCards, vouchers, clubs, refunds, warranties] = await Promise.all([
     prisma.giftCard.findMany({ where: { familyId, isActive: true }, select: { id: true, expiresAt: true } }),
     prisma.voucher.findMany({ where: { familyId, isActive: true, isUsed: false }, select: { id: true, expiresAt: true } }),
     prisma.clubMember.findMany({ where: { familyId, isActive: true }, select: { id: true, expiresAt: true } }),
     prisma.refund.findMany({ where: { familyId, isActive: true, isUsed: false }, select: { id: true, expiresAt: true } }),
+    prisma.warranty.findMany({ where: { familyId, isActive: true }, select: { id: true, expiresAt: true } }),
   ])
 
   const balances = await getBalancesForCards(activeCards.map((c) => c.id))
@@ -283,10 +290,17 @@ export async function getNavBadgeCounts(): Promise<NavBadgeCounts> {
     hasExpiringSoon: hasExpiringSoonItem(items, now, soonThreshold),
   })
 
+  // Warranty's count is pre-filtered to not-yet-expired items — unlike the
+  // other four categories, an expired warranty shouldn't keep contributing
+  // to the number (it still contributes to hasExpired/hasExpiringSoon via
+  // `category()` below, just not to `count`). See plans/warranty-dd.md §8.
+  const activeWarranties = warranties.filter((w) => w.expiresAt === null || w.expiresAt >= now)
+
   return {
     cards: category(cardsWithBalance),
     vouchers: category(vouchers),
     clubs: category(clubs),
     refunds: category(refunds),
+    warranties: { ...category(warranties), count: activeWarranties.length },
   }
 }

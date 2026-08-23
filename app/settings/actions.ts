@@ -133,6 +133,7 @@ export async function updateExpiringSoonDays(formData: FormData) {
   revalidatePath('/vouchers')
   revalidatePath('/refunds')
   revalidatePath('/clubs')
+  revalidatePath('/warranties')
 }
 
 export async function updateCurrency(formData: FormData) {

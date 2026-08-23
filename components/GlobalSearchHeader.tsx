@@ -37,6 +37,8 @@ export default function GlobalSearchHeader() {
     ? t.refundsTab
     : pathname.startsWith('/clubs')
     ? t.clubsTab
+    : pathname.startsWith('/warranties')
+    ? t.warrantiesTab
     : t.searchLabel
 
   function collapse() {

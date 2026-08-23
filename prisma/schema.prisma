@@ -23,6 +23,7 @@ model FamilyGroup {
   vouchers    Voucher[]
   clubMembers ClubMember[]
   refunds     Refund[]
+  warranties  Warranty[]
   settings    String?       // JSON-encoded family preferences — see lib/familySettings.ts
   createdAt   DateTime      @default(now())
 }
@@ -158,4 +159,55 @@ model Provider {
   createdAt       DateTime @default(now())
 
   @@index([type, country, familyId])
+}
+
+// Directory of companies (stores, manufacturers, service centers) used by
+// Warranty for BOTH the "purchased from" and "claim with" roles — the same
+// company is frequently both, and either field can reuse an entry the other
+// created. Not part of the generic Provider table above: Provider is shaped
+// for "just a display name" (Cards/Vouchers/Clubs/Refunds); this table needs
+// phone/url too, which none of those four types ever populate. familyId
+// follows the same non-FK '0' = shared/global sentinel as Provider.familyId
+// — see plans/warranty-dd.md.
+model WarrantyProvider {
+  id            String   @id @default(uuid())
+  familyId      String   @default("0")
+  name          String?
+  phone         String?
+  url           String?
+  nameByCountry String?
+  country       String   @default("IL")
+  createdBy     String?
+  createdAt     DateTime @default(now())
+
+  purchasedWarranties Warranty[] @relation("PurchasedFrom")
+  claimedWarranties   Warranty[] @relation("ClaimWith")
+
+  @@index([familyId])
+}
+
+// Status (Active/Expired) is deliberately computed from expiresAt, not
+// stored — no isUsed/status column, unlike Voucher/Refund. See
+// plans/warranty-hld.md's Ledger Rule callout.
+model Warranty {
+  id                String            @id @default(uuid())
+  seq               Int               @default(autoincrement())
+  familyId          String
+  family            FamilyGroup       @relation(fields: [familyId], references: [id])
+  productName       String
+  purchasedFromId   String
+  purchasedFrom     WarrantyProvider  @relation("PurchasedFrom", fields: [purchasedFromId], references: [id])
+  branch            String?           // physical branch/location of purchasedFrom, e.g. "Rishon LeZion" — free text, not a relation
+  warrantyCompanyId String?           // who to claim with, if different from purchasedFrom — null means "same as purchasedFrom"
+  warrantyCompany   WarrantyProvider? @relation("ClaimWith", fields: [warrantyCompanyId], references: [id])
+  purchaseDate      DateTime?
+  durationMonths    Int?              // warranty length in months, display/reference only — expiresAt is authoritative
+  expiresAt         DateTime?
+  referenceId       String?
+  notes             String?
+  link              String?           // encrypted at rest, see lib/encrypt.ts
+  imageUrl          String?
+  isActive          Boolean           @default(true)
+  createdBy         String?
+  createdAt         DateTime          @default(now())
 }
