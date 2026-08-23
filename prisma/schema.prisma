@@ -173,10 +173,10 @@ model WarrantyProvider {
   id            String   @id @default(uuid())
   familyId      String   @default("0")
   name          String?
-  phone         String?
-  url           String?
   nameByCountry String?
   country       String   @default("IL")
+  phone         String?
+  url           String?
   createdBy     String?
   createdAt     DateTime @default(now())
 
