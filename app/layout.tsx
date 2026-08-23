@@ -1,7 +1,7 @@
 import React from "react";
 import type { Metadata } from "next";
 import "./globals.css";
-import { ClerkProvider } from "@clerk/nextjs";
+import { ClerkProvider, ClerkLoaded } from "@clerk/nextjs";
 import LanguageProvider from "../components/LanguageProvider";
 import ThemeProvider from "../components/ThemeProvider";
 import GlobalSearchHeader from "../components/GlobalSearchHeader";
@@ -56,7 +56,13 @@ export default function RootLayout({
             </div>
           </header>
           <main className="app-main max-w-6xl w-full mx-auto px-4 sm:px-6 py-6 flex-1 flex flex-col pb-20">{children}</main>
-          <BottomNav />
+          {/* Defers mounting until Clerk's auth state is definitively known — BottomNav
+              is entirely auth-gated (returns null when signed out), so there's no
+              signed-out flash either way, but this is the idiomatic Clerk pattern
+              rather than relying on isSignedIn being falsy-while-undefined. */}
+          <ClerkLoaded>
+            <BottomNav />
+          </ClerkLoaded>
           <VisitTracker />
           <InstallPromptListener />
         </LanguageProvider>

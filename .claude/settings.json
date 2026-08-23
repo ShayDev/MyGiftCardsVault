@@ -73,7 +73,8 @@
       "Bash(awk '{print $5}')",
       "Bash(taskkill //F //PID 18596)",
       "Bash(echo \"tsc EXIT: $?\")",
-      "Bash(node -e \"console.log\\(require\\('./node_modules/@clerk/nextjs/package.json'\\).version\\)\")"
+      "Bash(node -e \"console.log\\(require\\('./node_modules/@clerk/nextjs/package.json'\\).version\\)\")",
+      "Bash(xargs grep -l \"ClerkLoaded\")"
     ],
     "additionalDirectories": [
       "\\tmp",

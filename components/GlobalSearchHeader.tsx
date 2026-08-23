@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useRef, useState } from 'react'
-import { useAuth } from '@clerk/nextjs'
+import { useAuth, ClerkLoaded } from '@clerk/nextjs'
 import { usePathname } from 'next/navigation'
 import { useLanguageStore } from '../hooks/useLanguageStore'
 import { getT } from '../lib/i18n'
@@ -121,18 +121,22 @@ export default function GlobalSearchHeader() {
         </div>
       </div>
       <div className="header-actions flex items-center gap-2">
-        {canSearch && (
-          <button
-            type="button"
-            onClick={() => setExpanded(true)}
-            aria-label={t.searchLabel}
-            className="global-search-open w-11 h-11 flex items-center justify-center rounded-full text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
-          >
-            <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z" />
-            </svg>
-          </button>
-        )}
+        {/* ClerkLoaded, not just the isSignedIn-falsy-while-undefined trick canSearch
+            already relies on — same idiomatic pattern as BottomNav in layout.tsx. */}
+        <ClerkLoaded>
+          {canSearch && (
+            <button
+              type="button"
+              onClick={() => setExpanded(true)}
+              aria-label={t.searchLabel}
+              className="global-search-open w-11 h-11 flex items-center justify-center rounded-full text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+            >
+              <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z" />
+              </svg>
+            </button>
+          )}
+        </ClerkLoaded>
         <HeaderNav />
         <LanguageToggle />
       </div>
