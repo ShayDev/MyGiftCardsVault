@@ -72,7 +72,8 @@
       "Bash(netstat -ano)",
       "Bash(awk '{print $5}')",
       "Bash(taskkill //F //PID 18596)",
-      "Bash(echo \"tsc EXIT: $?\")"
+      "Bash(echo \"tsc EXIT: $?\")",
+      "Bash(node -e \"console.log\\(require\\('./node_modules/@clerk/nextjs/package.json'\\).version\\)\")"
     ],
     "additionalDirectories": [
       "\\tmp",

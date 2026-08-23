@@ -31,7 +31,7 @@ export default function RootLayout({
 }) {
   return (
     <ClerkProvider>
-    <html lang="en" dir="ltr">
+    <html lang="en" dir="ltr" suppressHydrationWarning>
       <head>
         <meta name="theme-color" content="#0f172a" />
         <link rel="apple-touch-icon" href="/icons/icon-192.png" />
