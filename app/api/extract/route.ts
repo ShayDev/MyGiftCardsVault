@@ -1,6 +1,13 @@
 import { auth } from '@clerk/nextjs/server'
 import { NextResponse } from 'next/server'
 
+// Vercel's default serverless timeout is shorter than the old 15s Gemini
+// AbortSignal below needed for a dense/tilted receipt photo (confirmed via
+// prod logs: "TimeoutError: The operation was aborted due to timeout" — our
+// own AbortSignal firing, not a platform-level 504). Raises the function's
+// own ceiling so the AbortSignal bump below actually gets to use the time.
+export const maxDuration = 30
+
 type EntityType = 'CARD' | 'VOUCHER' | 'REFUND' | 'WARRANTY'
 
 const SCHEMAS: Record<EntityType, object> = {
@@ -92,7 +99,10 @@ async function callGemini(parts: object[], entityType: EntityType): Promise<Reco
           responseSchema: SCHEMAS[entityType],
         },
       }),
-      signal: AbortSignal.timeout(15_000),
+      // Was 15s — too tight for a dense/tilted receipt photo, confirmed via
+      // prod logs firing this AbortSignal (not a platform timeout). 25s
+      // leaves a few seconds of margin under maxDuration=30 above.
+      signal: AbortSignal.timeout(25_000),
     }
   )
 
