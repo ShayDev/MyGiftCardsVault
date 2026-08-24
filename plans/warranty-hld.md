@@ -27,7 +27,7 @@ A new section for tracking product warranties (electronics, appliances, furnitur
 Two new Prisma models:
 
 - **`WarrantyProvider`** — a reusable company directory: `id`, `familyId` (default `'0'` = shared/global), `name`, `phone`, `url`, `createdBy`, `createdAt`. Not tied to the generic `Provider` table's `type` enum — this is its own small table because it carries fields (`phone`, `url`) none of the other four entity types need.
-- **`Warranty`** — same skeleton as `Refund`/`ClubMember` for the common fields (`id`, `seq`, `familyId`, `productName`, `purchaseDate`, `durationMonths`, `expiresAt`, `referenceId`, `notes`, `link` [encrypted], `imageUrl`, `isActive`, `createdBy`, `createdAt`), plus two FKs into `WarrantyProvider`: `purchasedFromId` (required) and `warrantyCompanyId` (nullable), plus an optional free-text `branch` (physical location of `purchasedFrom`, e.g. "Rishon LeZion" — see point 7).
+- **`Warranty`** — same skeleton as `Refund`/`ClubMember` for the common fields (`id`, `seq`, `familyId`, `productName`, `purchaseDate`, `durationMonths`, `expiresAt`, `referenceId`, `notes`, `link` [encrypted], `imageUrl`, `isActive`, `createdBy`, `createdAt`), plus two FKs into `WarrantyProvider`: `purchasedFromId` (required) and `warrantyCompanyId` (nullable), an optional free-text `branch` (physical location of `purchasedFrom`, e.g. "Rishon LeZion" — see point 7), and an optional `purchasePrice`/`currency` pair (added after initial implementation, at the user's request — same shape as `Refund.amount`/`Refund.currency`).
 
 ---
 

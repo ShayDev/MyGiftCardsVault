@@ -203,6 +203,8 @@ model Warranty {
   purchaseDate      DateTime?
   durationMonths    Int?              // warranty length in months, display/reference only — expiresAt is authoritative
   expiresAt         DateTime?
+  purchasePrice     Decimal?          @db.Decimal(65, 30)
+  currency          String?           // ISO code, e.g. "ILS" — only meaningful when purchasePrice is set
   referenceId       String?
   notes             String?
   link              String?           // encrypted at rest, see lib/encrypt.ts

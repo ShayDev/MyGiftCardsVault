@@ -14,6 +14,7 @@
 | Purchase-vs-claim company | **New dedicated `WarrantyProvider` table** (`name`/`nameByCountry`/`country`, `phone`/`url`), used for *both* roles: `purchasedFrom` (required) and `warrantyCompany` (optional, defaults to "same as purchasedFrom"). Not the generic `Provider` table, but mirrors its `name`/`nameByCountry`/`country` bilingual-display shape exactly (added after initial implementation, at the user's request, to match `Provider`). |
 | `WarrantyProvider` scope | **Family + global**, same `familyId` default-`'0'` sentinel convention as `Provider`. Seed common manufacturers/retailers as global rows. |
 | Physical branch/location | **Optional free-text `branch` field on `Warranty`** (e.g. "Rishon LeZion"), paired with `purchasedFrom` — not a structured/reusable sub-entity under `WarrantyProvider`. Typed fresh per warranty, no autocomplete. |
+| Purchase price | **Added after initial implementation, at the user's request.** Optional `purchasePrice`/`currency` pair on `Warranty`, same shape as `Refund.amount`/`Refund.currency` — `currency` pre-fills from the family's display-currency setting and is only persisted when `purchasePrice` is also set. |
 
 ---
 
@@ -51,13 +52,15 @@ Deliberately **not** folded into the generic `Provider` table: `Provider` is sha
 | 8 | `purchaseDate` | `DateTime?` | Optional — needed only to compute `durationMonths` → `expiresAt` |
 | 9 | `durationMonths` | `Int?` | Optional — warranty length in months, display/reference only |
 | 10 | `expiresAt` | `DateTime?` | **Authoritative** expiry date — computed at entry time, directly editable |
-| 11 | `referenceId` | `String?` | Receipt/order/serial number |
-| 12 | `notes` | `String?` | Free-text notes |
-| 13 | `link` | `String?` | URL to receipt/warranty registration page — **encrypted at rest** |
-| 14 | `imageUrl` | `String?` | Uploaded receipt/warranty card photo (Vercel Blob, permanent, not encrypted) |
-| 15 | `isActive` | `Boolean` | Default `true` — soft delete |
-| 16 | `createdBy` | `String?` | FK → `User.id` |
-| 17 | `createdAt` | `DateTime` | Default `now()` |
+| 11 | `purchasePrice` | `Decimal?` | Optional — what was paid for the product (added after initial implementation, at the user's request) |
+| 12 | `currency` | `String?` | ISO code, e.g. "ILS" — pre-filled from the family's display-currency setting like `Refund.currency`; only meaningful when `purchasePrice` is set |
+| 13 | `referenceId` | `String?` | Receipt/order/serial number |
+| 14 | `notes` | `String?` | Free-text notes |
+| 15 | `link` | `String?` | URL to receipt/warranty registration page — **encrypted at rest** |
+| 16 | `imageUrl` | `String?` | Uploaded receipt/warranty card photo (Vercel Blob, permanent, not encrypted) |
+| 17 | `isActive` | `Boolean` | Default `true` — soft delete |
+| 18 | `createdBy` | `String?` | FK → `User.id` |
+| 19 | `createdAt` | `DateTime` | Default `now()` |
 
 **Why `branch` lives on `Warranty`, not `WarrantyProvider`:** the company directory is shared/reusable across the family (and globally seeded); a specific branch is not — it's one-off context for one purchase ("which IKEA did I actually buy this at"), not something worth deduping/autocompleting. Keeping it a plain string avoids growing `WarrantyProvider` into a two-level company→branch hierarchy for a field that's only ever display context, never queried/filtered on.
 
@@ -97,6 +100,8 @@ model Warranty {
   purchaseDate      DateTime?
   durationMonths    Int?
   expiresAt         DateTime?
+  purchasePrice     Decimal?          @db.Decimal(65, 30)
+  currency          String?
   referenceId       String?
   notes             String?
   link              String?
@@ -142,6 +147,8 @@ CREATE TABLE IF NOT EXISTS "Warranty" (
   "purchaseDate"      TIMESTAMPTZ,
   "durationMonths"    INTEGER,
   "expiresAt"         TIMESTAMPTZ,
+  "purchasePrice"     NUMERIC(65,30),
+  "currency"          TEXT,
   "referenceId"       TEXT,
   "notes"             TEXT,
   "link"              TEXT,
@@ -257,29 +264,35 @@ async function ensureWarrantyProviderExists(
 ### Zod schema
 
 ```ts
-const CreateWarrantySchema = z.object({
-  productName:        z.string().min(1, 'Product name is required'),
-  purchasedFromId:     z.string().optional(),   // set when an existing entry was picked
-  purchasedFromName:   z.string().optional(),    // set when free-text creates a new entry
-  purchasedFromPhone:  z.string().optional(),
-  purchasedFromUrl:    z.string().url().optional(),
-  branch:              z.string().optional(),    // free-text physical branch/location of purchasedFrom
+// Actual field, not the DD's original sketch — datetime() became coerce.date()
+// (form inputs submit plain date strings, not ISO datetimes) and imageUrl is
+// read separately from the FormData, outside this shared create/update schema.
+const WarrantyFieldsSchema = z.object({
+  productName:          z.string().min(1, 'Product name is required'),
+  purchasedFromId:      z.string().optional(),   // set when an existing entry was picked
+  purchasedFromName:    z.string().optional(),   // set when free-text creates a new entry
+  purchasedFromPhone:   z.string().optional(),
+  purchasedFromUrl:     z.string().url().optional(),
+  branch:               z.string().optional(),   // free-text physical branch/location of purchasedFrom
   warrantyCompanyId:    z.string().optional(),
   warrantyCompanyName:  z.string().optional(),
   warrantyCompanyPhone: z.string().optional(),
   warrantyCompanyUrl:   z.string().url().optional(),
-  purchaseDate:        z.string().datetime().optional(),
-  durationMonths:      z.coerce.number().int().positive().optional(),
-  expiresAt:           z.string().datetime().optional(),
-  referenceId:         z.string().optional(),
-  notes:               z.string().optional(),
-  link:                z.string().url().optional(),
-  imageUrl:            z.string().url().optional(),
-}).refine((v) => v.purchasedFromId || v.purchasedFromName, {
+  purchaseDate:         z.coerce.date().optional(),
+  durationMonths:       z.coerce.number().int().positive().optional(),
+  expiresAt:            z.coerce.date().optional(),
+  purchasePrice:        z.coerce.number().positive().optional(),
+  currency:             z.string().length(3).transform((v) => v.toUpperCase()).optional(),
+  referenceId:          z.string().optional(),
+  notes:                z.string().optional(),
+  link:                 z.string().url().optional(),
+}).refine((v) => Boolean(v.purchasedFromId) || Boolean(v.purchasedFromName?.trim()), {
   message: 'Where it was purchased is required',
   path: ['purchasedFromName'],
 })
 ```
+
+`currency` is only persisted when `purchasePrice` is also set (guarded at the call site, not in the schema) — an orphaned currency with no price isn't meaningful.
 
 ### `WarrantyItem` type
 
@@ -294,6 +307,8 @@ export type WarrantyItem = {
   purchaseDate?: string
   durationMonths?: number
   expiresAt?: string
+  purchasePrice?: number
+  currency?: string
   referenceId?: string
   notes?: string
   link?: string
@@ -330,6 +345,7 @@ export type WarrantyItem = {
 - Purchase date (optional, date picker)
 - Duration (months) (optional, numeric)
 - Expiry date (auto-computed from the two above when both are set; always directly editable — see §2)
+- Purchase price + currency (both optional; currency pre-fills from the family's display-currency setting, same as Refund's amount/currency pair)
 - Reference / order / serial number (optional)
 - Notes (optional)
 - Link (optional, URL)
@@ -385,12 +401,14 @@ WARRANTY: {
     purchaseDate:   { type: 'string', description: 'YYYY-MM-DD, or omit if not visible' },
     durationMonths: { type: 'number', description: 'warranty length in months if stated, e.g. "2 years" = 24' },
     expiresAt:      { type: 'string', description: 'YYYY-MM-DD explicit expiry date, only if printed directly (overrides duration math)' },
+    purchasePrice:  { type: 'number', description: 'the price paid for the product, if shown' },
+    currency:       { type: 'string', description: '3-letter ISO currency code for purchasePrice' },
     referenceId:    { type: 'string', description: 'receipt, order, or serial number' },
   },
 },
 ```
 
-Prompt: *"Read this receipt or warranty card. Return the product name, the store or seller name printed on it, the specific branch/location if one is shown (e.g. a city or address), the purchase date if visible, the warranty length in months if stated (convert years to months), an explicit expiry date only if one is printed directly, and any receipt/order/serial number. Do not guess a separate warranty service company — only extract who sold the item."*
+Prompt: *"Read this receipt or warranty card. Return the product name, the store or seller name printed on it, the specific branch/location if one is shown (e.g. a city or address), the purchase date if visible, the warranty length in months if stated (convert years to months), an explicit expiry date only if one is printed directly, the price paid and its 3-letter currency code if shown, and any receipt/order/serial number. Do not guess a separate warranty service company — only extract who sold the item."*
 
 `AddWarrantyModal` follows Refund's dual-purpose file input (not Card/Voucher's discard-after-scan pattern), since Warranty also keeps a permanent `imageUrl`: selecting a photo both shows the upload preview and immediately fires `/api/extract`; the image is persisted to Blob only at Save time via `handleSubmit`, exactly like `AddRefundModal` today.
 
@@ -454,6 +472,7 @@ warrantyCompanyUrl: 'Website'
 warrantyPurchaseDate: 'Purchase Date'
 warrantyDuration: 'Warranty Length (months)'
 warrantyExpiresAt: 'Expires On'
+warrantyPurchasePrice: 'Purchase Price'
 warrantyReference: 'Receipt / Order / Serial #'
 warrantyDetails: 'Warranty Details'
 warrantySameAsPurchase: '(same as purchase location)'
@@ -483,6 +502,7 @@ warrantyCompanyUrl: 'אתר אינטרנט'
 warrantyPurchaseDate: 'תאריך רכישה'
 warrantyDuration: 'משך האחריות (חודשים)'
 warrantyExpiresAt: 'בתוקף עד'
+warrantyPurchasePrice: 'מחיר רכישה'
 warrantyReference: 'מספר קבלה / הזמנה / סידורי'
 warrantyDetails: 'פרטי אחריות'
 warrantySameAsPurchase: '(זהה למקום הרכישה)'

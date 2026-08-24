@@ -17,6 +17,7 @@ import { firstName } from "../lib/formatName";
 import { useFamilyAttribution } from "../hooks/useFamilyAttributionStore";
 import { adjustNavBadgeCount } from "../hooks/useNavBadgeCountsStore";
 import { useSearchQueryStore } from "../hooks/useSearchQueryStore";
+import { resolveCurrency } from "../lib/currency";
 import Spinner from "./Spinner";
 import WarrantyProviderCombobox from "./WarrantyProviderCombobox";
 import { extractImage, TextExtractArea, type ExtractedFields } from "./ScanButton";
@@ -48,6 +49,14 @@ function providerColor(name: string): string {
 
 function isExpired(w: WarrantyItem): boolean {
   return w.expiresAt !== undefined && daysUntil(w.expiresAt) < 0;
+}
+
+function formatAmount(amount: number, currency: string, locale: string): string {
+  try {
+    return new Intl.NumberFormat(locale, { style: "currency", currency, minimumFractionDigits: 2 }).format(amount);
+  } catch {
+    return `${amount.toFixed(2)} ${currency}`;
+  }
 }
 
 // ── Modal Shell ────────────────────────────────────────────────────────────────
@@ -132,12 +141,15 @@ const inputClass =
 function AddWarrantyModal({
   onClose,
   providerOptions,
+  currency,
 }: {
   onClose: () => void;
   providerOptions: WarrantyProviderOption[];
+  currency: string | null;
 }) {
   const locale = useLanguageStore((s) => s.locale);
   const t = getT(locale);
+  const defaultCurrency = resolveCurrency(currency, locale);
   const [isPending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
@@ -154,6 +166,8 @@ function AddWarrantyModal({
   const purchaseDateRef = useRef<HTMLInputElement>(null);
   const durationMonthsRef = useRef<HTMLInputElement>(null);
   const expiresAtRef = useRef<HTMLInputElement>(null);
+  const purchasePriceRef = useRef<HTMLInputElement>(null);
+  const currencyRef = useRef<HTMLInputElement>(null);
   const referenceIdRef = useRef<HTMLInputElement>(null);
   const notesRef = useRef<HTMLInputElement>(null);
   const linkRef = useRef<HTMLInputElement>(null);
@@ -182,6 +196,10 @@ function AddWarrantyModal({
       purchaseDateRef.current.value = fields.purchaseDate;
     if (durationMonthsRef.current && typeof fields.durationMonths === "number")
       durationMonthsRef.current.value = String(fields.durationMonths);
+    if (purchasePriceRef.current && typeof fields.purchasePrice === "number")
+      purchasePriceRef.current.value = String(fields.purchasePrice);
+    if (currencyRef.current && typeof fields.currency === "string")
+      currencyRef.current.value = fields.currency.toUpperCase();
     if (referenceIdRef.current && typeof fields.referenceId === "string")
       referenceIdRef.current.value = fields.referenceId;
     if (typeof fields.expiresAt === "string" && expiresAtRef.current) {
@@ -371,11 +389,36 @@ function AddWarrantyModal({
         <Field label={t.warrantyExpiresAt}>
           <input ref={expiresAtRef} name="expiresAt" type="date" className={inputClass} />
         </Field>
+        <div className="flex gap-3">
+          <Field label={t.warrantyPurchasePrice}>
+            <input
+              ref={purchasePriceRef}
+              name="purchasePrice"
+              type="number"
+              min="0.01"
+              step="0.01"
+              placeholder="0.00"
+              className={`${inputClass} font-mono`}
+            />
+          </Field>
+          <Field label={t.refundCurrency}>
+            <input
+              ref={currencyRef}
+              name="currency"
+              maxLength={3}
+              defaultValue={defaultCurrency}
+              onChange={(e) => {
+                e.target.value = e.target.value.toUpperCase();
+              }}
+              className={`${inputClass} font-mono uppercase w-24`}
+            />
+          </Field>
+        </div>
         <Field label={t.warrantyReference}>
           <input ref={referenceIdRef} name="referenceId" className={inputClass} />
         </Field>
-        <Field label={t.refundLink}>
-          <input ref={linkRef} name="link" type="url" placeholder={t.refundLinkPlaceholder} className={inputClass} />
+        <Field label={t.warrantyLink}>
+          <input ref={linkRef} name="link" type="url" placeholder={t.warrantyLinkPlaceholder} className={inputClass} />
         </Field>
         <Field label={t.notesOptional}>
           <input ref={notesRef} name="notes" placeholder={t.notesPlaceholder} className={inputClass} />
@@ -534,11 +577,35 @@ function EditWarrantyModal({
             className={inputClass}
           />
         </Field>
+        <div className="flex gap-3">
+          <Field label={t.warrantyPurchasePrice}>
+            <input
+              name="purchasePrice"
+              type="number"
+              min="0.01"
+              step="0.01"
+              placeholder="0.00"
+              defaultValue={warranty.purchasePrice ?? ""}
+              className={`${inputClass} font-mono`}
+            />
+          </Field>
+          <Field label={t.refundCurrency}>
+            <input
+              name="currency"
+              maxLength={3}
+              defaultValue={warranty.currency ?? ""}
+              onChange={(e) => {
+                e.target.value = e.target.value.toUpperCase();
+              }}
+              className={`${inputClass} font-mono uppercase w-24`}
+            />
+          </Field>
+        </div>
         <Field label={t.warrantyReference}>
           <input name="referenceId" defaultValue={warranty.referenceId ?? ""} className={inputClass} />
         </Field>
-        <Field label={t.refundLink}>
-          <input name="link" type="url" defaultValue={warranty.link ?? ""} placeholder={t.refundLinkPlaceholder} className={inputClass} />
+        <Field label={t.warrantyLink}>
+          <input name="link" type="url" defaultValue={warranty.link ?? ""} placeholder={t.warrantyLinkPlaceholder} className={inputClass} />
         </Field>
         <Field label={t.notesOptional}>
           <input name="notes" defaultValue={warranty.notes ?? ""} placeholder={t.notesPlaceholder} className={inputClass} />
@@ -642,6 +709,16 @@ function WarrantyDetailModal({
           <p className="text-lg font-semibold text-slate-800 dark:text-neutral-100">{warranty.productName}</p>
         </div>
 
+        {/* Purchase price */}
+        {warranty.purchasePrice !== undefined && warranty.currency && (
+          <div>
+            <p className="text-xs text-slate-400 mb-0.5">{t.warrantyPurchasePrice}</p>
+            <p className="text-sm font-mono text-slate-700 dark:text-neutral-200" dir="ltr">
+              {formatAmount(warranty.purchasePrice, warranty.currency, t.currencyLocale)}
+            </p>
+          </div>
+        )}
+
         {/* Branch */}
         {warranty.branch && (
           <div>
@@ -699,7 +776,7 @@ function WarrantyDetailModal({
         {/* Link */}
         {warranty.link && (
           <div>
-            <p className="text-xs text-slate-400 mb-1.5">{t.refundLink}</p>
+            <p className="text-xs text-slate-400 mb-1.5">{t.warrantyLink}</p>
             <div className="flex items-center gap-2">
               <a
                 href={warranty.link}
@@ -885,10 +962,12 @@ export default function WarrantiesClient({
   warranties,
   providerOptions,
   expiringSoonDays,
+  currency,
 }: {
   warranties: WarrantyItem[];
   providerOptions: WarrantyProviderOption[];
   expiringSoonDays: number;
+  currency: string | null;
 }) {
   const locale = useLanguageStore((s) => s.locale);
   const t = getT(locale);
@@ -1009,7 +1088,7 @@ export default function WarrantiesClient({
       </section>
 
       {/* Modals */}
-      {showAdd && <AddWarrantyModal onClose={() => setShowAdd(false)} providerOptions={providerOptions} />}
+      {showAdd && <AddWarrantyModal onClose={() => setShowAdd(false)} providerOptions={providerOptions} currency={currency} />}
       {selected && (
         <WarrantyDetailModal
           warranty={selected}

@@ -18,7 +18,8 @@ export default async function Page() {
 
   if (!user?.familyId) redirect('/onboarding')
 
-  const expiringSoonDays = getExpiringSoonDays(parseFamilySettings(user.family?.settings ?? null))
+  const familySettings = parseFamilySettings(user.family?.settings ?? null)
+  const expiringSoonDays = getExpiringSoonDays(familySettings)
 
   const warranties = await prisma.warranty.findMany({
     where: { familyId: user.familyId, isActive: true },
@@ -55,6 +56,8 @@ export default async function Page() {
     purchaseDate:    w.purchaseDate?.toISOString() ?? undefined,
     durationMonths:  w.durationMonths ?? undefined,
     expiresAt:       w.expiresAt?.toISOString() ?? undefined,
+    purchasePrice:   w.purchasePrice ? Number(w.purchasePrice) : undefined,
+    currency:        w.currency ?? undefined,
     referenceId:     w.referenceId ?? undefined,
     notes:           w.notes ?? undefined,
     link:            dec(w.link ?? null),
@@ -65,5 +68,12 @@ export default async function Page() {
 
   const providerOptions = await getWarrantyProviderOptions()
 
-  return <WarrantiesClient warranties={payload} providerOptions={providerOptions} expiringSoonDays={expiringSoonDays} />
+  return (
+    <WarrantiesClient
+      warranties={payload}
+      providerOptions={providerOptions}
+      expiringSoonDays={expiringSoonDays}
+      currency={familySettings.currency}
+    />
+  )
 }

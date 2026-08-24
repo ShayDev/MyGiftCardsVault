@@ -47,6 +47,8 @@ async function main() {
       "purchaseDate"      TIMESTAMPTZ,
       "durationMonths"    INTEGER,
       "expiresAt"         TIMESTAMPTZ,
+      "purchasePrice"     NUMERIC(65,30),
+      "currency"          TEXT,
       "referenceId"       TEXT,
       "notes"             TEXT,
       "link"              TEXT,

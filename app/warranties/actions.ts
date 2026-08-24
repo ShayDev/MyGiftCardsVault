@@ -131,6 +131,8 @@ const WarrantyFieldsSchema = z.object({
   purchaseDate:         z.coerce.date().optional(),
   durationMonths:       z.coerce.number().int().positive().optional(),
   expiresAt:            z.coerce.date().optional(),
+  purchasePrice:        z.coerce.number().positive().optional(),
+  currency:             z.string().length(3).transform((v) => v.toUpperCase()).optional(),
   referenceId:          z.string().optional(),
   notes:                z.string().optional(),
   link:                 z.string().url().optional(),
@@ -154,6 +156,8 @@ function readWarrantyFormData(formData: FormData) {
     purchaseDate:         (formData.get('purchaseDate') as string) || undefined,
     durationMonths:       (formData.get('durationMonths') as string) || undefined,
     expiresAt:            (formData.get('expiresAt') as string) || undefined,
+    purchasePrice:        (formData.get('purchasePrice') as string) || undefined,
+    currency:             (formData.get('currency') as string) || undefined,
     referenceId:          (formData.get('referenceId') as string) || undefined,
     notes:                (formData.get('notes') as string) || undefined,
     link:                 (formData.get('link') as string) || undefined,
@@ -189,6 +193,8 @@ export async function createWarranty(formData: FormData) {
       purchaseDate: data.purchaseDate ?? null,
       durationMonths: data.durationMonths ?? null,
       expiresAt: data.expiresAt ?? null,
+      purchasePrice: data.purchasePrice ?? null,
+      currency: data.purchasePrice ? (data.currency ?? null) : null,
       referenceId: data.referenceId ?? null,
       notes: data.notes ?? null,
       link: data.link ? encrypt(data.link) : null,
@@ -231,6 +237,8 @@ export async function updateWarranty(warrantyId: string, formData: FormData) {
       purchaseDate: data.purchaseDate ?? null,
       durationMonths: data.durationMonths ?? null,
       expiresAt: data.expiresAt ?? null,
+      purchasePrice: data.purchasePrice ?? null,
+      currency: data.purchasePrice ? (data.currency ?? null) : null,
       referenceId: data.referenceId ?? null,
       notes: data.notes ?? null,
       link: data.link ? encrypt(data.link) : null,
@@ -261,6 +269,8 @@ export type WarrantyItem = {
   purchaseDate?: string
   durationMonths?: number
   expiresAt?: string
+  purchasePrice?: number
+  currency?: string
   referenceId?: string
   notes?: string
   link?: string
