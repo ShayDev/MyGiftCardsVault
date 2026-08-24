@@ -207,7 +207,7 @@ A dedicated section for tracking product warranties (electronics, appliances, et
 - ✅ Add `WARRANTY` entityType to the AI image-extract flow (`/api/extract`, `purchasedFrom` + `purchasePrice`/`currency` — not `warrantyCompany`); generalize `/api/upload`'s hardcoded `refunds/` folder
 - ✅ Extend `NavBadgeCounts` with a `warranties` category
 - ✅ `ClerkLoaded` hardening on auth-gated chrome (`BottomNav`, `GlobalSearchHeader`'s search button) — unrelated defensive fix picked up along the way
-- ⬜ Run `migrate-warranty-purchase-price.ts` against prod (dev done; prod has `purchasePrice`/`currency` columns pending)
+- ✅ Run `migrate-warranty-purchase-price.ts` against prod
 
 **See:** `plans/warranty-hld.md` and `plans/warranty-dd.md` for full design.
 
