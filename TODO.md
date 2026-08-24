@@ -190,6 +190,29 @@ A separate tab for percentage-off and promo discount codes (e.g. "20% off next o
 
 ---
 
+### ✅ Warranty Support
+
+A dedicated section for tracking product warranties (electronics, appliances, etc.) — product, where it was purchased, who to actually claim the warranty with (often a different company than the seller), purchase date + duration (computed expiry, overridable), optional purchase price, and proof of purchase (image + link).
+
+**What's needed:**
+
+- ✅ Add `WarrantyProvider` model to Prisma schema + migration — a dedicated company directory (`id`, `familyId` [default `'0'` global sentinel], `name`, `phone`, `url`, `nameByCountry`, `country`, `createdBy`, `createdAt` — matches `Provider`'s bilingual `name`/`nameByCountry`/`country` shape), **not** the generic `Provider` table
+- ✅ Add `Warranty` model + migration (`seq`, `familyId`, `productName`, `purchasedFromId` [required FK → `WarrantyProvider`], `branch` [optional free text, e.g. "Rishon LeZion"], `warrantyCompanyId` [optional FK → `WarrantyProvider`, defaults to "same as purchasedFrom"], `purchaseDate`, `durationMonths`, `expiresAt`, `purchasePrice`, `currency` [both optional], `referenceId`, `notes`, `link` [encrypted], `imageUrl`, `isActive`, `createdBy`, `createdAt`)
+- ✅ Seed starter `WarrantyProvider` rows — names only; `phone`/`url` left blank unless manually verified against real support info
+- ✅ New `WarrantyProviderCombobox` component (name/phone/url, not a `ProviderCombobox` reuse) — two instances per form, same shared directory
+- ✅ Server actions: `getWarrantyProviderOptions`, `ensureWarrantyProviderExists`, `createWarranty`, `updateWarranty`, `deleteWarranty` — no manual "used" state, status is computed from `expiresAt`
+- ✅ Two-section layout: "Active" on top, "Expired" below — computed from `expiresAt`, not a stored flag (unlike Vouchers/Refunds)
+- ✅ Add EN + HE translations
+- ✅ Add Warranties tab to `BottomNav` (5th tab; icon-only under ~380px width)
+- ✅ Add `WARRANTY` entityType to the AI image-extract flow (`/api/extract`, `purchasedFrom` + `purchasePrice`/`currency` — not `warrantyCompany`); generalize `/api/upload`'s hardcoded `refunds/` folder
+- ✅ Extend `NavBadgeCounts` with a `warranties` category
+- ✅ `ClerkLoaded` hardening on auth-gated chrome (`BottomNav`, `GlobalSearchHeader`'s search button) — unrelated defensive fix picked up along the way
+- ✅ Run `migrate-warranty-purchase-price.ts` against prod
+
+**See:** `plans/warranty-hld.md` and `plans/warranty-dd.md` for full design.
+
+---
+
 ### ⬜ Global Search
 
 Search across all tabs (Gift Cards, Vouchers, Clubs, Refunds) from a single input.

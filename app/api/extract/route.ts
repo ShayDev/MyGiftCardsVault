@@ -1,9 +1,23 @@
 import { auth } from '@clerk/nextjs/server'
 import { NextResponse } from 'next/server'
 
-type EntityType = 'CARD' | 'VOUCHER' | 'REFUND'
+type EntityType = 'CARD' | 'VOUCHER' | 'REFUND' | 'WARRANTY'
 
 const SCHEMAS: Record<EntityType, object> = {
+  WARRANTY: {
+    type: 'OBJECT',
+    properties: {
+      productName:    { type: 'STRING' },
+      purchasedFrom:  { type: 'STRING', description: 'the store or seller name printed on the receipt' },
+      branch:         { type: 'STRING', description: 'the specific branch/location printed on the receipt (e.g. a city or address), if shown — omit if there is none' },
+      purchaseDate:   { type: 'STRING', description: 'YYYY-MM-DD, otherwise omit this field if no purchase date is mentioned at all. If a date is ambiguous between day-first and month-first (e.g. two 2-digit groups), interpret it as DD/MM (day before month), not MM/DD.' },
+      durationMonths: { type: 'NUMBER', description: 'warranty length in months if stated, e.g. "2 years" = 24 — omit if not mentioned' },
+      expiresAt:      { type: 'STRING', description: 'YYYY-MM-DD explicit expiry date, only if printed directly (this overrides duration math) — omit if there is none' },
+      purchasePrice:  { type: 'NUMBER', description: 'the price paid for the product, if shown — omit if there is none' },
+      currency:       { type: 'STRING', description: '3-letter ISO currency code for purchasePrice — omit if purchasePrice is omitted' },
+      referenceId:    { type: 'STRING', description: 'receipt, order, or serial number — omit if there is none' },
+    },
+  },
   CARD: {
     type: 'OBJECT',
     properties: {
@@ -45,19 +59,21 @@ const SCHEMAS: Record<EntityType, object> = {
 }
 
 const IMAGE_PROMPTS: Record<EntityType, string> = {
+  WARRANTY: 'Read this receipt or warranty card. Return the product name, the store or seller name printed on it, the specific branch/location if one is shown (e.g. a city or address), the purchase date if visible, the warranty length in months if stated (convert years to months), an explicit expiry date only if one is printed directly, the price paid and its 3-letter currency code if shown, and any receipt/order/serial number. Do not guess a separate warranty service company — only extract who sold the item.',
   CARD: 'Read this gift card photo (front and back if both are shown). Return the provider/brand name as printed, a distinct product name/title if there is one separate from the brand, the full card number, the CVV if visible on the back, the expiration date if visible, the balance/denomination amount if printed on the card, a redemption URL if the card is redeemed via a link instead of a number, and any note about who it is from or the occasion if visible.',
   VOUCHER: 'Read this voucher or promo code image. Return the provider/brand name, a distinct title/name if there is one separate from the brand, the code, a redemption URL if it is redeemed via a link instead of a code, the value/amount if printed, the expiration date if visible, and any note about who it is from or the occasion if visible.',
   REFUND: 'Read this receipt or refund confirmation. Return the store/provider name, the amount, the 3-letter currency code, any order/reference number, a redemption/credit code if present, a redemption/view URL if present, a store-credit expiration date if shown, and any other relevant context about the order/return.',
 }
 
 const TEXT_PROMPTS: Record<EntityType, string> = {
+  WARRANTY: 'Extract warranty/purchase details from this pasted text (e.g. an order confirmation email). Return the product name, the store or seller name, the specific branch/location if one is mentioned, the purchase date if mentioned, the warranty length in months if stated (convert years to months), an explicit expiry date only if one is mentioned directly, the price paid and its 3-letter currency code if mentioned, and any receipt/order/serial number. Do not guess a separate warranty service company — only extract who sold the item.',
   CARD: 'Extract gift card details from this pasted text (e.g. a digital gift card email). Return the provider/brand name, a distinct product name/title if there is one separate from the brand, the full card number, the CVV if mentioned, the expiration date if mentioned, the balance/denomination amount if mentioned, a redemption URL if the card is redeemed via a link instead of a number, and any note about who it is from or the occasion if mentioned.',
   VOUCHER: 'Extract voucher/promo details from this pasted text (e.g. an email or SMS). Return the provider/brand name, a distinct title/name if there is one separate from the brand, the code, a redemption URL if it is redeemed via a link instead of a code, the value/amount if mentioned, the expiration date if mentioned, and any note about who it is from or the occasion if mentioned.',
   REFUND: 'Extract refund/store-credit details from this pasted text (e.g. a confirmation email). Return the store/provider name, the amount, the 3-letter currency code, any order/reference number, a redemption/credit code if mentioned, a redemption/view URL if present, a store-credit expiration date if mentioned, and any other relevant context about the order/return.',
 }
 
 function isEntityType(value: unknown): value is EntityType {
-  return value === 'CARD' || value === 'VOUCHER' || value === 'REFUND'
+  return value === 'CARD' || value === 'VOUCHER' || value === 'REFUND' || value === 'WARRANTY'
 }
 
 async function callGemini(parts: object[], entityType: EntityType): Promise<Record<string, string | number>> {

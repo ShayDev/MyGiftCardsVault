@@ -7,7 +7,7 @@ import { resizeImage } from '../lib/resizeImage'
 import Spinner from './Spinner'
 
 export type ExtractedFields = Record<string, string | number>
-export type EntityType = 'CARD' | 'VOUCHER' | 'REFUND'
+export type EntityType = 'CARD' | 'VOUCHER' | 'REFUND' | 'WARRANTY'
 
 export async function extractImage(file: File, entityType: EntityType): Promise<ExtractedFields> {
   const fd = new FormData()

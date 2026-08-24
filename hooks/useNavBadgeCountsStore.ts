@@ -27,7 +27,7 @@ const useNavBadgeCountsStore = create<NavBadgeCountsStore>((set, get) => ({
 }))
 
 const EMPTY_CATEGORY: NavBadgeCategory = { count: 0, hasExpired: false, hasExpiringSoon: false }
-const EMPTY: NavBadgeCounts = { cards: EMPTY_CATEGORY, vouchers: EMPTY_CATEGORY, clubs: EMPTY_CATEGORY, refunds: EMPTY_CATEGORY }
+const EMPTY: NavBadgeCounts = { cards: EMPTY_CATEGORY, vouchers: EMPTY_CATEGORY, clubs: EMPTY_CATEGORY, refunds: EMPTY_CATEGORY, warranties: EMPTY_CATEGORY }
 
 export function useNavBadgeCounts(): NavBadgeCounts {
   const { data, setData } = useNavBadgeCountsStore()

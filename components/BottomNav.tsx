@@ -69,6 +69,18 @@ export default function BottomNav() {
         </svg>
       ),
     },
+    {
+      href: '/warranties',
+      label: t.warrantiesTab,
+      active: pathname.startsWith('/warranties'),
+      badgeKey: 'warranties',
+      icon: (
+        <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
+          <path strokeLinecap="round" strokeLinejoin="round" d="M12 3l7 3v5c0 4.5-3 8.25-7 10-4-1.75-7-5.5-7-10V6l7-3z" />
+          <path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4" />
+        </svg>
+      ),
+    },
   ]
 
   return (
@@ -82,6 +94,7 @@ export default function BottomNav() {
             <Link
               key={tab.href}
               href={tab.href}
+              title={tab.label}
               className={`flex-1 flex flex-col items-center gap-1 py-2.5 text-xs font-medium transition-colors min-h-[56px] justify-center ${
                 tab.active ? 'text-emerald-600 dark:text-emerald-400' : 'text-slate-400 hover:text-slate-600 dark:hover:text-slate-300'
               }`}
@@ -97,7 +110,8 @@ export default function BottomNav() {
                   </span>
                 )}
               </span>
-              {tab.label}
+              {/* Icon-only under ~380px so 5 tabs don't wrap/crowd on small phones — see plans/warranty-dd.md §5. */}
+              <span className="hidden min-[380px]:inline">{tab.label}</span>
             </Link>
           )
         })}

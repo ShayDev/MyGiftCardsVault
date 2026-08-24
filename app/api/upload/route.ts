@@ -11,8 +11,9 @@ export async function POST(req: Request) {
 
   if (!file) return NextResponse.json({ error: 'No file provided' }, { status: 400 })
 
+  const folder = (form.get('folder') as string | null) ?? 'refunds'
   const ext = file.name.split('.').pop() ?? 'jpg'
-  const blob = await put(`refunds/${userId}-${Date.now()}.${ext}`, file, {
+  const blob = await put(`${folder}/${userId}-${Date.now()}.${ext}`, file, {
     access: 'public',
     contentType: file.type,
   })
