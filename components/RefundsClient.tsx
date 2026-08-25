@@ -1375,17 +1375,6 @@ function RefundRow({
             </div>
           </div>
         )}
-        {!refund.isUsed && (
-          <span
-            className={`flex-shrink-0 px-2.5 py-1 rounded-full text-xs font-semibold ${
-              isPending
-                ? "bg-amber-100 text-amber-700"
-                : "bg-emerald-100 text-emerald-700"
-            }`}
-          >
-            {isPending ? t.pendingRefunds : t.receivedRefunds}
-          </span>
-        )}
       </button>
       {onDelete && (
         <button
