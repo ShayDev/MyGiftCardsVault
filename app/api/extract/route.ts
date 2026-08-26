@@ -87,32 +87,47 @@ async function callGemini(parts: object[], entityType: EntityType): Promise<Reco
   const apiKey = process.env.GEMINI_API_KEY
   if (!apiKey) throw new Error('GEMINI_API_KEY is not set')
 
-  const res = await fetch(
-    `https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-latest:generateContent?key=${apiKey}`,
-    {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        contents: [{ parts }],
-        generationConfig: {
-          responseMimeType: 'application/json',
-          responseSchema: SCHEMAS[entityType],
-        },
-      }),
-      // Was 15s — too tight for a dense/tilted receipt photo, confirmed via
-      // prod logs firing this AbortSignal (not a platform timeout). 25s
-      // leaves a few seconds of margin under maxDuration=30 above.
-      signal: AbortSignal.timeout(25_000),
+  const body = JSON.stringify({
+    contents: [{ parts }],
+    generationConfig: {
+      responseMimeType: 'application/json',
+      responseSchema: SCHEMAS[entityType],
+    },
+  })
+
+  // One retry, only for a transient Gemini-side overload (5xx — confirmed via
+  // prod logs: "Gemini request failed: 503" on an otherwise-ordinary paste-text
+  // extraction). These fail fast, not slowly, so a short backoff + second
+  // attempt usually succeeds. Anything else (4xx, network error, our own
+  // AbortSignal timing out below) is not retried — a second attempt wouldn't help.
+  for (let attempt = 0; ; attempt++) {
+    const res = await fetch(
+      `https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-latest:generateContent?key=${apiKey}`,
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body,
+        // Was 15s — too tight for a dense/tilted receipt photo, confirmed via
+        // prod logs firing this AbortSignal (not a platform timeout). 25s
+        // leaves a few seconds of margin under maxDuration=30 above.
+        signal: AbortSignal.timeout(25_000),
+      }
+    )
+
+    if (!res.ok) {
+      if (res.status >= 500 && attempt === 0) {
+        await new Promise((r) => setTimeout(r, 1000))
+        continue
+      }
+      throw new Error(`Gemini request failed: ${res.status}`)
     }
-  )
 
-  if (!res.ok) throw new Error(`Gemini request failed: ${res.status}`)
+    const data = await res.json()
+    const text = data.candidates?.[0]?.content?.parts?.[0]?.text
+    if (!text) throw new Error('Gemini returned no content')
 
-  const data = await res.json()
-  const text = data.candidates?.[0]?.content?.parts?.[0]?.text
-  if (!text) throw new Error('Gemini returned no content')
-
-  return JSON.parse(text)
+    return JSON.parse(text)
+  }
 }
 
 export async function POST(req: Request) {
