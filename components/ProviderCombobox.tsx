@@ -6,7 +6,7 @@ import { getT } from '../lib/i18n'
 import type { ProviderOption } from '../lib/providerTypes'
 
 const inputClass =
-  'w-full h-11 px-3 rounded-xl border border-slate-200 text-sm text-slate-800 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition'
+  'w-full h-11 px-3 rounded-xl border border-slate-200 dark:border-neutral-700 dark:bg-neutral-800 text-sm text-slate-800 dark:text-neutral-100 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition'
 
 function matches(option: ProviderOption, query: string): boolean {
   const q = query.toLowerCase()
@@ -115,7 +115,7 @@ export default function ProviderCombobox({
         <div
           id="provider-combobox-listbox"
           role="listbox"
-          className="provider-combobox-panel absolute z-10 mt-1 w-full max-h-56 overflow-y-auto rounded-xl border border-slate-200 bg-white shadow-lg"
+          className="provider-combobox-panel absolute z-10 mt-1 w-full max-h-56 overflow-y-auto rounded-xl border border-slate-200 dark:border-neutral-700 bg-white dark:bg-neutral-900 shadow-lg"
         >
           {filtered.map((option, i) => (
             <button
@@ -126,7 +126,7 @@ export default function ProviderCombobox({
               onMouseDown={(e) => e.preventDefault()}
               onClick={() => selectOption(option)}
               className={`provider-combobox-option flex min-h-11 w-full items-center px-3 text-left text-sm ${
-                i === highlighted ? 'bg-emerald-50 text-emerald-700' : 'text-slate-700 hover:bg-slate-50'
+                i === highlighted ? 'bg-emerald-50 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-400' : 'text-slate-700 dark:text-neutral-200 hover:bg-slate-50 dark:hover:bg-neutral-800'
               }`}
             >
               {option.display}
@@ -139,8 +139,8 @@ export default function ProviderCombobox({
               aria-selected={filtered.length === highlighted}
               onMouseDown={(e) => e.preventDefault()}
               onClick={selectAddRow}
-              className={`provider-combobox-add-option flex min-h-11 w-full items-center gap-1.5 px-3 text-left text-sm font-medium text-emerald-600 ${
-                filtered.length === highlighted ? 'bg-emerald-50' : 'hover:bg-slate-50'
+              className={`provider-combobox-add-option flex min-h-11 w-full items-center gap-1.5 px-3 text-left text-sm font-medium text-emerald-600 dark:text-emerald-400 ${
+                filtered.length === highlighted ? 'bg-emerald-50 dark:bg-emerald-950' : 'hover:bg-slate-50 dark:hover:bg-neutral-800'
               }`}
             >
               <span>+</span>

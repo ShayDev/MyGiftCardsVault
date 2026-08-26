@@ -64,7 +64,7 @@ export function TextExtractArea({
         placeholder={t.scanTextPlaceholder}
         rows={4}
         disabled={isScanning}
-        className="w-full px-3 py-2 rounded-xl border border-slate-200 text-sm text-slate-800 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition"
+        className="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-neutral-700 dark:bg-neutral-800 text-sm text-slate-800 dark:text-neutral-100 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition"
       />
       <button
         type="button"
