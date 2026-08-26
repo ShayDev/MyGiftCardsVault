@@ -80,7 +80,8 @@
       "Bash(xargs -I{} sh -c 'echo \"=== {} ===\"; grep -c \"dark:\" {}')",
       "Bash(vercel logs *)",
       "Bash(node scripts/_test-extract.mjs)",
-      "Bash(vercel project *)"
+      "Bash(vercel project *)",
+      "Bash(node scripts/_test-extract2.mjs)"
     ],
     "additionalDirectories": [
       "\\tmp",

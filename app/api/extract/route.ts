@@ -91,6 +91,14 @@ async function callGemini(parts: object[], entityType: EntityType): Promise<Reco
     generationConfig: {
       responseMimeType: 'application/json',
       responseSchema: SCHEMAS[entityType],
+      // gemini-flash-latest "thinks" by default, which is pure overhead for a
+      // mechanical extract-into-schema task. Confirmed via direct live testing
+      // with this route's exact request shape: disabling it took the same
+      // request from 9-25s (and sometimes an incomplete result — fields
+      // present in the text were omitted) down to ~4s with every field
+      // correctly filled. Also reduces how often the 20s AbortSignal below
+      // or a Gemini-side "high demand" 503 gets hit at all.
+      thinkingConfig: { thinkingBudget: 0 },
     },
   })
 
