@@ -78,7 +78,9 @@
       "Bash(node scripts/_shot.mjs)",
       "Bash(cd \"c:/Dev/CloudeProjects/MyGiftCardsVault\" && rm -f scripts/_shot.mjs && rm -f \"C:/Users/User/AppData/Local/Temp/claude/c--Dev-CloudeProjects-MyGiftCardsVault/db25c829-4818-4ea6-a34f-1d421783a0b6/scratchpad/row-repro.html\" \"C:/Users/User/AppData/Local/Temp/claude/c--Dev-CloudeProjects-MyGiftCardsVault/db25c829-4818-4ea6-a34f-1d421783a0b6/scratchpad/row-\"*.png && echo cleaned)",
       "Bash(xargs -I{} sh -c 'echo \"=== {} ===\"; grep -c \"dark:\" {}')",
-      "Bash(vercel logs *)"
+      "Bash(vercel logs *)",
+      "Bash(node scripts/_test-extract.mjs)",
+      "Bash(vercel project *)"
     ],
     "additionalDirectories": [
       "\\tmp",

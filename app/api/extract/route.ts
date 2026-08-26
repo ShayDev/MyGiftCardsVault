@@ -1,12 +1,11 @@
 import { auth } from '@clerk/nextjs/server'
 import { NextResponse } from 'next/server'
 
-// Vercel's default serverless timeout is shorter than the old 15s Gemini
-// AbortSignal below needed for a dense/tilted receipt photo (confirmed via
-// prod logs: "TimeoutError: The operation was aborted due to timeout" — our
-// own AbortSignal firing, not a platform-level 504). Raises the function's
-// own ceiling so the AbortSignal bump below actually gets to use the time.
-export const maxDuration = 30
+// Raised from 30 to fit 2 full attempts (20s each + backoff) — Gemini's
+// gemini-flash-latest was confirmed live via direct testing to sometimes hang
+// to a full timeout AND separately return "high demand" 503s, so a retry
+// needs real headroom, not just a single longer attempt.
+export const maxDuration = 60
 
 type EntityType = 'CARD' | 'VOUCHER' | 'REFUND' | 'WARRANTY'
 
@@ -95,24 +94,33 @@ async function callGemini(parts: object[], entityType: EntityType): Promise<Reco
     },
   })
 
-  // One retry, only for a transient Gemini-side overload (5xx — confirmed via
-  // prod logs: "Gemini request failed: 503" on an otherwise-ordinary paste-text
-  // extraction). These fail fast, not slowly, so a short backoff + second
-  // attempt usually succeeds. Anything else (4xx, network error, our own
-  // AbortSignal timing out below) is not retried — a second attempt wouldn't help.
+  // One retry — for a transient Gemini-side overload, confirmed via direct
+  // testing against the live API with this exact route's request shape:
+  // gemini-flash-latest is currently sometimes (a) slow enough to hang past
+  // a 20s timeout, or (b) returning an explicit 503 "high demand" after
+  // 10-11s. Both are retried once; a 4xx or a parse failure is not, since a
+  // second attempt wouldn't help those.
   for (let attempt = 0; ; attempt++) {
-    const res = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-latest:generateContent?key=${apiKey}`,
-      {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body,
-        // Was 15s — too tight for a dense/tilted receipt photo, confirmed via
-        // prod logs firing this AbortSignal (not a platform timeout). 25s
-        // leaves a few seconds of margin under maxDuration=30 above.
-        signal: AbortSignal.timeout(25_000),
+    let res: Response
+    try {
+      res = await fetch(
+        `https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-latest:generateContent?key=${apiKey}`,
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body,
+          // 20s per attempt — two attempts plus backoff fits comfortably
+          // under maxDuration=60 above.
+          signal: AbortSignal.timeout(20_000),
+        }
+      )
+    } catch (err) {
+      if (attempt === 0) {
+        await new Promise((r) => setTimeout(r, 1000))
+        continue
       }
-    )
+      throw err
+    }
 
     if (!res.ok) {
       if (res.status >= 500 && attempt === 0) {
