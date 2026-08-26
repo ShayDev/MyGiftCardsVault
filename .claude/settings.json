@@ -74,11 +74,14 @@
       "Bash(taskkill //F //PID 18596)",
       "Bash(echo \"tsc EXIT: $?\")",
       "Bash(node -e \"console.log\\(require\\('./node_modules/@clerk/nextjs/package.json'\\).version\\)\")",
-      "Bash(xargs grep -l \"ClerkLoaded\")"
+      "Bash(xargs grep -l \"ClerkLoaded\")",
+      "Bash(node scripts/_shot.mjs)",
+      "Bash(cd \"c:/Dev/CloudeProjects/MyGiftCardsVault\" && rm -f scripts/_shot.mjs && rm -f \"C:/Users/User/AppData/Local/Temp/claude/c--Dev-CloudeProjects-MyGiftCardsVault/db25c829-4818-4ea6-a34f-1d421783a0b6/scratchpad/row-repro.html\" \"C:/Users/User/AppData/Local/Temp/claude/c--Dev-CloudeProjects-MyGiftCardsVault/db25c829-4818-4ea6-a34f-1d421783a0b6/scratchpad/row-\"*.png && echo cleaned)"
     ],
     "additionalDirectories": [
       "\\tmp",
-      "C:\\Users\\User\\AppData\\Local\\Temp\\claude"
+      "C:\\Users\\User\\AppData\\Local\\Temp\\claude",
+      "C:\\Users\\User\\AppData\\Local\\Temp\\claude\\c--Dev-CloudeProjects-MyGiftCardsVault\\db25c829-4818-4ea6-a34f-1d421783a0b6\\scratchpad"
     ]
   }
 }

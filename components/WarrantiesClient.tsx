@@ -921,7 +921,7 @@ function WarrantyRow({
       type="button"
       dir={dir}
       onClick={onClick}
-      className={`warranty-row w-full rounded-2xl border shadow-sm hover:shadow-md transition-all p-4 flex items-center gap-3 text-start ${
+      className={`warranty-row w-full rounded-2xl border shadow-sm hover:shadow-md transition-all p-4 flex flex-wrap items-center gap-x-3 gap-y-1 text-start overflow-hidden ${
         expiringSoon
           ? "bg-rose-50/60 dark:bg-rose-950/40 border-rose-200 dark:border-rose-800 hover:bg-rose-50 dark:hover:bg-rose-950/60"
           : "bg-white dark:bg-neutral-900 border-slate-100 dark:border-neutral-800 hover:border-slate-200 dark:hover:border-neutral-700"
@@ -930,10 +930,10 @@ function WarrantyRow({
       <span className="text-xs font-mono text-slate-400 flex-shrink-0 w-6" dir="ltr">
         #{warranty.seq}
       </span>
-      <span className={`flex-shrink-0 px-2.5 py-1 rounded-full text-xs font-semibold ${providerColor(warranty.purchasedFrom.display)}`}>
+      <span className={`flex-shrink-0 max-w-[45%] sm:max-w-none truncate px-2.5 py-1 rounded-full text-xs font-semibold ${providerColor(warranty.purchasedFrom.display)}`}>
         <HighlightMatch text={warranty.purchasedFrom.display} query={query} />
       </span>
-      <div className="flex-1 min-w-0">
+      <div className="flex-1 min-w-[64px]">
         <p className="text-sm font-semibold text-slate-800 dark:text-neutral-100 truncate">
           <HighlightMatch text={warranty.productName} query={query} />
         </p>
@@ -944,11 +944,15 @@ function WarrantyRow({
         )}
       </div>
       {warranty.expiresAt && (
-        <div className="flex-shrink-0 text-xs font-mono text-end">
-          <div className="text-slate-400">{t.expires}</div>
-          <div className={`flex items-center gap-1.5 ${expiringSoon ? "text-rose-600 dark:text-rose-400 font-semibold" : "text-slate-400"}`}>
-            {formatDateSlashFull(warranty.expiresAt)}
-            <ExpiryDaysBadge expiresAt={warranty.expiresAt} />
+        // basis-full drops this to its own line on narrow screens — see the
+        // "expire notice covers other elements" mobile overflow fix.
+        <div className="basis-full sm:basis-auto flex-shrink-0 flex sm:block justify-end text-xs font-mono text-end">
+          <div>
+            <div className="text-slate-400">{t.expires}</div>
+            <div className={`flex items-center gap-1.5 ${expiringSoon ? "text-rose-600 dark:text-rose-400 font-semibold" : "text-slate-400"}`}>
+              {formatDateSlashFull(warranty.expiresAt)}
+              <ExpiryDaysBadge expiresAt={warranty.expiresAt} />
+            </div>
           </div>
         </div>
       )}

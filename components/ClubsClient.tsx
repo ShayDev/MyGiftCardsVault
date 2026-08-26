@@ -697,7 +697,7 @@ function ClubRow({
     <button
       type="button"
       onClick={onClick}
-      className={`w-full text-start rounded-2xl border shadow-sm hover:shadow-md transition-all p-4 flex items-center gap-3 ${
+      className={`w-full text-start rounded-2xl border shadow-sm hover:shadow-md transition-all p-4 flex flex-wrap items-center gap-x-3 gap-y-1 overflow-hidden ${
         expiringSoon
           ? "bg-rose-50/60 dark:bg-rose-950/40 border-rose-200 dark:border-rose-800 hover:bg-rose-50 dark:hover:bg-rose-950/60"
           : "bg-white dark:bg-neutral-900 border-slate-100 dark:border-neutral-800 hover:border-slate-200 dark:hover:border-neutral-700"
@@ -707,15 +707,15 @@ function ClubRow({
         #{club.seq}
       </span>
       {club.provider && (
-        <div className="flex-shrink-0">
+        <div className="flex-shrink-0 max-w-[40%] sm:max-w-none">
           <span
-            className={`px-2.5 py-1 rounded-full text-xs font-semibold ${providerColor(club.provider)}`}
+            className={`block truncate px-2.5 py-1 rounded-full text-xs font-semibold ${providerColor(club.provider)}`}
           >
             <HighlightMatch text={club.provider} query={query} />
           </span>
         </div>
       )}
-      <div className="flex-1 min-w-0">
+      <div className="flex-1 min-w-[64px]">
         <div className="flex items-center gap-2">
           <span className="text-sm font-medium text-slate-800 dark:text-neutral-100 truncate">
             <HighlightMatch text={club.name} query={query} />
@@ -745,8 +745,10 @@ function ClubRow({
         </div>
       </div>
       {club.expiresAt && (
+        // basis-full drops this to its own line on narrow screens — see the
+        // "expire notice covers other elements" mobile overflow fix.
         <span
-          className={`flex-shrink-0 flex items-center gap-1.5 text-xs font-mono ${expiringSoon ? "text-rose-600 dark:text-rose-400 font-semibold" : "text-slate-400"}`}
+          className={`basis-full sm:basis-auto flex-shrink-0 flex items-center justify-end sm:justify-start gap-1.5 text-xs font-mono ${expiringSoon ? "text-rose-600 dark:text-rose-400 font-semibold" : "text-slate-400"}`}
         >
           {formatExpiresAt(club.expiresAt!)}
           {expiringSoon && <ExpiryDaysBadge expiresAt={club.expiresAt!} />}

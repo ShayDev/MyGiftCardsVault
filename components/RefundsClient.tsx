@@ -1285,7 +1285,7 @@ function RefundRow({
   return (
     <div
       dir={dir}
-      className={`refund-row w-full rounded-2xl border shadow-sm hover:shadow-md transition-all p-4 flex items-center gap-3 pr-2 ${
+      className={`refund-row w-full rounded-2xl border shadow-sm hover:shadow-md transition-all p-4 flex items-center gap-3 pr-2 overflow-hidden ${
         expiringSoon
           ? "bg-rose-50/60 dark:bg-rose-950/40 border-rose-200 dark:border-rose-800 hover:bg-rose-50 dark:hover:bg-rose-950/60"
           : "bg-white dark:bg-neutral-900 border-slate-100 dark:border-neutral-800 hover:border-slate-200 dark:hover:border-neutral-700"
@@ -1328,7 +1328,7 @@ function RefundRow({
       <button
         type="button"
         onClick={onClick}
-        className="flex-1 min-w-0 flex items-center gap-3 text-start"
+        className="flex-1 min-w-0 flex flex-wrap items-center gap-x-3 gap-y-1 text-start"
       >
         <span
           className="text-xs font-mono text-slate-400 flex-shrink-0 w-6"
@@ -1337,13 +1337,13 @@ function RefundRow({
           #{refund.seq}
         </span>
         <span
-          className={`flex-shrink-0 px-2.5 py-1 rounded-full text-xs font-semibold ${providerColor(refund.provider)}`}
+          className={`flex-shrink-0 max-w-[45%] sm:max-w-none truncate px-2.5 py-1 rounded-full text-xs font-semibold ${providerColor(refund.provider)}`}
         >
           <HighlightMatch text={refund.provider} query={query} />
         </span>
-        <div className="flex-1 min-w-0">
+        <div className="flex-1 min-w-[64px]">
           <div className="flex items-baseline gap-2" dir="ltr">
-            <p className="text-sm font-mono font-semibold text-slate-800 dark:text-neutral-100">
+            <p className="text-sm font-mono font-semibold text-slate-800 dark:text-neutral-100 truncate">
               {formatAmount(
                 refund.amount - refund.usedAmount,
                 currencyCode,
@@ -1358,20 +1358,25 @@ function RefundRow({
           </div>
           {refund.referenceId && (
             <div className="mt-0.5">
-              <span className="text-xs font-mono text-slate-400 truncate">
+              <span className="block text-xs font-mono text-slate-400 truncate">
                 <HighlightMatch text={refund.referenceId} query={query} />
               </span>
             </div>
           )}
         </div>
         {refund.expiresAt && (
-          <div className="flex-shrink-0 text-xs font-mono">
-            <div className="text-slate-400">{t.expires}</div>
-            <div
-              className={`flex items-center gap-1.5 ${expiringSoon ? "text-rose-600 dark:text-rose-400 font-semibold" : "text-slate-400"}`}
-            >
-              {formatExpiresAt(refund.expiresAt)}
-              {expiringSoon && <ExpiryDaysBadge expiresAt={refund.expiresAt} />}
+          // basis-full drops this to its own line on narrow screens instead of
+          // squeezing the amount/reference into unreadable slivers — see the
+          // "expire notice covers other elements" mobile overflow fix.
+          <div className="basis-full sm:basis-auto flex-shrink-0 flex sm:block justify-end text-xs font-mono">
+            <div>
+              <div className="text-slate-400 text-end sm:text-start">{t.expires}</div>
+              <div
+                className={`flex items-center gap-1.5 ${expiringSoon ? "text-rose-600 dark:text-rose-400 font-semibold" : "text-slate-400"}`}
+              >
+                {formatExpiresAt(refund.expiresAt)}
+                {expiringSoon && <ExpiryDaysBadge expiresAt={refund.expiresAt} />}
+              </div>
             </div>
           </div>
         )}
