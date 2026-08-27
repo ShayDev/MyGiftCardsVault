@@ -9,7 +9,7 @@ import { UserButton } from '@clerk/nextjs'
 import CopyButton from './CopyButton'
 import Spinner from '../../components/Spinner'
 import CurrencyToggle from '../../components/CurrencyToggle'
-import { switchFamily, createNewFamily, switchToOwnFamily, updateExpiringSoonDays, updateCurrency } from './actions'
+import { switchFamily, createNewFamily, switchToOwnFamily, updateExpiringSoonDays, updateCurrency, updateAiEngine } from './actions'
 import { SUPPORTED_CURRENCIES } from '../../lib/currency'
 import { isAndroid, isIOS, isStandalone } from '../../lib/platform'
 import { useInstallPromptStore } from '../../hooks/useInstallPromptStore'
@@ -23,6 +23,7 @@ type Props = {
   ownsCurrentFamily: boolean
   expiringSoonDays: number
   currency: string | null
+  aiEngine: 'gemini' | 'claude'
 }
 
 type Mode = 'closed' | 'choose' | 'join' | 'create'
@@ -44,6 +45,7 @@ export default function SettingsClient({
   ownsCurrentFamily,
   expiringSoonDays,
   currency,
+  aiEngine,
 }: Props) {
   const locale = useLanguageStore((s) => s.locale)
   const t = getT(locale)
@@ -82,6 +84,27 @@ export default function SettingsClient({
     } else {
       setExpirySaved(true)
       setTimeout(() => setExpirySaved(false), 2000)
+    }
+  }
+
+  const [aiEngineSelected, setAiEngineSelected] = useState(aiEngine)
+  const [aiEngineSaving, setAiEngineSaving] = useState(false)
+  const [aiEngineError, setAiEngineError] = useState<string | null>(null)
+
+  // No "saved" flash needed here — the two buttons visually reflect the
+  // current selection immediately, unlike a text/number field.
+  async function handleAiEngineChange(next: 'gemini' | 'claude') {
+    if (next === aiEngineSelected) return
+    setAiEngineSelected(next)
+    setAiEngineSaving(true)
+    setAiEngineError(null)
+    const fd = new FormData()
+    fd.set('aiEngine', next)
+    const result = await updateAiEngine(fd)
+    setAiEngineSaving(false)
+    if (result?.error) {
+      setAiEngineError(result.error)
+      setAiEngineSelected(aiEngine) // revert the optimistic flip
     }
   }
 
@@ -376,6 +399,32 @@ export default function SettingsClient({
           </div>
           {expiryError && <p className="text-rose-600 dark:text-rose-400 text-sm">{expiryError}</p>}
         </form>
+      </div>
+
+      <div className="settings-ai-engine-section bg-white dark:bg-neutral-900 rounded-2xl border border-slate-200 dark:border-neutral-700 p-5 mb-4">
+        <h2 className="text-sm font-semibold text-slate-500 uppercase tracking-wide mb-4">{t.settingsAiEngineLabel}</h2>
+        <p className="text-xs text-slate-400 mb-3">{t.settingsAiEngineHelp}</p>
+        <div className="flex items-center gap-3">
+          <div className="flex rounded-xl border border-slate-200 dark:border-neutral-700 overflow-hidden">
+            {(['gemini', 'claude'] as const).map((engine) => (
+              <button
+                key={engine}
+                type="button"
+                onClick={() => handleAiEngineChange(engine)}
+                disabled={aiEngineSaving}
+                className={`min-h-[44px] px-4 text-sm font-medium transition-colors disabled:opacity-50 ${
+                  aiEngineSelected === engine
+                    ? 'bg-emerald-600 text-white'
+                    : 'bg-white dark:bg-neutral-900 text-slate-600 dark:text-neutral-300 hover:bg-slate-50 dark:hover:bg-neutral-800'
+                }`}
+              >
+                {engine === 'gemini' ? t.settingsAiEngineGemini : t.settingsAiEngineClaude}
+              </button>
+            ))}
+          </div>
+          {aiEngineSaving && <Spinner />}
+        </div>
+        {aiEngineError && <p className="text-rose-600 dark:text-rose-400 text-sm mt-2">{aiEngineError}</p>}
       </div>
 
       {(isPwaInstalled || isAndroidReady || platform.ios || isPreview) && (

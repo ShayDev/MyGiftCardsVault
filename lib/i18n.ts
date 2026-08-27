@@ -290,6 +290,11 @@ const translations = {
     settingsCurrencyHelp: "Choose which currency amounts are shown in. This only changes how numbers are displayed — it doesn't convert balances.",
     settingsCurrencyFollowLanguage: 'Follow language',
     settingsCurrencySaved: 'Saved',
+    // AI engine setting
+    settingsAiEngineLabel: 'Scan engine',
+    settingsAiEngineHelp: 'Which AI reads receipts/cards for the Scan feature. Switch if one is down or giving worse results.',
+    settingsAiEngineGemini: 'Gemini',
+    settingsAiEngineClaude: 'Claude',
     // Appearance setting
     themeLight: 'Light',
     themeDark: 'Dark',
@@ -580,6 +585,11 @@ const translations = {
     settingsCurrencyHelp: 'בחר את המטבע להצגת סכומים. פעולה זו רק משנה את אופן הצגת המספרים — היא אינה ממירה יתרות.',
     settingsCurrencyFollowLanguage: 'בהתאם לשפה',
     settingsCurrencySaved: 'נשמר',
+    // AI engine setting
+    settingsAiEngineLabel: 'מנוע סריקה',
+    settingsAiEngineHelp: 'איזה AI קורא קבלות/כרטיסים בפיצ׳ר הסריקה. עברו בין המנועים אם אחד מהם לא זמין או נותן תוצאות פחות טובות.',
+    settingsAiEngineGemini: 'Gemini',
+    settingsAiEngineClaude: 'Claude',
     // Appearance setting
     themeLight: 'בהיר',
     themeDark: 'כהה',

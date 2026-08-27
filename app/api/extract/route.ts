@@ -1,10 +1,16 @@
 import { auth } from '@clerk/nextjs/server'
 import { NextResponse } from 'next/server'
+import Anthropic from '@anthropic-ai/sdk'
+import { zodOutputFormat } from '@anthropic-ai/sdk/helpers/zod'
+import { z } from 'zod'
+import prisma from '../../../lib/prisma'
+import { parseFamilySettings } from '../../../lib/familySettings'
 
 // Raised from 30 to fit 2 full attempts (20s each + backoff) — Gemini's
 // gemini-flash-latest was confirmed live via direct testing to sometimes hang
 // to a full timeout AND separately return "high demand" 503s, so a retry
-// needs real headroom, not just a single longer attempt.
+// needs real headroom, not just a single longer attempt. Also comfortably
+// covers the Claude path, which has its own 2-attempt/20s-each retry below.
 export const maxDuration = 60
 
 type EntityType = 'CARD' | 'VOUCHER' | 'REFUND' | 'WARRANTY'
@@ -64,6 +70,54 @@ const SCHEMAS: Record<EntityType, object> = {
   },
 }
 
+// Same fields as SCHEMAS above, as Zod objects for Claude's structured-output
+// path (client.messages.parse + zodOutputFormat) — kept as a parallel literal
+// rather than generated from SCHEMAS, since the two providers' schema formats
+// don't share a common representation worth abstracting over for just four
+// small, rarely-changed shapes.
+const ZOD_SCHEMAS: Record<EntityType, z.ZodTypeAny> = {
+  WARRANTY: z.object({
+    productName: z.string().optional(),
+    purchasedFrom: z.string().optional(),
+    branch: z.string().optional(),
+    purchaseDate: z.string().optional(),
+    durationMonths: z.number().optional(),
+    expiresAt: z.string().optional(),
+    purchasePrice: z.number().optional(),
+    currency: z.string().optional(),
+    referenceId: z.string().optional(),
+  }),
+  CARD: z.object({
+    provider: z.string().optional(),
+    name: z.string().optional(),
+    fullNumber: z.string().optional(),
+    cvv: z.string().optional(),
+    expiresAt: z.string().optional(),
+    value: z.number().optional(),
+    link: z.string().optional(),
+    notes: z.string().optional(),
+  }),
+  VOUCHER: z.object({
+    provider: z.string().optional(),
+    name: z.string().optional(),
+    code: z.string().optional(),
+    value: z.number().optional(),
+    expiresAt: z.string().optional(),
+    link: z.string().optional(),
+    notes: z.string().optional(),
+  }),
+  REFUND: z.object({
+    provider: z.string().optional(),
+    amount: z.number().optional(),
+    currency: z.string().optional(),
+    referenceId: z.string().optional(),
+    code: z.string().optional(),
+    expiresAt: z.string().optional(),
+    link: z.string().optional(),
+    notes: z.string().optional(),
+  }),
+}
+
 const IMAGE_PROMPTS: Record<EntityType, string> = {
   WARRANTY: 'Read this receipt or warranty card. Return the product name, the store or seller name printed on it, the specific branch/location if one is shown (e.g. a city or address), the purchase date if visible, the warranty length in months if stated (convert years to months), an explicit expiry date only if one is printed directly, the price paid and its 3-letter currency code if shown, and any receipt/order/serial number. Do not guess a separate warranty service company — only extract who sold the item.',
   CARD: 'Read this gift card photo (front and back if both are shown). Return the provider/brand name as printed, a distinct product name/title if there is one separate from the brand, the full card number, the CVV if visible on the back, the expiration date if visible, the balance/denomination amount if printed on the card, a redemption URL if the card is redeemed via a link instead of a number, and any note about who it is from or the occasion if visible.',
@@ -82,9 +136,16 @@ function isEntityType(value: unknown): value is EntityType {
   return value === 'CARD' || value === 'VOUCHER' || value === 'REFUND' || value === 'WARRANTY'
 }
 
-async function callGemini(parts: object[], entityType: EntityType): Promise<Record<string, string | number>> {
+async function callGemini(file: File | null, pastedText: string | null, entityType: EntityType): Promise<Record<string, string | number>> {
   const apiKey = process.env.GEMINI_API_KEY
   if (!apiKey) throw new Error('GEMINI_API_KEY is not set')
+
+  const parts = file
+    ? [
+        { text: IMAGE_PROMPTS[entityType] },
+        { inlineData: { mimeType: file.type, data: Buffer.from(await file.arrayBuffer()).toString('base64') } },
+      ]
+    : [{ text: `${TEXT_PROMPTS[entityType]}\n\n"""${pastedText}"""` }]
 
   const body = JSON.stringify({
     contents: [{ parts }],
@@ -146,6 +207,77 @@ async function callGemini(parts: object[], entityType: EntityType): Promise<Reco
   }
 }
 
+// resizeImage() on the client always re-encodes to this format before upload —
+// see lib/resizeImage.ts. Defaults to it for any unrecognized/unexpected
+// incoming mime type rather than failing the whole request.
+function toClaudeImageMediaType(mime: string): 'image/jpeg' | 'image/png' | 'image/gif' | 'image/webp' {
+  if (mime === 'image/jpeg' || mime === 'image/png' || mime === 'image/gif' || mime === 'image/webp') return mime
+  return 'image/jpeg'
+}
+
+async function callClaude(file: File | null, pastedText: string | null, entityType: EntityType): Promise<Record<string, string | number>> {
+  const apiKey = process.env.ANTHROPIC_API_KEY
+  if (!apiKey) throw new Error('ANTHROPIC_API_KEY is not set')
+
+  const client = new Anthropic({ apiKey })
+
+  const content: Anthropic.MessageParam['content'] = file
+    ? [
+        {
+          type: 'image',
+          source: {
+            type: 'base64',
+            media_type: toClaudeImageMediaType(file.type),
+            data: Buffer.from(await file.arrayBuffer()).toString('base64'),
+          },
+        },
+        { type: 'text', text: IMAGE_PROMPTS[entityType] },
+      ]
+    : [{ type: 'text', text: `${TEXT_PROMPTS[entityType]}\n\n"""${pastedText}"""` }]
+
+  // Same retry shape as callGemini above — one retry on a transient/server-side
+  // failure or timeout, none on a 4xx (a second attempt wouldn't help those).
+  for (let attempt = 0; ; attempt++) {
+    try {
+      const response = await client.messages.parse(
+        {
+          model: 'claude-opus-5',
+          max_tokens: 4096,
+          // Mechanical extraction doesn't need deep reasoning — low effort
+          // keeps latency/cost down, same spirit as Gemini's thinkingBudget:0
+          // above, but via the documented Opus-5-safe path (explicitly
+          // disabling thinking on Opus 5 has known failure modes — effort is
+          // the supported way to cut reasoning overhead on this model).
+          output_config: { format: zodOutputFormat(ZOD_SCHEMAS[entityType]), effort: 'low' },
+          messages: [{ role: 'user', content }],
+        },
+        { timeout: 20_000 }
+      )
+
+      if (!response.parsed_output) throw new Error('Claude returned no parsed output')
+      return response.parsed_output as Record<string, string | number>
+    } catch (err) {
+      const retryable =
+        err instanceof Anthropic.RateLimitError ||
+        err instanceof Anthropic.APIConnectionError ||
+        err instanceof Anthropic.InternalServerError
+      if (retryable && attempt === 0) {
+        await new Promise((r) => setTimeout(r, 1000))
+        continue
+      }
+      throw err
+    }
+  }
+}
+
+async function getAiEngine(userId: string): Promise<'gemini' | 'claude'> {
+  const user = await prisma.user.findUnique({
+    where: { clerkId: userId },
+    select: { family: { select: { settings: true } } },
+  })
+  return parseFamilySettings(user?.family?.settings ?? null).aiEngine
+}
+
 export async function POST(req: Request) {
   const { userId } = await auth()
   if (!userId) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
@@ -160,14 +292,10 @@ export async function POST(req: Request) {
   }
 
   try {
-    const parts = file
-      ? [
-          { text: IMAGE_PROMPTS[entityType] },
-          { inlineData: { mimeType: file.type, data: Buffer.from(await file.arrayBuffer()).toString('base64') } },
-        ]
-      : [{ text: `${TEXT_PROMPTS[entityType]}\n\n"""${pastedText}"""` }]
-
-    const fields = await callGemini(parts, entityType)
+    const engine = await getAiEngine(userId)
+    const fields = engine === 'claude'
+      ? await callClaude(file, pastedText, entityType)
+      : await callGemini(file, pastedText, entityType)
     return NextResponse.json({ fields })
   } catch (err) {
     console.error('Extraction failed:', err)

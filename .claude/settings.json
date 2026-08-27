@@ -81,7 +81,14 @@
       "Bash(vercel logs *)",
       "Bash(node scripts/_test-extract.mjs)",
       "Bash(vercel project *)",
-      "Bash(node scripts/_test-extract2.mjs)"
+      "Bash(node scripts/_test-extract2.mjs)",
+      "Bash(node scripts/_check-quota.mjs)",
+      "Bash(node scripts/_test3.mjs)",
+      "Bash(node scripts/_check-status.mjs)",
+      "Skill(claude-api)",
+      "Skill(claude-api:*)",
+      "Bash(npm install *)",
+      "Bash(node scripts/_test-claude.mjs)"
     ],
     "additionalDirectories": [
       "\\tmp",

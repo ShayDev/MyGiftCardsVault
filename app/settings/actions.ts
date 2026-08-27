@@ -27,6 +27,10 @@ const currencySchema = z.object({
   currency: z.string().refine((v) => v === '' || isSupportedCurrency(v), 'Unsupported currency'),
 })
 
+const aiEngineSchema = z.object({
+  aiEngine: z.enum(['gemini', 'claude']),
+})
+
 export async function switchFamily(formData: FormData) {
   const { userId } = await auth()
   if (!userId) redirect('/sign-in')
@@ -161,4 +165,28 @@ export async function updateCurrency(formData: FormData) {
   revalidatePath('/cards')
   revalidatePath('/vouchers')
   revalidatePath('/refunds')
+}
+
+export async function updateAiEngine(formData: FormData) {
+  const { userId } = await auth()
+  if (!userId) redirect('/sign-in')
+
+  const parsed = aiEngineSchema.safeParse({ aiEngine: formData.get('aiEngine') })
+  if (!parsed.success) return { error: 'Choose a valid engine.' }
+
+  const dbUser = await prisma.user.findUnique({ where: { clerkId: userId }, select: { familyId: true } })
+  if (!dbUser?.familyId) redirect('/onboarding')
+
+  const family = await prisma.familyGroup.findUnique({ where: { id: dbUser.familyId }, select: { settings: true } })
+  const current = parseFamilySettings(family?.settings ?? null)
+  const updated = { ...current, aiEngine: parsed.data.aiEngine }
+
+  await prisma.familyGroup.update({
+    where: { id: dbUser.familyId },
+    data: { settings: JSON.stringify(updated) },
+  })
+
+  // /api/extract itself reads this setting fresh on every request (no cache to
+  // bust there) — only the settings page needs revalidating.
+  revalidatePath('/settings')
 }

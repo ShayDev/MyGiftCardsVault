@@ -33,6 +33,7 @@ export default async function SettingsPage() {
       ownsCurrentFamily={ownedFamily?.id === user.familyId}
       expiringSoonDays={expiringSoonDays}
       currency={familySettings.currency}
+      aiEngine={familySettings.aiEngine}
     />
   )
 }
