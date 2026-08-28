@@ -101,7 +101,8 @@ npx dotenv -e .env.local -o -- npx tsx scripts/diagnose-extract.ts
 npx dotenv -e .env.local -o -- npx tsx scripts/diagnose-extract.ts --mode image
 
 # Useful flags: --engine gemini|claude|both, --type CARD|VOUCHER|REFUND|WARRANTY,
-# --repeat N (run N times per engine — good for spotting an intermittent/flaky provider)
+# --repeat N (run N times per engine — good for spotting an intermittent/flaky provider),
+# --locale en|he (mirrors the app's UI-language hint for the "notes" field's output language)
 npx dotenv -e .env.local -o -- npx tsx scripts/diagnose-extract.ts --engine both --type WARRANTY --repeat 3
 ```
 

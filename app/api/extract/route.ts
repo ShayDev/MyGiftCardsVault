@@ -35,6 +35,8 @@ export async function POST(req: Request) {
   const entityType = form.get('entityType')
   const file = form.get('file') as File | null
   const pastedText = form.get('text') as string | null
+  const localeField = form.get('locale')
+  const locale = localeField === 'he' ? 'he' : 'en'
 
   if (!isEntityType(entityType) || (!file && !pastedText?.trim())) {
     return NextResponse.json({ error: 'Invalid request' }, { status: 400 })
@@ -42,7 +44,7 @@ export async function POST(req: Request) {
 
   try {
     const engine = await getAiEngine(userId)
-    const fields = await callEngine(engine, file, pastedText, entityType)
+    const fields = await callEngine(engine, file, pastedText, entityType, undefined, undefined, locale)
     return NextResponse.json({ fields })
   } catch (err) {
     console.error('Extraction failed:', err)

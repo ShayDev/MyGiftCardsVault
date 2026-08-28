@@ -9,20 +9,22 @@ import Spinner from './Spinner'
 export type ExtractedFields = Record<string, string | number>
 export type EntityType = 'CARD' | 'VOUCHER' | 'REFUND' | 'WARRANTY'
 
-export async function extractImage(file: File, entityType: EntityType): Promise<ExtractedFields> {
+export async function extractImage(file: File, entityType: EntityType, locale?: string): Promise<ExtractedFields> {
   const fd = new FormData()
   fd.append('file', file)
   fd.append('entityType', entityType)
+  if (locale) fd.append('locale', locale)
   const res = await fetch('/api/extract', { method: 'POST', body: fd })
   const data = await res.json()
   if (!res.ok) throw new Error(data.error)
   return data.fields
 }
 
-export async function extractText(text: string, entityType: EntityType): Promise<ExtractedFields> {
+export async function extractText(text: string, entityType: EntityType, locale?: string): Promise<ExtractedFields> {
   const fd = new FormData()
   fd.append('text', text)
   fd.append('entityType', entityType)
+  if (locale) fd.append('locale', locale)
   const res = await fetch('/api/extract', { method: 'POST', body: fd })
   const data = await res.json()
   if (!res.ok) throw new Error(data.error)
@@ -34,10 +36,12 @@ export function TextExtractArea({
   entityType,
   onExtracted,
   t,
+  locale,
 }: {
   entityType: EntityType
   onExtracted: (fields: ExtractedFields) => void
   t: Translations
+  locale?: string
 }) {
   const [text, setText] = useState('')
   const [isScanning, setIsScanning] = useState(false)
@@ -48,7 +52,7 @@ export function TextExtractArea({
     setIsScanning(true)
     setError(null)
     try {
-      onExtracted(await extractText(text, entityType))
+      onExtracted(await extractText(text, entityType, locale))
     } catch {
       setError(t.scanTextFailed)
     } finally {
@@ -86,7 +90,8 @@ export default function ScanButton({
   entityType: EntityType
   onExtracted: (fields: ExtractedFields) => void
 }) {
-  const t = getT(useLanguageStore((s) => s.locale))
+  const locale = useLanguageStore((s) => s.locale)
+  const t = getT(locale)
   const [mode, setMode] = useState<'photo' | 'text'>('text')
   const [isScanning, setIsScanning] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -100,7 +105,7 @@ export default function ScanButton({
     setError(null)
     try {
       const resized = await resizeImage(file)
-      onExtracted(await extractImage(resized, entityType))
+      onExtracted(await extractImage(resized, entityType, locale))
     } catch {
       setError(t.scanFailed)
     } finally {
@@ -166,7 +171,7 @@ export default function ScanButton({
           {error && <p className="scan-button-error text-xs text-rose-500 mt-1">{error}</p>}
         </>
       ) : (
-        <TextExtractArea entityType={entityType} onExtracted={onExtracted} t={t} />
+        <TextExtractArea entityType={entityType} onExtracted={onExtracted} t={t} locale={locale} />
       )}
     </div>
   )

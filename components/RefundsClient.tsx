@@ -240,7 +240,7 @@ function AddRefundModal({
     setIsScanning(true);
     setScanError(null);
     try {
-      applyExtractedFields(await extractImage(file, "REFUND"));
+      applyExtractedFields(await extractImage(file, "REFUND", locale));
     } catch {
       setScanError(t.scanFailed);
     } finally {

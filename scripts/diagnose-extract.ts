@@ -25,6 +25,9 @@
 //                                  version, e.g. gemini-2.5-flash or gemini-2.5-flash-lite,
 //                                  when -latest is flaky. See scripts/list-gemini-models.ts
 //                                  to see every model your key can currently use.)
+//   --locale en|he                 (default: none — mirrors the app's UI-language hint that
+//                                  steers the "notes" field's output language; omit to see
+//                                  each engine's unhinted default behavior)
 //
 // Examples:
 //   npx dotenv -e .env.local -o -- npx tsx scripts/diagnose-extract.ts
@@ -84,7 +87,7 @@ function guessMimeType(filePath: string): string {
   return 'image/jpeg'
 }
 
-async function runOnce(engine: Engine, file: File | null, text: string | null, entityType: EntityType, attemptNum: number, geminiModel: string) {
+async function runOnce(engine: Engine, file: File | null, text: string | null, entityType: EntityType, attemptNum: number, geminiModel: string, locale?: string) {
   console.log(`\n=== ${engine} run #${attemptNum}${engine === 'gemini' ? ` (model=${geminiModel})` : ''} ===`)
   const attempts: AttemptLog[] = []
   const started = Date.now()
@@ -92,7 +95,7 @@ async function runOnce(engine: Engine, file: File | null, text: string | null, e
     const fields = await callEngine(engine, file, text, entityType, (log) => {
       attempts.push(log)
       console.log(`  attempt ${log.attempt}: ${log.outcome} in ${log.ms}ms — ${log.detail}`)
-    }, geminiModel)
+    }, geminiModel, locale)
     const totalMs = Date.now() - started
     const expected = schemaFieldNames(entityType)
     const present = expected.filter((k) => fields[k] !== undefined && fields[k] !== '')
@@ -149,13 +152,14 @@ async function main() {
     console.log(`Input: fixture text "${DEFAULT_TEXT_FILE}" (${text.length} chars) — edit this file in place to change it`)
   }
 
-  console.log(`Engines: ${engines.join(', ')} | Entity type: ${entityType} | Repeat: ${repeat}${engines.includes('gemini') ? ` | Gemini model: ${geminiModel}` : ''}`)
+  const locale = args.locale
+  console.log(`Engines: ${engines.join(', ')} | Entity type: ${entityType} | Repeat: ${repeat}${engines.includes('gemini') ? ` | Gemini model: ${geminiModel}` : ''}${locale ? ` | Locale: ${locale}` : ''}`)
 
   const summary: Record<string, { ok: number; fail: number; totalMs: number[] }> = {}
   for (const engine of engines) {
     summary[engine] = { ok: 0, fail: 0, totalMs: [] }
     for (let i = 1; i <= repeat; i++) {
-      const result = await runOnce(engine, file, text, entityType, i, geminiModel)
+      const result = await runOnce(engine, file, text, entityType, i, geminiModel, locale)
       if (result.ok) summary[engine].ok++
       else summary[engine].fail++
       summary[engine].totalMs.push(result.totalMs)
