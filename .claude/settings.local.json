@@ -19,7 +19,18 @@
       "Bash(node -e ' *)",
       "Bash(tasklist //FI \"IMAGENAME eq node.exe\")",
       "WebSearch",
-      "WebFetch(domain:console.groq.com)"
+      "WebFetch(domain:console.groq.com)",
+      "Bash(netstat -ano)",
+      "Bash(wmic process *)",
+      "Bash(awk '{print $6, $7}')",
+      "PowerShell(Get-Process -Id 9452 -ErrorAction SilentlyContinue)",
+      "Bash(rm -f scripts/_verify-default.ts)",
+      "Bash(npm install *)",
+      "Bash(ls \"c:/Dev/CloudeProjects/MyGiftCardsVault/node_modules/@ms-playwright\" 2>&1; ls \"C:/Users/User/AppData/Local/ms-playwright\" 2>&1 | head -5)",
+      "Read(//c/Users/User/AppData/Local/ms-playwright/**)",
+      "Bash(node scripts/_shot-hebrew.mjs)",
+      "Bash(identify scripts/diagnose-fixtures/image.jpg)",
+      "Bash(node scripts/_test-qwen36.mjs)"
     ]
   }
 }

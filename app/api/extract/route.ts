@@ -11,6 +11,14 @@ import { isEntityType, callEngine, type Engine } from '../../../lib/extractEngin
 // covers the Claude path, which has its own 2-attempt/20s-each retry.
 export const maxDuration = 60
 
+// Briefly pinned photos to Gemini unconditionally (better Hebrew OCR than
+// Groq's qwen/qwen3.8-27b, which was confirmed via diagnose-extract.ts to
+// hallucinate wrong numbers/a wrong domain/stray Chinese characters on a
+// Hebrew receipt) — reverted back to one engine for both modalities once
+// Gemini's own outage made that trade-off worse than the OCR gap. If Gemini
+// stabilizes or Claude's workspace billing gets sorted, an explicit
+// per-modality override here is the way back to better Hebrew OCR — see the
+// git history around this comment for that version.
 async function getAiEngine(userId: string): Promise<Engine> {
   const user = await prisma.user.findUnique({
     where: { clerkId: userId },
