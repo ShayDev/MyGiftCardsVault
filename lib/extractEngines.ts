@@ -9,7 +9,7 @@ import { zodOutputFormat } from '@anthropic-ai/sdk/helpers/zod'
 import { z } from 'zod'
 
 export type EntityType = 'CARD' | 'VOUCHER' | 'REFUND' | 'WARRANTY'
-export type Engine = 'gemini' | 'claude'
+export type Engine = 'gemini' | 'claude' | 'groq'
 
 export const SCHEMAS: Record<EntityType, object> = {
   WARRANTY: {
@@ -112,6 +112,77 @@ export const ZOD_SCHEMAS: Record<EntityType, z.ZodTypeAny> = {
     link: z.string().optional(),
     notes: z.string().optional(),
   }),
+}
+
+// Same fields again, as plain JSON Schema for Groq's OpenAI-compatible
+// response_format: {type:'json_schema', strict:true} mode. Strict mode (needed
+// for reliable structured output, same reasoning as the other two engines)
+// requires every property to be listed in `required` and `additionalProperties:
+// false` — it has no concept of a truly optional key, so "omit if not found"
+// is expressed as `type: [X, 'null']` instead; callGroq() strips null values
+// back out before returning, so callers see the same "field simply absent"
+// shape as callGemini/callClaude.
+export const JSON_SCHEMAS: Record<EntityType, object> = {
+  WARRANTY: {
+    type: 'object',
+    properties: {
+      productName:    { type: ['string', 'null'] },
+      purchasedFrom:  { type: ['string', 'null'] },
+      branch:         { type: ['string', 'null'] },
+      purchaseDate:   { type: ['string', 'null'] },
+      durationMonths: { type: ['number', 'null'] },
+      expiresAt:      { type: ['string', 'null'] },
+      purchasePrice:  { type: ['number', 'null'] },
+      currency:       { type: ['string', 'null'] },
+      referenceId:    { type: ['string', 'null'] },
+    },
+    required: ['productName', 'purchasedFrom', 'branch', 'purchaseDate', 'durationMonths', 'expiresAt', 'purchasePrice', 'currency', 'referenceId'],
+    additionalProperties: false,
+  },
+  CARD: {
+    type: 'object',
+    properties: {
+      provider:   { type: ['string', 'null'] },
+      name:       { type: ['string', 'null'] },
+      fullNumber: { type: ['string', 'null'] },
+      cvv:        { type: ['string', 'null'] },
+      expiresAt:  { type: ['string', 'null'] },
+      value:      { type: ['number', 'null'] },
+      link:       { type: ['string', 'null'] },
+      notes:      { type: ['string', 'null'] },
+    },
+    required: ['provider', 'name', 'fullNumber', 'cvv', 'expiresAt', 'value', 'link', 'notes'],
+    additionalProperties: false,
+  },
+  VOUCHER: {
+    type: 'object',
+    properties: {
+      provider:  { type: ['string', 'null'] },
+      name:      { type: ['string', 'null'] },
+      code:      { type: ['string', 'null'] },
+      value:     { type: ['number', 'null'] },
+      expiresAt: { type: ['string', 'null'] },
+      link:      { type: ['string', 'null'] },
+      notes:     { type: ['string', 'null'] },
+    },
+    required: ['provider', 'name', 'code', 'value', 'expiresAt', 'link', 'notes'],
+    additionalProperties: false,
+  },
+  REFUND: {
+    type: 'object',
+    properties: {
+      provider:    { type: ['string', 'null'] },
+      amount:      { type: ['number', 'null'] },
+      currency:    { type: ['string', 'null'] },
+      referenceId: { type: ['string', 'null'] },
+      code:        { type: ['string', 'null'] },
+      expiresAt:   { type: ['string', 'null'] },
+      link:        { type: ['string', 'null'] },
+      notes:       { type: ['string', 'null'] },
+    },
+    required: ['provider', 'amount', 'currency', 'referenceId', 'code', 'expiresAt', 'link', 'notes'],
+    additionalProperties: false,
+  },
 }
 
 export const IMAGE_PROMPTS: Record<EntityType, string> = {
@@ -315,6 +386,94 @@ export async function callClaude(
   }
 }
 
+// qwen/qwen3.8-27b is the one Groq model that currently supports both vision
+// (up to 3 images/request) and strict JSON-schema structured output — see
+// console.groq.com/docs/vision and /docs/structured-outputs. Free tier: 30
+// RPM / 30K TPM / 14,400 RPD as of this writing — genuinely free, no card.
+export const DEFAULT_GROQ_MODEL = 'qwen/qwen3.8-27b'
+
+export async function callGroq(
+  file: File | null,
+  pastedText: string | null,
+  entityType: EntityType,
+  onAttempt?: (log: AttemptLog) => void,
+  model: string = DEFAULT_GROQ_MODEL,
+): Promise<Record<string, string | number>> {
+  const apiKey = process.env.GROQ_API_KEY
+  if (!apiKey) throw new Error('GROQ_API_KEY is not set')
+
+  const content = file
+    ? [
+        { type: 'text', text: IMAGE_PROMPTS[entityType] },
+        {
+          type: 'image_url',
+          image_url: { url: `data:${file.type};base64,${Buffer.from(await file.arrayBuffer()).toString('base64')}` },
+        },
+      ]
+    : [{ type: 'text', text: `${TEXT_PROMPTS[entityType]}\n\n"""${pastedText}"""` }]
+
+  const body = JSON.stringify({
+    model,
+    messages: [{ role: 'user', content }],
+    response_format: {
+      type: 'json_schema',
+      json_schema: { name: 'extraction', strict: true, schema: JSON_SCHEMAS[entityType] },
+    },
+  })
+
+  // Same retry shape as the other two engines — one retry on a transient/
+  // server-side failure or timeout, none on a 4xx.
+  for (let attempt = 0; ; attempt++) {
+    const started = Date.now()
+    let res: Response
+    try {
+      res = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${apiKey}` },
+        body,
+        signal: AbortSignal.timeout(20_000),
+      })
+    } catch (err) {
+      const ms = Date.now() - started
+      if (attempt === 0) {
+        onAttempt?.({ attempt, ms, outcome: 'retryable-error', detail: err instanceof Error ? err.message : String(err) })
+        await new Promise((r) => setTimeout(r, 1000))
+        continue
+      }
+      onAttempt?.({ attempt, ms, outcome: 'fatal-error', detail: err instanceof Error ? err.message : String(err) })
+      throw err
+    }
+
+    const ms = Date.now() - started
+    if (!res.ok) {
+      const bodyText = await res.text().catch(() => '')
+      if (res.status >= 500 && attempt === 0) {
+        onAttempt?.({ attempt, ms, outcome: 'retryable-error', detail: `HTTP ${res.status}: ${bodyText.slice(0, 300)}` })
+        await new Promise((r) => setTimeout(r, 1000))
+        continue
+      }
+      onAttempt?.({ attempt, ms, outcome: 'fatal-error', detail: `HTTP ${res.status}: ${bodyText.slice(0, 300)}` })
+      throw new Error(`Groq request failed: ${res.status}`)
+    }
+
+    const data = await res.json()
+    const text = data.choices?.[0]?.message?.content
+    if (!text) {
+      onAttempt?.({ attempt, ms, outcome: 'fatal-error', detail: 'Groq returned no content' })
+      throw new Error('Groq returned no content')
+    }
+
+    const parsed = JSON.parse(text) as Record<string, string | number | null>
+    const cleaned: Record<string, string | number> = {}
+    for (const [k, v] of Object.entries(parsed)) {
+      if (v !== null && v !== undefined && v !== '') cleaned[k] = v
+    }
+
+    onAttempt?.({ attempt, ms, outcome: 'success', detail: `finish_reason=${data.choices?.[0]?.finish_reason ?? 'unknown'}` })
+    return cleaned
+  }
+}
+
 export async function callEngine(
   engine: Engine,
   file: File | null,
@@ -323,7 +482,7 @@ export async function callEngine(
   onAttempt?: (log: AttemptLog) => void,
   geminiModel?: string,
 ): Promise<Record<string, string | number>> {
-  return engine === 'claude'
-    ? callClaude(file, pastedText, entityType, onAttempt)
-    : callGemini(file, pastedText, entityType, onAttempt, geminiModel)
+  if (engine === 'claude') return callClaude(file, pastedText, entityType, onAttempt)
+  if (engine === 'groq') return callGroq(file, pastedText, entityType, onAttempt)
+  return callGemini(file, pastedText, entityType, onAttempt, geminiModel)
 }

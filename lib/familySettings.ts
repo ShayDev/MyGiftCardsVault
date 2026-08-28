@@ -13,9 +13,11 @@ export type FamilySettings = {
   currency: string | null
   // Which LLM powers the Scan (AI image/text extract) feature — added when
   // Gemini hit a sustained outage and the user wanted a switchable fallback.
-  // Defaults to 'gemini' (the original, still-cheaper default) rather than
-  // silently switching existing families to Claude.
-  aiEngine: 'gemini' | 'claude'
+  // 'groq' (qwen/qwen3.8-27b) added right after as a genuinely-free third
+  // option once Claude turned out to need paid workspace billing. Defaults to
+  // 'gemini' (the original default) rather than silently switching existing
+  // families.
+  aiEngine: 'gemini' | 'claude' | 'groq'
   // Other keys (e.g. a future `theme`, ...) may also be present in the underlying
   // JSON — untyped here, but never dropped. Each new family-wide preference gets
   // its own top-level key and its own typed accessor, following this same file's
@@ -54,7 +56,7 @@ export function parseFamilySettings(raw: string | null): FamilySettings {
       clubs: typeof days.clubs === 'number' ? days.clubs : null,
     },
     currency: typeof parsed.currency === 'string' ? parsed.currency : null,
-    aiEngine: parsed.aiEngine === 'claude' ? 'claude' : 'gemini',
+    aiEngine: parsed.aiEngine === 'claude' || parsed.aiEngine === 'groq' ? parsed.aiEngine : 'gemini',
   }
 }
 

@@ -12,7 +12,7 @@
 //   scripts/diagnose-fixtures/image.jpg   — used when you pass --mode image
 //
 // Options:
-//   --engine gemini|claude|both   (default: both)
+//   --engine gemini|claude|groq|all   (default: all — "both" also still works as an alias)
 //   --type CARD|VOUCHER|REFUND|WARRANTY   (default: CARD)
 //   --mode image                  use the image fixture instead of the text fixture
 //   --text "pasted text to extract from"       (overrides the fixtures)
@@ -112,8 +112,8 @@ async function runOnce(engine: Engine, file: File | null, text: string | null, e
 async function main() {
   const args = parseArgs(process.argv.slice(2))
 
-  const engineArg = args.engine ?? 'both'
-  const engines: Engine[] = engineArg === 'both' ? ['gemini', 'claude'] : [engineArg as Engine]
+  const engineArg = args.engine ?? 'all'
+  const engines: Engine[] = engineArg === 'all' || engineArg === 'both' ? ['gemini', 'claude', 'groq'] : [engineArg as Engine]
 
   const entityTypeArg = (args.type ?? 'CARD').toUpperCase()
   if (!isEntityType(entityTypeArg)) {

@@ -2,7 +2,7 @@ import { auth } from '@clerk/nextjs/server'
 import { NextResponse } from 'next/server'
 import prisma from '../../../lib/prisma'
 import { parseFamilySettings } from '../../../lib/familySettings'
-import { isEntityType, callEngine } from '../../../lib/extractEngines'
+import { isEntityType, callEngine, type Engine } from '../../../lib/extractEngines'
 
 // Raised from 30 to fit 2 full attempts (20s each + backoff) — Gemini's
 // gemini-flash-latest was confirmed live via direct testing to sometimes hang
@@ -11,7 +11,7 @@ import { isEntityType, callEngine } from '../../../lib/extractEngines'
 // covers the Claude path, which has its own 2-attempt/20s-each retry.
 export const maxDuration = 60
 
-async function getAiEngine(userId: string): Promise<'gemini' | 'claude'> {
+async function getAiEngine(userId: string): Promise<Engine> {
   const user = await prisma.user.findUnique({
     where: { clerkId: userId },
     select: { family: { select: { settings: true } } },

@@ -295,6 +295,7 @@ const translations = {
     settingsAiEngineHelp: 'Which AI reads receipts/cards for the Scan feature. Switch if one is down or giving worse results.',
     settingsAiEngineGemini: 'Gemini',
     settingsAiEngineClaude: 'Claude',
+    settingsAiEngineGroq: 'Groq',
     // Appearance setting
     themeLight: 'Light',
     themeDark: 'Dark',
@@ -590,6 +591,7 @@ const translations = {
     settingsAiEngineHelp: 'איזה AI קורא קבלות/כרטיסים בפיצ׳ר הסריקה. עברו בין המנועים אם אחד מהם לא זמין או נותן תוצאות פחות טובות.',
     settingsAiEngineGemini: 'Gemini',
     settingsAiEngineClaude: 'Claude',
+    settingsAiEngineGroq: 'Groq',
     // Appearance setting
     themeLight: 'בהיר',
     themeDark: 'כהה',

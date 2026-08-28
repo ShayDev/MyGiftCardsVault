@@ -28,7 +28,7 @@ const currencySchema = z.object({
 })
 
 const aiEngineSchema = z.object({
-  aiEngine: z.enum(['gemini', 'claude']),
+  aiEngine: z.enum(['gemini', 'claude', 'groq']),
 })
 
 export async function switchFamily(formData: FormData) {

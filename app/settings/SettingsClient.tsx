@@ -23,7 +23,7 @@ type Props = {
   ownsCurrentFamily: boolean
   expiringSoonDays: number
   currency: string | null
-  aiEngine: 'gemini' | 'claude'
+  aiEngine: 'gemini' | 'claude' | 'groq'
 }
 
 type Mode = 'closed' | 'choose' | 'join' | 'create'
@@ -93,7 +93,7 @@ export default function SettingsClient({
 
   // No "saved" flash needed here — the two buttons visually reflect the
   // current selection immediately, unlike a text/number field.
-  async function handleAiEngineChange(next: 'gemini' | 'claude') {
+  async function handleAiEngineChange(next: 'gemini' | 'claude' | 'groq') {
     if (next === aiEngineSelected) return
     setAiEngineSelected(next)
     setAiEngineSaving(true)
@@ -406,7 +406,7 @@ export default function SettingsClient({
         <p className="text-xs text-slate-400 mb-3">{t.settingsAiEngineHelp}</p>
         <div className="flex items-center gap-3">
           <div className="flex rounded-xl border border-slate-200 dark:border-neutral-700 overflow-hidden">
-            {(['gemini', 'claude'] as const).map((engine) => (
+            {(['gemini', 'claude', 'groq'] as const).map((engine) => (
               <button
                 key={engine}
                 type="button"
@@ -418,7 +418,7 @@ export default function SettingsClient({
                     : 'bg-white dark:bg-neutral-900 text-slate-600 dark:text-neutral-300 hover:bg-slate-50 dark:hover:bg-neutral-800'
                 }`}
               >
-                {engine === 'gemini' ? t.settingsAiEngineGemini : t.settingsAiEngineClaude}
+                {engine === 'gemini' ? t.settingsAiEngineGemini : engine === 'claude' ? t.settingsAiEngineClaude : t.settingsAiEngineGroq}
               </button>
             ))}
           </div>
