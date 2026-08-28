@@ -88,7 +88,10 @@
       "Skill(claude-api)",
       "Skill(claude-api:*)",
       "Bash(npm install *)",
-      "Bash(node scripts/_test-claude.mjs)"
+      "Bash(node scripts/_test-claude.mjs)",
+      "Bash(node scripts/_test-claude2.mjs)",
+      "Bash(node scripts/_check-gemini.mjs)",
+      "Bash(rm -f scripts/_check-gemini.mjs)"
     ],
     "additionalDirectories": [
       "\\tmp",

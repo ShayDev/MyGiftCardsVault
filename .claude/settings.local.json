@@ -15,7 +15,9 @@
       "Skill(run)",
       "Skill(run:*)",
       "Bash(echo \"EXIT CODE: $?\")",
-      "Bash(curl -s -o /dev/null -w \"HTTP %{http_code}\\\\n\" http://localhost:3000/cards)"
+      "Bash(curl -s -o /dev/null -w \"HTTP %{http_code}\\\\n\" http://localhost:3000/cards)",
+      "Bash(node -e ' *)",
+      "Bash(tasklist //FI \"IMAGENAME eq node.exe\")"
     ]
   }
 }

@@ -91,6 +91,22 @@ This ledger approach ensures a full audit trail and eliminates balance drift.
 | `npm run prisma:generate` | Regenerate Prisma client |
 | `npm run seed`            | Seed the database        |
 
+### Scan Engine Diagnostics
+
+The app's "Scan" feature (extracting card/voucher/refund/warranty details from a pasted photo or text) can use either **Gemini** or **Claude** — switchable per-family in Settings, see `lib/extractEngines.ts`. Both API calls run the same code in production and in a local diagnostic script, so you can reproduce and debug extraction issues (a provider outage, a bad/incomplete result, etc.) without going through the app UI or a browser at all.
+
+```bash
+# Edit scripts/diagnose-fixtures/text.txt (or image.jpg), then run:
+npx dotenv -e .env.local -o -- npx tsx scripts/diagnose-extract.ts
+npx dotenv -e .env.local -o -- npx tsx scripts/diagnose-extract.ts --mode image
+
+# Useful flags: --engine gemini|claude|both, --type CARD|VOUCHER|REFUND|WARRANTY,
+# --repeat N (run N times per engine — good for spotting an intermittent/flaky provider)
+npx dotenv -e .env.local -o -- npx tsx scripts/diagnose-extract.ts --engine both --type WARRANTY --repeat 3
+```
+
+Requires `GEMINI_API_KEY`/`ANTHROPIC_API_KEY` in `.env.local` (see `.env.example`). Full usage notes are in the header comment of `scripts/diagnose-extract.ts`. Output shows per-attempt timing/errors (including automatic retries) and, on success, exactly which schema fields came back vs. were silently omitted — the same detail you'd want when a result "worked" but was missing something.
+
 ## Supporting Systems Links
 
 - **CODE REPO**
