@@ -20,11 +20,12 @@
 //   --image <path>                (overrides the fixtures — reads an image file)
 //   --repeat N                    (default: 1 — run each engine N times, useful for
 //                                  spotting intermittent failures like the Gemini outage)
-//   --gemini-model <id>           (default: gemini-flash-latest — a rolling alias Google
-//                                  can silently repoint. Compare against a pinned older
-//                                  version, e.g. gemini-2.5-flash or gemini-2.5-flash-lite,
-//                                  when -latest is flaky. See scripts/list-gemini-models.ts
-//                                  to see every model your key can currently use.)
+//   --gemini-model <id>           (default: gemini-3.5-flash-lite — pinned, not the
+//                                  gemini-flash-latest rolling alias Google can silently
+//                                  repoint. Compare against another pinned version, e.g.
+//                                  gemini-2.5-flash or gemini-2.5-flash-lite. See
+//                                  scripts/list-gemini-models.ts to see every model your
+//                                  key can currently use.)
 //   --locale en|he                 (default: none — mirrors the app's UI-language hint that
 //                                  steers the "notes" field's output language; omit to see
 //                                  each engine's unhinted default behavior)
@@ -40,6 +41,10 @@
 // # Edit scripts/diagnose-fixtures/text.txt (or image.jpg), then run:
 // dotenv -e .env.local -o -- npx tsx scripts/diagnose-extract.ts
 // npx dotenv -e .env.local -o -- npx tsx scripts/diagnose-extract.ts --mode image
+// npx dotenv -e .env.local -o -- npx tsx scripts/diagnose-extract.ts --engine gemini --type CARD --text "..." --repeat 5
+// npx dotenv -e .env.local -o -- npx tsx scripts/diagnose-extract.ts --engine groq --repeat 3
+// npx dotenv -e .env.local -o -- npx tsx scripts/diagnose-extract.ts --mode image --engine groq --repeat 1
+// npx dotenv -e .env.local -o -- npx tsx scripts/diagnose-extract.ts --mode image --engine gemini --repeat 1 type WARRANTY
 
 import fs from "fs";
 import path from "path";

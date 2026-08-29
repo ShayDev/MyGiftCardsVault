@@ -10,6 +10,22 @@ import { z } from 'zod'
 
 export type EntityType = 'CARD' | 'VOUCHER' | 'REFUND' | 'WARRANTY'
 export type Engine = 'gemini' | 'claude' | 'groq'
+export type Modality = 'text' | 'image'
+
+// Which LLM handles each input modality — an app-wide deployment setting
+// (AI_ENGINE_TEXT / AI_ENGINE_IMAGE), not a per-family preference: this used
+// to live in FamilySettings.aiEngine with a Settings-page picker, but that let
+// any family member flip every other family's engine too once it's shared
+// infrastructure, and a single JSON blob couldn't express "different engine
+// per modality" cleanly. Splitting by modality matters because Gemini has
+// noticeably better Hebrew OCR on photos than Groq's qwen/qwen3.8-27b (see
+// app/api/extract/route.ts's git history), while Groq's free tier is fine for
+// pasted text. Unset or invalid falls back to 'groq', same default the old
+// family setting used.
+export function getAiEngine(modality: Modality): Engine {
+  const raw = modality === 'image' ? process.env.AI_ENGINE_IMAGE : process.env.AI_ENGINE_TEXT
+  return raw === 'gemini' || raw === 'claude' || raw === 'groq' ? raw : 'groq'
+}
 
 export const SCHEMAS: Record<EntityType, object> = {
   WARRANTY: {
@@ -236,13 +252,21 @@ export type AttemptLog = {
   detail: string
 }
 
-// A rolling alias — Google can silently repoint this to a newer model version
-// at any time. Confirmed via diagnose-extract.ts's Gemini attempt logging
-// (which reports `modelVersion` on success) that this currently resolves to
-// gemini-3.7-flash, the newest release — plausibly the most capacity-contended
-// one during a demand spike, hence the model param below for easy comparison
-// against an older, more established pinned version (e.g. gemini-2.5-flash).
-export const DEFAULT_GEMINI_MODEL = 'gemini-flash-latest'
+// Pinned (not the 'gemini-flash-latest' rolling alias, which Google can
+// silently repoint to a newer, more capacity-contended model at any time).
+// Verified via diagnose-extract.ts against both the text and image fixtures
+// with CARD/WARRANTY entity types — correct extractions in under 1.5s each.
+// Needs the thinkingBudget override below (see MIN_THINKING_BUDGET).
+export const DEFAULT_GEMINI_MODEL = 'gemini-3.5-flash-lite'
+
+// Most Gemini models accept thinkingBudget: 0 to fully disable thinking, but
+// some reject it outright with a 400 "invalid argument" — confirmed via
+// direct API testing that gemini-3.5-flash-lite is one of these (it accepts
+// thinkingBudget: 1 but rejects 0). Fall back to the lowest accepted budget
+// for known exceptions; every other model keeps the fully-disabled default.
+const MIN_THINKING_BUDGET: Record<string, number> = {
+  'gemini-3.5-flash-lite': 1,
+}
 
 export async function callGemini(
   file: File | null,
@@ -274,7 +298,7 @@ export async function callGemini(
       // present in the text were omitted) down to ~4s with every field
       // correctly filled. Also reduces how often the 20s AbortSignal below
       // or a Gemini-side "high demand" 503 gets hit at all.
-      thinkingConfig: { thinkingBudget: 0 },
+      thinkingConfig: { thinkingBudget: MIN_THINKING_BUDGET[model] ?? 0 },
     },
   })
 

@@ -11,13 +11,6 @@ export type FamilySettings = {
   // ISO 4217 code (e.g. 'USD'), or null to keep following the UI language's
   // traditional currency (en → USD, he → ILS) — see lib/currency.ts.
   currency: string | null;
-  // Which LLM powers the Scan (AI image/text extract) feature — added when
-  // Gemini hit a sustained outage and the user wanted a switchable fallback.
-  // 'groq' (qwen/qwen3.8-27b) added right after as a genuinely-free third
-  // option once Claude turned out to need paid workspace billing. Defaults to
-  // 'gemini' (the original default) rather than silently switching existing
-  // families.
-  aiEngine: "gemini" | "claude" | "groq";
   // Other keys (e.g. a future `theme`, ...) may also be present in the underlying
   // JSON — untyped here, but never dropped. Each new family-wide preference gets
   // its own top-level key and its own typed accessor, following this same file's
@@ -34,7 +27,6 @@ const DEFAULT_SETTINGS: FamilySettings = {
     clubs: null,
   },
   currency: null,
-  aiEngine: "groq",
 };
 
 // Defensive by necessity — this is raw TEXT, not a DB-validated shape. Malformed
@@ -64,10 +56,6 @@ export function parseFamilySettings(raw: string | null): FamilySettings {
       clubs: typeof days.clubs === "number" ? days.clubs : null,
     },
     currency: typeof parsed.currency === "string" ? parsed.currency : DEFAULT_SETTINGS.currency,
-    aiEngine:
-      parsed.aiEngine === "gemini" || parsed.aiEngine === "claude" || parsed.aiEngine === "groq"
-        ? parsed.aiEngine
-        : DEFAULT_SETTINGS.aiEngine,
   };
 }
 
