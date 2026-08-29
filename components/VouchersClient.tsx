@@ -5,6 +5,7 @@ import { createVoucher, updateVoucher, markVoucherUsed, deleteVoucher, type Vouc
 import { useLanguageStore } from '../hooks/useLanguageStore'
 import { useCurrency } from '../hooks/useCurrency'
 import { getT } from '../lib/i18n'
+import { getActionErrorMessage } from '../lib/actionErrorMessage'
 import { formatCode } from '../lib/formatCode'
 import { formatExpiresAt, formatDate, formatDateSlashFull, isExpiringSoon } from '../lib/date'
 import { firstName } from '../lib/formatName'
@@ -153,7 +154,7 @@ function AddVoucherModal({
         adjustNavBadgeCount('vouchers', 1)
         onClose()
       } catch (err) {
-        setError(err instanceof Error ? err.message : t.failedToCreateVoucher)
+        setError(getActionErrorMessage(err, t, t.failedToCreateVoucher))
       }
     })
   }
@@ -270,7 +271,7 @@ function VoucherDetailModal({
         onUpdated()
         onClose()
       } catch (err) {
-        setError(err instanceof Error ? err.message : t.failedToUpdateVoucher)
+        setError(getActionErrorMessage(err, t, t.failedToUpdateVoucher))
       }
     })
   }
@@ -284,7 +285,7 @@ function VoucherDetailModal({
         onUpdated()
         onClose()
       } catch (err) {
-        setError(err instanceof Error ? err.message : t.failedToUpdateVoucher)
+        setError(getActionErrorMessage(err, t, t.failedToUpdateVoucher))
       }
     })
   }
@@ -524,7 +525,7 @@ function EditVoucherModal({
         await updateVoucher(voucher.id, fd)
         onClose()
       } catch (err) {
-        setError(err instanceof Error ? err.message : t.failedToUpdateVoucher)
+        setError(getActionErrorMessage(err, t, t.failedToUpdateVoucher))
       }
     })
   }

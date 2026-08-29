@@ -13,6 +13,7 @@ import {
 import { useLanguageStore } from "../hooks/useLanguageStore";
 import { useCurrency } from "../hooks/useCurrency";
 import { getT } from "../lib/i18n";
+import { getActionErrorMessage } from "../lib/actionErrorMessage";
 import { localeDir } from "../lib/i18n";
 import { resolveCurrency } from "../lib/currency";
 import { formatCode } from "../lib/formatCode";
@@ -269,7 +270,7 @@ function AddRefundModal({
         adjustNavBadgeCount("refunds", 1);
         onClose();
       } catch (err) {
-        setError(err instanceof Error ? err.message : t.failedToCreateRefund);
+        setError(getActionErrorMessage(err, t, t.failedToCreateRefund));
       }
     });
   }
@@ -554,7 +555,7 @@ function EditRefundModal({
         await updateRefund(refund.id, fd);
         onClose();
       } catch (err) {
-        setError(err instanceof Error ? err.message : t.failedToUpdateRefund);
+        setError(getActionErrorMessage(err, t, t.failedToUpdateRefund));
       }
     });
   }
@@ -726,7 +727,7 @@ function UseAmountModal({
         if (fullyUsed) adjustNavBadgeCount("refunds", -1);
         onClose();
       } catch (err) {
-        setError(err instanceof Error ? err.message : t.failedToUpdateRefund);
+        setError(getActionErrorMessage(err, t, t.failedToUpdateRefund));
       }
     });
   }
@@ -841,7 +842,7 @@ function RefundDetailModal({
         await markRefundReceived(refund.id, refund.status !== "received");
         onClose();
       } catch (err) {
-        setError(err instanceof Error ? err.message : t.failedToUpdateRefund);
+        setError(getActionErrorMessage(err, t, t.failedToUpdateRefund));
       }
     });
   }
@@ -854,7 +855,7 @@ function RefundDetailModal({
         if (!refund.isUsed) adjustNavBadgeCount("refunds", -1);
         onClose();
       } catch (err) {
-        setError(err instanceof Error ? err.message : t.failedToUpdateRefund);
+        setError(getActionErrorMessage(err, t, t.failedToUpdateRefund));
       }
     });
   }

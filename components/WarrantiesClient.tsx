@@ -10,6 +10,7 @@ import {
 } from "../app/warranties/actions";
 import { useLanguageStore } from "../hooks/useLanguageStore";
 import { getT } from "../lib/i18n";
+import { getActionErrorMessage } from "../lib/actionErrorMessage";
 import { localeDir } from "../lib/i18n";
 import { formatDateSlashFull, daysUntil, isExpiringSoon } from "../lib/date";
 import { resizeImage } from "../lib/resizeImage";
@@ -250,7 +251,7 @@ function AddWarrantyModal({
         adjustNavBadgeCount("warranties", 1);
         onClose();
       } catch (err) {
-        setError(err instanceof Error ? err.message : t.failedToCreateWarranty);
+        setError(getActionErrorMessage(err, t, t.failedToCreateWarranty));
       }
     });
   }
@@ -496,7 +497,7 @@ function EditWarrantyModal({
         await updateWarranty(warranty.id, fd);
         onClose();
       } catch (err) {
-        setError(err instanceof Error ? err.message : t.failedToUpdateWarranty);
+        setError(getActionErrorMessage(err, t, t.failedToUpdateWarranty));
       }
     });
   }
@@ -678,7 +679,7 @@ function WarrantyDetailModal({
         if (!expired) adjustNavBadgeCount("warranties", -1);
         onClose();
       } catch (err) {
-        setError(err instanceof Error ? err.message : t.failedToUpdateWarranty);
+        setError(getActionErrorMessage(err, t, t.failedToUpdateWarranty));
       }
     });
   }

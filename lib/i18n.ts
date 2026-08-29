@@ -84,6 +84,11 @@ const translations = {
     reveal: 'Reveal',
     hide: 'Hide',
     notesLabel: 'Notes',
+    // Generic, localized stand-ins for a server action's ActionError code
+    // (see lib/actionError.ts) — used across cards/vouchers/refunds/warranties/
+    // clubs instead of ever showing a raw server error message to the user.
+    errorValidation: 'Please check the form and try again.',
+    errorUnauthorized: "You don't have access to that.",
     failedToCreateCard: 'Failed to create card',
     scanButton: 'Scan',
     scanning: 'Scanning…',
@@ -380,6 +385,8 @@ const translations = {
     reveal: 'הצג',
     hide: 'הסתר',
     notesLabel: 'הערות',
+    errorValidation: 'נא לבדוק את הטופס ולנסות שוב.',
+    errorUnauthorized: 'אין לך גישה לפריט זה.',
     failedToCreateCard: 'יצירת הכרטיס נכשלה',
     scanButton: 'סרוק',
     scanning: 'סורק...',

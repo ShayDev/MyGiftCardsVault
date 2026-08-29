@@ -6,6 +6,7 @@ import { redirect } from 'next/navigation'
 import { z } from 'zod'
 import prisma from '../../lib/prisma'
 import { encrypt } from '../../lib/encrypt'
+import { ActionError, parseAction } from '../../lib/actionError'
 
 async function getAuth(): Promise<{ familyId: string; userId: string }> {
   const { userId } = await auth()
@@ -167,7 +168,7 @@ function readWarrantyFormData(formData: FormData) {
 export async function createWarranty(formData: FormData) {
   const { familyId, userId } = await getAuth()
 
-  const data = WarrantyFieldsSchema.parse(readWarrantyFormData(formData))
+  const data = parseAction(WarrantyFieldsSchema, readWarrantyFormData(formData))
   const imageUrl = (formData.get('imageUrl') as string) || undefined
 
   const purchasedFromId = await ensureWarrantyProviderExists(
@@ -175,7 +176,7 @@ export async function createWarranty(formData: FormData) {
     familyId,
     userId,
   )
-  if (!purchasedFromId) throw new Error('Where it was purchased is required')
+  if (!purchasedFromId) throw new ActionError('VALIDATION_ERROR')
 
   const warrantyCompanyId = await ensureWarrantyProviderExists(
     { id: data.warrantyCompanyId, name: data.warrantyCompanyName, phone: data.warrantyCompanyPhone, url: data.warrantyCompanyUrl },
@@ -212,14 +213,14 @@ export async function createWarranty(formData: FormData) {
 export async function updateWarranty(warrantyId: string, formData: FormData) {
   const { familyId, userId } = await getAuth()
 
-  const data = WarrantyFieldsSchema.parse(readWarrantyFormData(formData))
+  const data = parseAction(WarrantyFieldsSchema, readWarrantyFormData(formData))
 
   const purchasedFromId = await ensureWarrantyProviderExists(
     { id: data.purchasedFromId, name: data.purchasedFromName, phone: data.purchasedFromPhone, url: data.purchasedFromUrl },
     familyId,
     userId,
   )
-  if (!purchasedFromId) throw new Error('Where it was purchased is required')
+  if (!purchasedFromId) throw new ActionError('VALIDATION_ERROR')
 
   const warrantyCompanyId = await ensureWarrantyProviderExists(
     { id: data.warrantyCompanyId, name: data.warrantyCompanyName, phone: data.warrantyCompanyPhone, url: data.warrantyCompanyUrl },

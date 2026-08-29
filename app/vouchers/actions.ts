@@ -8,6 +8,7 @@ import prisma from '../../lib/prisma'
 import { encrypt } from '../../lib/encrypt'
 import { ensureProviderExists } from '../providers/actions'
 import { parseFamilySettings, getExpiringSoonDays } from '../../lib/familySettings'
+import { parseAction } from '../../lib/actionError'
 
 async function getAuth(): Promise<{ familyId: string; userId: string; expiringSoonDays: number }> {
   const { userId } = await auth()
@@ -51,7 +52,7 @@ export async function createVoucher(formData: FormData) {
     notes: (formData.get('notes') as string) || undefined,
   }
 
-  const data = CreateVoucherSchema.parse(raw)
+  const data = parseAction(CreateVoucherSchema, raw)
 
   await prisma.voucher.create({
     data: {
@@ -88,7 +89,7 @@ export async function updateVoucher(voucherId: string, formData: FormData) {
     notes: (formData.get('notes') as string) || undefined,
   }
 
-  const data = CreateVoucherSchema.parse(raw)
+  const data = parseAction(CreateVoucherSchema, raw)
 
   await prisma.voucher.update({
     where: { id: voucherId, familyId },

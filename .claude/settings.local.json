@@ -30,7 +30,11 @@
       "Read(//c/Users/User/AppData/Local/ms-playwright/**)",
       "Bash(node scripts/_shot-hebrew.mjs)",
       "Bash(identify scripts/diagnose-fixtures/image.jpg)",
-      "Bash(node scripts/_test-qwen36.mjs)"
+      "Bash(node scripts/_test-qwen36.mjs)",
+      "Bash(rm c:/Dev/CloudeProjects/MyGiftCardsVault/scripts/_verify-action-error.ts /tmp/verify-action-error.ts 2>/dev/null; echo done)"
+    ],
+    "additionalDirectories": [
+      "\\tmp"
     ]
   }
 }

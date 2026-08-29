@@ -9,6 +9,7 @@ import { encrypt } from '../lib/encrypt'
 import { ensureProviderExists } from './providers/actions'
 import { getBalancesForCards } from '../lib/balance'
 import { parseFamilySettings, getExpiringSoonDays } from '../lib/familySettings'
+import { ActionError, parseAction } from '../lib/actionError'
 
 async function getAuthenticatedFamilyId(): Promise<{ familyId: string; userId: string; expiringSoonDays: number }> {
   const { userId } = await auth()
@@ -46,7 +47,7 @@ export async function createCard(formData: FormData) {
   const raw = {
     name: formData.get('name') as string,
     provider: (formData.get('provider') as string) || undefined,
-    last4: formData.get('last4') as string,
+    last4: (formData.get('last4') as string) || undefined,
     fullNumber: (formData.get('fullNumber') as string) || undefined,
     cvv: (formData.get('cvv') as string) || undefined,
     link: (formData.get('link') as string) || undefined,
@@ -56,7 +57,7 @@ export async function createCard(formData: FormData) {
     isReloadable: formData.get('isReloadable') === 'true',
   }
 
-  const data = CreateCardSchema.parse(raw)
+  const data = parseAction(CreateCardSchema, raw)
 
   const card = await prisma.giftCard.create({
     data: {
@@ -116,7 +117,7 @@ export async function updateCard(cardId: string, formData: FormData) {
     isReloadable: formData.get('isReloadable') === 'true',
   }
 
-  const data = UpdateCardSchema.parse(raw)
+  const data = parseAction(UpdateCardSchema, raw)
 
   await prisma.giftCard.update({
     where: { id: cardId, familyId },
@@ -163,13 +164,13 @@ export async function createTransaction(input: {
 }) {
   const { familyId, userId } = await getAuthenticatedFamilyId()
 
-  const data = CreateTransactionSchema.parse(input)
+  const data = parseAction(CreateTransactionSchema, input)
 
   const card = await prisma.giftCard.findFirst({
     where: { id: data.cardId, familyId },
     select: { id: true },
   })
-  if (!card) throw new Error('Unauthorized')
+  if (!card) throw new ActionError('UNAUTHORIZED')
 
   await prisma.transaction.create({
     data: {
@@ -200,7 +201,7 @@ export async function getCardTransactions(cardId: string): Promise<TransactionIt
     where: { id: cardId, familyId },
     select: { id: true },
   })
-  if (!card) throw new Error('Unauthorized')
+  if (!card) throw new ActionError('UNAUTHORIZED')
 
   const transactions = await prisma.transaction.findMany({
     where: { giftCardId: cardId },

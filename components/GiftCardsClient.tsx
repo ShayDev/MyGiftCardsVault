@@ -5,6 +5,7 @@ import { createCard, updateCard, deactivateCard, createTransaction, getCardTrans
 import { useLanguageStore } from '../hooks/useLanguageStore'
 import { useCurrency } from '../hooks/useCurrency'
 import { getT } from '../lib/i18n'
+import { getActionErrorMessage } from '../lib/actionErrorMessage'
 import { formatCode } from '../lib/formatCode'
 import { formatExpiresAt, formatDate, formatDateSlashFull, isExpiringSoon } from '../lib/date'
 import { firstName } from '../lib/formatName'
@@ -176,7 +177,7 @@ function AddCardModal({
         adjustNavBadgeCount('cards', 1)
         onClose()
       } catch (err) {
-        setError(err instanceof Error ? err.message : t.failedToCreateCard)
+        setError(getActionErrorMessage(err, t, t.failedToCreateCard))
       }
     })
   }
@@ -667,7 +668,7 @@ function EditCardModal({
         await updateCard(card.id, fd)
         onClose()
       } catch (err) {
-        setError(err instanceof Error ? err.message : t.failedToUpdateCard)
+        setError(getActionErrorMessage(err, t, t.failedToUpdateCard))
       }
     })
   }
@@ -821,7 +822,7 @@ function TransactionModal({
         else if (currentBalance > 0 && projected <= 0) adjustNavBadgeCount('cards', -1)
         onClose()
       } catch (err) {
-        setError(err instanceof Error ? err.message : t.transactionFailed)
+        setError(getActionErrorMessage(err, t, t.transactionFailed))
       }
     })
   }
@@ -916,7 +917,7 @@ function DeleteDialog({ card, onClose }: { card: CardWithBalance; onClose: () =>
         if (card.balance > 0) adjustNavBadgeCount('cards', -1)
         onClose()
       } catch (err) {
-        setError(err instanceof Error ? err.message : t.failedToRemoveCard)
+        setError(getActionErrorMessage(err, t, t.failedToRemoveCard))
       }
     })
   }

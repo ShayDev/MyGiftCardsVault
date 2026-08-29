@@ -8,6 +8,7 @@ import prisma from '../../lib/prisma'
 import { encrypt } from '../../lib/encrypt'
 import { ensureProviderExists } from '../providers/actions'
 import { parseFamilySettings, getExpiringSoonDays } from '../../lib/familySettings'
+import { ActionError, parseAction } from '../../lib/actionError'
 
 async function getAuth(): Promise<{ familyId: string; userId: string; expiringSoonDays: number }> {
   const { userId } = await auth()
@@ -54,7 +55,7 @@ export async function createRefund(formData: FormData) {
     imageUrl:    (formData.get('imageUrl') as string) || undefined,
   }
 
-  const data = CreateRefundSchema.parse(raw)
+  const data = parseAction(CreateRefundSchema, raw)
 
   await prisma.refund.create({
     data: {
@@ -106,7 +107,7 @@ export async function updateRefund(refundId: string, formData: FormData) {
     link:        (formData.get('link') as string) || undefined,
   }
 
-  const data = UpdateRefundSchema.parse(raw)
+  const data = parseAction(UpdateRefundSchema, raw)
 
   await prisma.refund.update({
     where: { id: refundId, familyId },
@@ -167,7 +168,7 @@ export async function useRefundAmount(refundId: string, amount: number) {
     where: { id: refundId, familyId },
     select: { amount: true, usedAmount: true },
   })
-  if (!refund) throw new Error('Unauthorized')
+  if (!refund) throw new ActionError('UNAUTHORIZED')
 
   const newUsed = Number(refund.usedAmount) + amount
   const fullyUsed = newUsed >= Number(refund.amount)

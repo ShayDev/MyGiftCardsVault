@@ -9,6 +9,7 @@ import {
 } from "../app/clubs/actions";
 import { useLanguageStore } from "../hooks/useLanguageStore";
 import { getT, localeDir } from "../lib/i18n";
+import { getActionErrorMessage } from "../lib/actionErrorMessage";
 import { formatCode } from "../lib/formatCode";
 import {
   formatExpiresAt,
@@ -160,7 +161,7 @@ function AddClubModal({
         adjustNavBadgeCount("clubs", 1);
         onClose();
       } catch (err) {
-        setError(err instanceof Error ? err.message : t.failedToCreateClub);
+        setError(getActionErrorMessage(err, t, t.failedToCreateClub));
       }
     });
   }
@@ -305,7 +306,7 @@ function ClubDetailModal({
         onUpdated();
         onClose();
       } catch (err) {
-        setError(err instanceof Error ? err.message : t.failedToDeleteClub);
+        setError(getActionErrorMessage(err, t, t.failedToDeleteClub));
       }
     });
   }
@@ -564,7 +565,7 @@ function EditClubModal({
         await updateClub(club.id, fd);
         onClose();
       } catch (err) {
-        setError(err instanceof Error ? err.message : t.failedToUpdateClub);
+        setError(getActionErrorMessage(err, t, t.failedToUpdateClub));
       }
     });
   }

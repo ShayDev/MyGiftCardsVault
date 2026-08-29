@@ -8,6 +8,7 @@ import prisma from '../../lib/prisma'
 import { encrypt } from '../../lib/encrypt'
 import { ensureProviderExists } from '../providers/actions'
 import { parseFamilySettings, getExpiringSoonDays } from '../../lib/familySettings'
+import { parseAction } from '../../lib/actionError'
 
 async function getAuth(): Promise<{ familyId: string; userId: string; expiringSoonDays: number }> {
   const { userId } = await auth()
@@ -48,7 +49,7 @@ export async function createClub(formData: FormData) {
     notes:     (formData.get('notes') as string) || undefined,
   }
 
-  const data = CreateClubSchema.parse(raw)
+  const data = parseAction(CreateClubSchema, raw)
 
   await prisma.clubMember.create({
     data: {
@@ -82,7 +83,7 @@ export async function updateClub(clubId: string, formData: FormData) {
     notes:     (formData.get('notes') as string) || undefined,
   }
 
-  const data = CreateClubSchema.parse(raw)
+  const data = parseAction(CreateClubSchema, raw)
 
   await prisma.clubMember.update({
     where: { id: clubId, familyId },
