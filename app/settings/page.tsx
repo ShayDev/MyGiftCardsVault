@@ -3,6 +3,7 @@ import { redirect } from 'next/navigation'
 import prisma from '../../lib/prisma'
 import SettingsClient from './SettingsClient'
 import { parseFamilySettings, getExpiringSoonDays } from '../../lib/familySettings'
+import { isSuperadminEmail } from '../../lib/superadmin'
 
 export default async function SettingsPage() {
   const { userId } = await auth()
@@ -33,6 +34,7 @@ export default async function SettingsPage() {
       ownsCurrentFamily={ownedFamily?.id === user.familyId}
       expiringSoonDays={expiringSoonDays}
       currency={familySettings.currency}
+      isSuperadmin={isSuperadminEmail(user.email)}
     />
   )
 }

@@ -1,6 +1,6 @@
 # Admin Menu — Detailed Design
 
-**Status:** Ready to implement Phase 1. Builds on [admin-menu-hld.md](./admin-menu-hld.md).
+**Status:** Phase 1 implemented (`lib/superadmin.ts`, `lib/adminStats.ts`, `components/admin/charts.tsx`, `components/AdminClient.tsx`, `app/admin/page.tsx`, `/settings` link). Builds on [admin-menu-hld.md](./admin-menu-hld.md).
 
 Phase 1 is a **read-only** superadmin dashboard — **no schema change, no mutations**. App-wide settings (the Scan AI engine switch) are deferred; §7 keeps the design notes for when they're picked up.
 
@@ -13,7 +13,7 @@ Phase 1 is a **read-only** superadmin dashboard — **no schema change, no mutat
 | Phase 1 panels | (2) records created over time — last 12 months, stacked by entity; (3) content totals now; Families table. No settings, no writes. |
 | Engine switch | **Deferred** — see §7. Not built in Phase 1. |
 | Panel 5 / `ExtractLog` | **Out of Phase 1** — deferred decision. `AdminClient` leaves a placeholder slot. |
-| Charts | Hand-rolled inline SVG under `components/admin/`. No dependency. |
+| Charts | Hand-rolled under `components/admin/charts.tsx` — flexbox + Tailwind, not SVG (simpler, responsive for free, no viewBox/text math for a handful of bars). No dependency. |
 | i18n | English-only. No keys added to `lib/i18n.ts`. |
 | Families table counts | `isActive`-only counts (no per-row balance computation). Panel 3's card count *does* use the balance rule (one app-wide pass). |
 
@@ -166,13 +166,13 @@ Layout, top to bottom:
 
 Client component only for the sortable table + any chart hover; the data all arrives as props from the server component.
 
-### `components/admin/` chart primitives (new, hand-rolled SVG)
+### `components/admin/charts.tsx` — chart primitives (one file, hand-rolled, flexbox + Tailwind)
 
-- `StatTile.tsx` — label + big number, the app's card styling (`rounded-2xl border ...`).
-- `BarChart.tsx` — `{ label: string; value: number; color?: string }[]`, vertical bars, value labels on top, no axis library. `viewBox` + `preserveAspectRatio`, responsive width.
-- `StackedBarChart.tsx` — `{ bucket: string; segments: { key: string; value: number; color: string }[] }[]`. One stacked column per bucket, month labels on the x-axis (rotate/abbreviate on narrow screens), a small legend.
+- `StatTile` — label + big number, the app's card styling (`rounded-2xl border ...`).
+- `BarChart` — `{ label; value; colorClass? }[]`, **horizontal** bars (label / track / fill-width-% / value). No SVG.
+- `StackedBarChart` — `{ buckets: { label; segments: Record<string, number> }[]; series: { key; label; colorClass }[] }`. Flex row of columns; each column a `flex-col-reverse` of coloured segments sized by `flexGrow`; legend below; wrapped in `overflow-x-auto` with a `min-w` so it scrolls on tiny screens.
 
-All three: theme-aware via Tailwind `dark:` classes on the wrapper and `currentColor` / CSS-var fills where practical; min touch target respected for any interactive header.
+All theme-aware via Tailwind `dark:` classes. Pure presentational, no hooks — importable from a server component too.
 
 ### Settings link — `app/settings/page.tsx` + `SettingsClient.tsx`
 

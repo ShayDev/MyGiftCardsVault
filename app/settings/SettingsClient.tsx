@@ -23,6 +23,7 @@ type Props = {
   ownsCurrentFamily: boolean
   expiringSoonDays: number
   currency: string | null
+  isSuperadmin: boolean
 }
 
 type Mode = 'closed' | 'choose' | 'join' | 'create'
@@ -44,6 +45,7 @@ export default function SettingsClient({
   ownsCurrentFamily,
   expiringSoonDays,
   currency,
+  isSuperadmin,
 }: Props) {
   const locale = useLanguageStore((s) => s.locale)
   const t = getT(locale)
@@ -443,6 +445,25 @@ export default function SettingsClient({
         </form>
       </div>
       */}
+
+      {/* Superadmin-only — English literal, not an i18n key (operator console, see plans/admin-menu-hld.md). */}
+      {isSuperadmin && (
+        <Link
+          href="/admin"
+          dir="ltr"
+          className="settings-admin-link block bg-white dark:bg-neutral-900 rounded-2xl border border-slate-200 dark:border-neutral-700 p-5 mb-4 hover:bg-slate-50 dark:hover:bg-neutral-800 transition-colors"
+        >
+          <div className="flex items-center justify-between gap-3">
+            <div>
+              <h2 className="text-sm font-semibold text-slate-500 uppercase tracking-wide">Admin</h2>
+              <p className="text-xs text-slate-400 mt-1">Usage dashboard &amp; app stats</p>
+            </div>
+            <svg className="w-5 h-5 text-slate-400 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
+            </svg>
+          </div>
+        </Link>
+      )}
 
       <div className="bg-white dark:bg-neutral-900 rounded-2xl border border-slate-200 dark:border-neutral-700 p-5">
         <h2 className="text-sm font-semibold text-slate-500 uppercase tracking-wide mb-4">{t.settingsAccount}</h2>

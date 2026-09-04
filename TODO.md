@@ -291,13 +291,13 @@ Allow a single user to belong to multiple families and switch between them in th
 
 A dedicated `/admin` operator console — app-wide usage dashboards + settings that currently need a redeploy. Phased: Phase 1 superadmin-only, Phase 2 opens a family-scoped subset to family owners.
 
-**Phase 1 (locked scope) — read-only dashboard, no schema change, no mutations:**
+**Phase 1 (locked scope) — read-only dashboard, no schema change, no mutations — ✅ shipped:**
 
-- ⬜ `lib/superadmin.ts` — hardcoded email allowlist (`SUPERADMIN_EMAILS` env merge), `requireSuperadmin()`
-- ⬜ `lib/adminStats.ts` — records-created-over-time (12mo, stacked by entity), content totals now, families table (all take optional `familyId` for later)
-- ⬜ `components/admin/` — hand-rolled SVG `StatTile` / `BarChart` / `StackedBarChart` (no charting dep)
-- ⬜ `app/admin/page.tsx` + `components/AdminClient.tsx` — superadmin-gated, English-only (no i18n keys)
-- ⬜ Superadmin-only link on `/settings` (not a BottomNav tab)
+- ✅ `lib/superadmin.ts` — hardcoded email allowlist (`SUPERADMIN_EMAILS` env merge), `requireSuperadmin()`
+- ✅ `lib/adminStats.ts` — records-created-over-time (12mo, stacked by entity), content totals now, families table (all take optional `familyId` for later)
+- ✅ `components/admin/charts.tsx` — hand-rolled `StatTile` / `BarChart` / `StackedBarChart` (flexbox + Tailwind, no charting dep)
+- ✅ `app/admin/page.tsx` + `components/AdminClient.tsx` — superadmin-gated, English-only (no i18n keys)
+- ✅ Superadmin-only link on `/settings` (not a BottomNav tab)
 
 **Deferred:**
 
