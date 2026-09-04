@@ -284,3 +284,28 @@ Allow a single user to belong to multiple families and switch between them in th
 - ⬜ All server actions need to know the "active family" (cookie or session)
 - ⬜ Onboarding: allow joining more than one family after initial setup
 - ⬜ Settings: show all families the user belongs to, with leave/switch options
+
+---
+
+### ⬜ Admin Menu
+
+A dedicated `/admin` operator console — app-wide usage dashboards + settings that currently need a redeploy. Phased: Phase 1 superadmin-only, Phase 2 opens a family-scoped subset to family owners.
+
+**Phase 1 (locked scope) — read-only dashboard, no schema change, no mutations:**
+
+- ⬜ `lib/superadmin.ts` — hardcoded email allowlist (`SUPERADMIN_EMAILS` env merge), `requireSuperadmin()`
+- ⬜ `lib/adminStats.ts` — records-created-over-time (12mo, stacked by entity), content totals now, families table (all take optional `familyId` for later)
+- ⬜ `components/admin/` — hand-rolled SVG `StatTile` / `BarChart` / `StackedBarChart` (no charting dep)
+- ⬜ `app/admin/page.tsx` + `components/AdminClient.tsx` — superadmin-gated, English-only (no i18n keys)
+- ⬜ Superadmin-only link on `/settings` (not a BottomNav tab)
+
+**Deferred:**
+
+- ⬜ AI engine switch (text + image) → new `AppSetting` table, resolution DB → env → `'groq'` read once per warm instance, wired into `/api/extract`; `updateAiEngineSetting` action + UI on `/admin` (design kept in `plans/admin-menu-dd.md` §7)
+- ⬜ Family-owner (`role === 'owner'`) family-scoped `/admin` — `lib/adminStats.ts` already takes an optional `familyId`
+- ⬜ Panel 1 (growth over time), Panel 4 (engagement snapshot from `UserLoginStat`), Users table
+- ⬜ Panel 5 — Scan health (success rate + p50/p95 latency by engine); needs a new `ExtractLog` table — **decision deferred**
+- ⬜ Move `ENABLE_NAV_BADGES` / `ENABLE_ADDED_BY_ATTRIBUTION` into `AppSetting`
+- ⬜ Per-family financial dashboards (blocked app-wide by multi-currency)
+
+**See:** `plans/admin-menu-hld.md` and `plans/admin-menu-dd.md`.
