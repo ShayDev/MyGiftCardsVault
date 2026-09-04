@@ -53,9 +53,16 @@ export function StackedBarChart({ buckets, series }: { buckets: Bucket[]; series
   return (
     <div className="admin-stacked-chart flex flex-col gap-3">
       <div className="admin-stacked-scroll overflow-x-auto">
-        <div className="admin-stacked-plot flex h-44 items-end gap-1.5 min-w-[420px]">
+        {/* Fixed-height plot (h-40) so each column's h-full below is a DEFINITE
+            height — a percentage height only resolves against a parent whose own
+            height is explicit, not one merely stretched by flexbox. items-end on
+            this row would leave un-stretched columns with an auto (indefinite)
+            height, and every bar's height:% inside them collapses to 0 — that
+            was the "no data" bug. justify-end on each column bottom-aligns its
+            single (shorter-than-max) bar instead. */}
+        <div className="admin-stacked-plot flex h-40 gap-1.5 min-w-[420px]">
           {buckets.map((b, i) => (
-            <div key={`${b.label}-${i}`} className="admin-stacked-col flex min-w-0 flex-1 flex-col items-center gap-1">
+            <div key={`${b.label}-${i}`} className="admin-stacked-col flex h-full min-w-0 flex-1 flex-col items-center justify-end">
               <div
                 className="admin-stacked-bar flex w-full max-w-[26px] flex-col-reverse overflow-hidden rounded-sm"
                 style={{ height: `${(totals[i] / max) * 100}%` }}
@@ -73,10 +80,14 @@ export function StackedBarChart({ buckets, series }: { buckets: Bucket[]; series
                   )
                 })}
               </div>
-              <span className="admin-stacked-xlabel w-full truncate text-center text-[10px] text-slate-400">
-                {b.label}
-              </span>
             </div>
+          ))}
+        </div>
+        <div className="admin-stacked-xlabels mt-1 flex gap-1.5 min-w-[420px]">
+          {buckets.map((b, i) => (
+            <span key={`${b.label}-${i}`} className="admin-stacked-xlabel min-w-0 flex-1 truncate text-center text-[10px] text-slate-400">
+              {b.label}
+            </span>
           ))}
         </div>
       </div>
