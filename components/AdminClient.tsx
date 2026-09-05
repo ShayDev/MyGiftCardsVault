@@ -58,13 +58,17 @@ export default function AdminClient({ recordsByMonth, totals, families }: Props)
 
   const totalsBar = SERIES.map((s) => ({
     label: s.label,
-    value: totals[s.key],
+    value: totals[s.key].active,
     colorClass: s.colorClass,
   }))
 
   // Sum of the five trackable-content entities only — deliberately excludes
   // families/users, which are a different kind of count (accounts, not items).
-  const totalItems = SERIES.reduce((sum, s) => sum + totals[s.key], 0)
+  const totalItems = SERIES.reduce((sum, s) => sum + totals[s.key].active, 0)
+  const totalInactive = SERIES.reduce((sum, s) => sum + totals[s.key].inactive, 0)
+
+  const inactiveSub = (t: { inactive: number }) =>
+    t.inactive > 0 ? `${t.inactive.toLocaleString('en-US')} inactive` : undefined
 
   const [sortKey, setSortKey] = useState<FamilySortKey>('createdAt')
   const [sortDir, setSortDir] = useState<'asc' | 'desc'>('desc')
@@ -111,12 +115,17 @@ export default function AdminClient({ recordsByMonth, totals, families }: Props)
           Content totals
         </h2>
         <div className="admin-totals-grid grid grid-cols-2 gap-3 sm:grid-cols-4">
-          <StatTile label="Total Items" value={totalItems} highlight />
-          <StatTile label="Cards" value={totals.cards} />
-          <StatTile label="Vouchers" value={totals.vouchers} />
-          <StatTile label="Refunds" value={totals.refunds} />
-          <StatTile label="Clubs" value={totals.clubs} />
-          <StatTile label="Warranties" value={totals.warranties} />
+          <StatTile
+            label="Total Items"
+            value={totalItems}
+            highlight
+            sub={totalInactive > 0 ? `${totalInactive.toLocaleString('en-US')} inactive` : undefined}
+          />
+          <StatTile label="Cards" value={totals.cards.active} sub={inactiveSub(totals.cards)} />
+          <StatTile label="Vouchers" value={totals.vouchers.active} sub={inactiveSub(totals.vouchers)} />
+          <StatTile label="Refunds" value={totals.refunds.active} sub={inactiveSub(totals.refunds)} />
+          <StatTile label="Clubs" value={totals.clubs.active} sub={inactiveSub(totals.clubs)} />
+          <StatTile label="Warranties" value={totals.warranties.active} sub={inactiveSub(totals.warranties)} />
           <StatTile label="Families" value={totals.families} highlight />
           <StatTile label="Users" value={totals.users} />
         </div>

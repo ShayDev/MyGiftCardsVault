@@ -4,8 +4,22 @@
 // presentational, no hooks — safe to render from a server component too.
 // See plans/admin-menu-dd.md §4.
 
-/** `highlight` picks out a headline number (e.g. Total Items) from the rest of the grid. */
-export function StatTile({ label, value, highlight }: { label: string; value: number; highlight?: boolean }) {
+/**
+ * `highlight` picks out a headline number (e.g. Total Items) from the rest of
+ * the grid. `sub` is an optional small muted line under the value (e.g. the
+ * inactive-items count).
+ */
+export function StatTile({
+  label,
+  value,
+  highlight,
+  sub,
+}: {
+  label: string
+  value: number
+  highlight?: boolean
+  sub?: string
+}) {
   return (
     <div
       className={`admin-stat-tile rounded-2xl border p-4 ${
@@ -28,6 +42,7 @@ export function StatTile({ label, value, highlight }: { label: string; value: nu
       >
         {value.toLocaleString('en-US')}
       </p>
+      {sub && <p className="admin-stat-tile-sub mt-0.5 text-[11px] text-slate-400">{sub}</p>}
     </div>
   )
 }

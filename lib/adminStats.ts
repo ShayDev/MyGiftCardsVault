@@ -12,12 +12,16 @@ export type AdminEntity = (typeof ADMIN_ENTITIES)[number]
 
 export type MonthlyRow = { month: string; entity: AdminEntity; count: number }
 
+// Per entity: `active` follows the same rule as getNavBadgeCounts(); `inactive`
+// is every other row (soft-deleted, used, zero-balance, or an expired warranty).
+export type EntityTotal = { active: number; inactive: number }
+
 export type ContentTotals = {
-  cards: number // isActive && balance > 0 — same rule as getNavBadgeCounts()
-  vouchers: number // isActive && !isUsed
-  refunds: number // isActive && !isUsed
-  clubs: number // isActive
-  warranties: number // isActive && (expiresAt null || in the future)
+  cards: EntityTotal // active = isActive && balance > 0
+  vouchers: EntityTotal // active = isActive && !isUsed
+  refunds: EntityTotal // active = isActive && !isUsed
+  clubs: EntityTotal // active = isActive
+  warranties: EntityTotal // active = isActive && (expiresAt null || in the future)
   families: number
   users: number
 }
@@ -68,21 +72,52 @@ export async function getContentTotals(familyId?: string): Promise<ContentTotals
   const scope = familyId ? { familyId } : {}
   const now = new Date()
 
-  const [activeCards, vouchers, refunds, clubs, warranties, families, users] = await Promise.all([
+  const [
+    allCards,
+    activeCardRows,
+    allVouchers,
+    activeVouchers,
+    allRefunds,
+    activeRefunds,
+    allClubs,
+    activeClubs,
+    warrantyRows,
+    families,
+    users,
+  ] = await Promise.all([
+    prisma.giftCard.count({ where: scope }),
     prisma.giftCard.findMany({ where: { ...scope, isActive: true }, select: { id: true } }),
+    prisma.voucher.count({ where: scope }),
     prisma.voucher.count({ where: { ...scope, isActive: true, isUsed: false } }),
+    prisma.refund.count({ where: scope }),
     prisma.refund.count({ where: { ...scope, isActive: true, isUsed: false } }),
+    prisma.clubMember.count({ where: scope }),
     prisma.clubMember.count({ where: { ...scope, isActive: true } }),
-    prisma.warranty.findMany({ where: { ...scope, isActive: true }, select: { expiresAt: true } }),
+    prisma.warranty.findMany({ where: scope, select: { isActive: true, expiresAt: true } }),
     familyId ? Promise.resolve(1) : prisma.familyGroup.count(),
     prisma.user.count({ where: familyId ? { familyId } : {} }),
   ])
 
-  const balances = await getBalancesForCards(activeCards.map((c) => c.id))
-  const cards = activeCards.filter((c) => (balances.get(c.id)?.toNumber() ?? 0) > 0).length
-  const warrantiesActive = warranties.filter((w) => w.expiresAt === null || w.expiresAt >= now).length
+  const balances = await getBalancesForCards(activeCardRows.map((c) => c.id))
+  const activeCards = activeCardRows.filter((c) => (balances.get(c.id)?.toNumber() ?? 0) > 0).length
+  const activeWarranties = warrantyRows.filter(
+    (w) => w.isActive && (w.expiresAt === null || w.expiresAt >= now),
+  ).length
 
-  return { cards, vouchers, refunds, clubs, warranties: warrantiesActive, families, users }
+  const split = (active: number, total: number): EntityTotal => ({
+    active,
+    inactive: Math.max(0, total - active),
+  })
+
+  return {
+    cards: split(activeCards, allCards),
+    vouchers: split(activeVouchers, allVouchers),
+    refunds: split(activeRefunds, allRefunds),
+    clubs: split(activeClubs, allClubs),
+    warranties: split(activeWarranties, warrantyRows.length),
+    families,
+    users,
+  }
 }
 
 /**
