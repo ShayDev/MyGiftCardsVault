@@ -117,7 +117,7 @@ export default function AdminClient({ recordsByMonth, totals, families }: Props)
           <StatTile label="Refunds" value={totals.refunds} />
           <StatTile label="Clubs" value={totals.clubs} />
           <StatTile label="Warranties" value={totals.warranties} />
-          <StatTile label="Families" value={totals.families} />
+          <StatTile label="Families" value={totals.families} highlight />
           <StatTile label="Users" value={totals.users} />
         </div>
         <div className="admin-totals-chart rounded-2xl border border-slate-200 dark:border-neutral-700 bg-white dark:bg-neutral-900 p-5">
