@@ -4,11 +4,28 @@
 // presentational, no hooks — safe to render from a server component too.
 // See plans/admin-menu-dd.md §4.
 
-export function StatTile({ label, value }: { label: string; value: number }) {
+/** `highlight` picks out a headline number (e.g. Total Items) from the rest of the grid. */
+export function StatTile({ label, value, highlight }: { label: string; value: number; highlight?: boolean }) {
   return (
-    <div className="admin-stat-tile rounded-2xl border border-slate-200 dark:border-neutral-700 bg-white dark:bg-neutral-900 p-4">
-      <p className="admin-stat-tile-label text-xs font-medium uppercase tracking-wide text-slate-400">{label}</p>
-      <p className="admin-stat-tile-value mt-1 text-2xl font-bold font-mono text-slate-900 dark:text-neutral-200">
+    <div
+      className={`admin-stat-tile rounded-2xl border p-4 ${
+        highlight
+          ? 'border-emerald-200 bg-emerald-50 dark:border-emerald-800 dark:bg-emerald-950'
+          : 'border-slate-200 bg-white dark:border-neutral-700 dark:bg-neutral-900'
+      }`}
+    >
+      <p
+        className={`admin-stat-tile-label text-xs font-medium uppercase tracking-wide ${
+          highlight ? 'text-emerald-700 dark:text-emerald-400' : 'text-slate-400'
+        }`}
+      >
+        {label}
+      </p>
+      <p
+        className={`admin-stat-tile-value mt-1 font-bold font-mono ${highlight ? 'text-3xl' : 'text-2xl'} ${
+          highlight ? 'text-emerald-700 dark:text-emerald-400' : 'text-slate-900 dark:text-neutral-200'
+        }`}
+      >
         {value.toLocaleString('en-US')}
       </p>
     </div>

@@ -62,6 +62,10 @@ export default function AdminClient({ recordsByMonth, totals, families }: Props)
     colorClass: s.colorClass,
   }))
 
+  // Sum of the five trackable-content entities only — deliberately excludes
+  // families/users, which are a different kind of count (accounts, not items).
+  const totalItems = SERIES.reduce((sum, s) => sum + totals[s.key], 0)
+
   const [sortKey, setSortKey] = useState<FamilySortKey>('createdAt')
   const [sortDir, setSortDir] = useState<'asc' | 'desc'>('desc')
 
@@ -107,6 +111,7 @@ export default function AdminClient({ recordsByMonth, totals, families }: Props)
           Content totals
         </h2>
         <div className="admin-totals-grid grid grid-cols-2 gap-3 sm:grid-cols-4">
+          <StatTile label="Total Items" value={totalItems} highlight />
           <StatTile label="Cards" value={totals.cards} />
           <StatTile label="Vouchers" value={totals.vouchers} />
           <StatTile label="Refunds" value={totals.refunds} />
